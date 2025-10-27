@@ -353,6 +353,17 @@ table td> :not(.we-label) {
   filter: brightness(0.95);
 }
 
+/* Unified table helper class for pages that want the ST8 table look */
+.st8-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(44, 110, 189, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 /* Météo dans le header */
 .meteo-header-bar {
   display: flex;

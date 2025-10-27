@@ -16,15 +16,7 @@
       flex-wrap: wrap;
     }
 
-    // global helper: return Monday of week containing date
-    function getWeekStart(d) {
-      const dt=new Date(d);
-      const day=dt.getDay();
-      const diff=(day===0 ? -6 : 1) - day; // sunday -> -6, else move to Monday
-      dt.setDate(dt.getDate() + diff);
-      dt.setHours(0, 0, 0, 0);
-      return dt;
-    }
+    /* helper functions moved to script: getWeekStart is defined in the page script section */
 
     .badge {
       display: inline-flex;
@@ -276,17 +268,17 @@
       const container = document.getElementById('planning-bihebdo-content');
       container.innerHTML = `
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-          <label>Vue: 
-            <select id="bi-view">
-              <option value="7">Hebdomadaire (7 jours)</option>
-              <option value="14" selected>Bi‑hebdomadaire (14 jours)</option>
-            </select>
-          </label>
-          <label>Début: <input type="date" id="bi-start" /></label>
-          <button id="bi-load" class="st8-btn">Charger</button>
-          <button id="bi-force-save" class="st8-btn">💾 Forcer sauvegarde</button>
-          <button id="bi-show-caces" class="st8-btn secondary">Voir correspondances CACES</button>
-        </div>
+            <label>Vue: 
+              <select id="bi-view">
+                <option value="7">Hebdomadaire (7 jours)</option>
+                <option value="14" selected>Bi‑hebdomadaire (14 jours)</option>
+              </select>
+            </label>
+            <label>Début: <input type="date" id="bi-start" /></label>
+            <button id="bi-load" class="st8-btn">Charger</button>
+            <button id="bi-force-save" class="st8-btn">💾 Forcer sauvegarde</button>
+            <button id="bi-show-caces" class="st8-btn secondary">Voir correspondances CACES</button>
+          </div>
         <div id="bi-table-container"></div>
         <div class="caces-legend" style="margin-top:8px">
           <div class="legend-item"><span class="dot" style="background:#f59e0b"></span><span class="label">Engin</span></div>
@@ -300,6 +292,7 @@
       // set default date to today
       const inpt = document.getElementById('bi-start');
       const d = new Date(); inpt.value = d.toISOString().slice(0, 10);
+
       document.getElementById('bi-load').addEventListener('click', () => { const sd = document.getElementById('bi-start').value; const v = parseInt(document.getElementById('bi-view').value, 10) || 14; VIEW_DAYS = v; buildBiTable(new Date(sd), v); });
       document.getElementById('bi-view').addEventListener('change', (e) => { VIEW_DAYS = parseInt(e.target.value, 10) || 14; const sd = document.getElementById('bi-start').value; buildBiTable(new Date(sd), VIEW_DAYS); });
       document.getElementById('bi-force-save').addEventListener('click', forceSaveBihebdo);
@@ -321,6 +314,8 @@
         document.getElementById('bi-view').value = '7'; VIEW_DAYS = 7;
         buildBiTable(weekStart, 7);
       });
+
+
     }
 
     function buildBiTable(startDate, daysCount = 14) {
@@ -418,6 +413,16 @@
 
       table.appendChild(tbody);
       container.appendChild(table);
+    }
+
+    // return Monday of week containing date (local date)
+    function getWeekStart(d) {
+      const dt = new Date(d);
+      const day = dt.getDay();
+      const diff = (day === 0 ? -6 : 1) - day; // sunday -> -6, else move to Monday
+      dt.setDate(dt.getDate() + diff);
+      dt.setHours(0, 0, 0, 0);
+      return dt;
     }
 
     function renderBadges(agent) {
