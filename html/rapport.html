@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ST8 • Rapport Global Connecté</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/libs/chart.min.js"></script>
+  <script src="../js/libs/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #334155);
+      color: #fff;
+      text-align: center;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 30px 60px;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      padding: 16px 20px;
+    }
+
+    h2 {
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    .kpi-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .kpi-bar .item {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .kpi-bar b { font-size: 18px; color: #0f172a; }
+
+    canvas { width: 100%; max-height: 360px; margin-top: 10px; }
+
+    .table-mini {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .table-mini th, .table-mini td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .print-btn {
+      margin: 16px 0;
+      background: #475569;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .print-btn:hover { background: #334155; }
+
+    @media print {
+      .print-btn { display: none !important; }
+      header { background: none; color: #000; border-bottom: 2px solid #000; }
+      @page { size: A4 portrait; margin: 15mm; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Service Territorial Bordeaux-Maritime / Bastide N°8</h1>
+    <div>Rapport global généré le <span id="rapportDate"></span></div>
+  </header>
+
+  <main>
+    <button class="print-btn" id="btnRapportPrint">🖨️ Imprimer / Export PDF</button>
+
+    <!-- === Agents === -->
+    <section id="rapport-agents">
+      <h2>👥 Agents</h2>
+      <div class="kpi-bar">
+        <div class="item"><b id="kpiAgentsTotal">—</b><br><small>Total agents</small></div>
+        <div class="item"><b id="kpiAgentsVoirie">—</b><br><small>Agents Voirie</small></div>
+        <div class="item"><b id="kpiAgentsEV">—</b><br><small>Espaces Verts</small></div>
+      </div>
+    </section>
+
+    <!-- === Planning === -->
+    <section id="rapport-planning">
+      <h2>📅 Planning</h2>
+      <div class="kpi-bar">
+        <div class="item"><b id="kpiPresence">—</b><br><small>Taux de présence moyen</small></div>
+        <div class="item"><b id="kpiAbsence">—</b><br><small>Taux d'absence global</small></div>
+      </div>
+      <canvas id="chartPlanning"></canvas>
+    </section>
+
+    <!-- === Prépa Chantier === -->
+    <section id="rapport-prepa">
+      <h2>🚧 Préparation de chantier</h2>
+      <table class="table-mini" id="tablePrepa">
+        <thead><tr><th>Chantier</th><th>Chef d'équipe</th><th>Date</th><th>Statut</th></tr></thead>
+        <tbody><tr><td colspan="4" style="text-align:center;">Chargement…</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- === Éléments Variables === -->
+    <section id="rapport-ev">
+      <h2>🧩 Éléments Variables</h2>
+      <table class="table-mini" id="tableEV">
+        <thead><tr><th>Type</th><th>Quantité</th><th>Valeur</th></tr></thead>
+        <tbody><tr><td colspan="3" style="text-align:center;">Chargement…</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- === Statistiques === -->
+    <section id="rapport-stats">
+      <h2>📊 Synthèse Statistique</h2>
+      <div class="kpi-bar">
+        <div class="item"><b id="rapportMoy">—</b><br><small>Moyenne annuelle</small></div>
+        <div class="item"><b id="rapportBest">—</b><br><small>Meilleure période</small></div>
+        <div class="item"><b id="rapportWorst">—</b><br><small>Période faible</small></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById("rapportDate").textContent = new Date().toLocaleDateString("fr-FR");
+
+    async function loadJson(file) {
+      try {
+        const res = await fetch(`../data/${file}`);
+        if (res.ok) return await res.json();
+      } catch {}
+      return null;
+    }
+
+    function getLocalOrFile(key, fallbackFile) {
+      const local = localStorage.getItem(key);
+      if (local) {
+        try { return JSON.parse(local); } catch {}
+      }
+      return loadJson(fallbackFile);
+    }
+
+    async function loadRapport() {
+      const agents = await getLocalOrFile("agents_st8_autosave", "agents_st8.json");
+      const planning = await getLocalOrFile("planning_st8_autosave", "planning_st8.json");
+      const prepa = await getLocalOrFile("prepa_st8_autosave", "prepa_st8.json");
+      const ev = await getLocalOrFile("elements_st8_autosave", "elements_st8.json");
+
+      // === Agents ===
+      if (agents) {
+        const all = Object.values(agents).flat();
+        document.getElementById("kpiAgentsTotal").textContent = all.length || 0;
+        document.getElementById("kpiAgentsVoirie").textContent = (agents["AGENTS VOIRIE ST 8"] || []).length;
+        document.getElementById("kpiAgentsEV").textContent = (agents["ESPACES VERTS ST 8"] || []).length;
+      }
+
+      // === Planning ===
+      if (planning?.planning?.["2025"]) {
+        const year = planning.planning["2025"];
+        let total = 0, present = 0;
+        for (const agent in year) {
+          for (const day in year[agent]) {
+            total++;
+            if (year[agent][day] === "P") present++;
+          }
+        }
+        const taux = total ? (present / total) * 100 : 0;
+        const abs = 100 - taux;
+        document.getElementById("kpiPresence").textContent = taux.toFixed(1) + "%";
+        document.getElementById("kpiAbsence").textContent = abs.toFixed(1) + "%";
+        document.getElementById("rapportMoy").textContent = taux.toFixed(1) + "%";
+
+        // Graphique mini
+        new Chart(document.getElementById("chartPlanning"), {
+          type: "bar",
+          data: {
+            labels: ["Présence moyenne"],
+            datasets: [{
+              data: [taux],
+              backgroundColor: taux >= 85 ? "#22c55e" :
+                               taux >= 70 ? "#eab308" :
+                               taux >= 50 ? "#f97316" : "#ef4444"
+            }]
+          },
+          options: {
+            indexAxis: "y",
+            scales: { x: { min: 0, max: 100, ticks: { callback: v => v + "%" } } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      // === Prépa ===
+      if (prepa?.chantiers) {
+        const tbody = document.querySelector("#tablePrepa tbody");
+        tbody.innerHTML = prepa.chantiers.map(c => `
+          <tr>
+            <td>${c.nom || "—"}</td>
+            <td>${c.chef || "—"}</td>
+            <td>${c.date || "—"}</td>
+            <td>${c.statut || "Prévu"}</td>
+          </tr>
+        `).join("");
+      }
+
+      // === Éléments Variables ===
+      if (ev?.elements) {
+        const tbody = document.querySelector("#tableEV tbody");
+        tbody.innerHTML = ev.elements.map(e => `
+          <tr>
+            <td>${e.type || "—"}</td>
+            <td>${e.quantite || 0}</td>
+            <td>${e.valeur || "—"}</td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    // Impression PDF
+    document.getElementById("btnRapportPrint").addEventListener("click", () => {
+      window.print();
+    });
+
+    loadRapport();
+  </script>
+</body>
+</html>

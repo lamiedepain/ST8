@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Statistiques annuelles</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../assets/icons/ST8_brown.svg" type="image/svg+xml">
+  <script src="../js/api-sync.js"></script>
+  <script src="../js/libs/chart.min.js"></script>
+  <script src="../js/libs/datetime.js"></script>
+  <script src="../js/libs/presence.js"></script>
+</head>
+
+<body>
+  <header class="theme-brown">
+    <div class="title">
+      <div class="square theme-brown">ST</div>
+      <div class="text">
+        <div style="font-weight:bold;">Statistiques annuelles</div>
+        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
+      </div>
+    </div>
+    <img src="../assets/icons/logo_blanc.png" class="logo" alt="Logo BM">
+  </header>
+  <main>
+    <p class="page-intro">Analyse le taux de pr&eacute;sence par groupe &agrave; partir du planning mensuel et des
+      donn&eacute;es agents.</p>
+
+    <!-- Interface des statistiques -->
+    <div id="stats-content">
+      <div class="stats-dashboard">
+        <div class="stats-overview">
+          <div class="stat-card">
+            <h3>Effectif Total</h3>
+            <div class="stat-number" id="total-agents">-</div>
+          </div>
+          <div class="stat-card">
+            <h3>Services</h3>
+            <div class="stat-number" id="total-services">-</div>
+          </div>
+          <div class="stat-card">
+            <h3>Compétences</h3>
+            <div class="stat-number" id="total-competences">-</div>
+          </div>
+        </div>
+
+        <div class="stats-charts">
+          <!-- Les graphiques agrégés (service / permis / compétences) ont été remplacés
+               par des camemberts individuels par service pour un affichage direct. -->
+
+          <div class="chart-container">
+            <h3>Camemberts par service</h3>
+            <div id="service-pies"
+              style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem"></div>
+          </div>
+
+          <div class="chart-container">
+            <h3>Tendance de présence</h3>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+              <label for="presence-year">Année</label>
+              <select id="presence-year"></select>
+              <label for="presence-grain">Granularité</label>
+              <select id="presence-grain">
+                <option value="week">Hebdo</option>
+                <option value="month" selected>Mensuel</option>
+                <option value="year">Annuel</option>
+              </select>
+            </div>
+            <canvas id="presenceChart" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let statsData = null;
+
+      // Charger les données depuis agents_source.json
+      async function loadStatsData() {
+        try {
+          statsData = await ApiSync.fetchAgentsSource();
+          generateStats();
+        } catch (error) {
+          console.error('Erreur chargement statistiques:', error);
+          document.getElementById('stats-content').innerHTML =
+            '<p style="color: red;">Erreur de chargement des données</p>';
+        }
+      }
+
+      // Générer les statistiques
+      function generateStats() {
+        if (!statsData || !statsData.agents) return;
+
+        const agents = statsData.agents;
+
+        // Vue d'ensemble
+        document.getElementById('total-agents').textContent = agents.length;
+
+        const services = [...new Set(agents.map(a => a.service))];
+        document.getElementById('total-services').textContent = services.length;
+
+        const allCompetences = agents.flatMap(a => a.competences);
+        const uniqueCompetences = [...new Set(allCompetences)];
+        document.getElementById('total-competences').textContent = uniqueCompetences.length;
+
+        // Graphiques
+        // Remplacés par les camemberts par service
+        generateServicePies(agents);
+
+        // Présences: préparer contrôles et rendre le graphique
+        const yearSel = populatePresenceControls(agents);
+        const grainSel = document.getElementById('presence-grain');
+        const defaultYear = yearSel && yearSel.value ? yearSel.value : (new Date().getFullYear());
+        renderPresenceChart(agents, grainSel.value, defaultYear);
+
+        // interactions
+        yearSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value));
+        grainSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value));
+
+        // generate one pie per service
+        generateServicePies(agents);
+      }
+
+      /* Removed individual aggregate charts - replaced by service camemberts */
+
+      // ---------- Charts globals ----------
+      // Chart instances (kept for backward compatibility if needed)
+      let _presenceChart = null;
+
+      // Collect counts per date and per status code
+      function collectStatusCountsByDate(agents) {
+        const effectifTotal = agents.length || 0;
+        const map = {}; // date -> { codes: { CODE: count }, daysSlots: effectifTotal }
+        const codes = new Set();
+
+        agents.forEach(agent => {
+          const pres = agent.presences || {};
+          Object.keys(pres).forEach(d => {
+            const code = String(pres[d] || '').toUpperCase() || 'UNKNOWN';
+            codes.add(code);
+            map[d] = map[d] || { codes: {}, effectif: effectifTotal };
+            map[d].codes[code] = (map[d].codes[code] || 0) + 1;
+          });
+        });
+
+        return { map, codes: Array.from(codes).sort(), effectifTotal };
+      }
+
+      // Aggregate per period (week/month/year) producing buckets with summed counts and total slots
+      function aggregateStatusByPeriod(mapObj, step = 'month') {
+        const { map, effectifTotal } = mapObj;
+        const buckets = new Map();
+
+        Object.keys(map).forEach(dateStr => {
+          const d = DateTimeUtils.toDate(dateStr);
+          if (!d) return;
+          let key;
+          if (step === 'month') key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          else if (step === 'year') key = `${d.getFullYear()}`;
+          else {
+            const tmp = PresenceUtils.getIsoWeek(d);
+            key = `${tmp.year}-W${String(tmp.week).padStart(2, '0')}`;
+          }
+
+          const bucket = buckets.get(key) || { key, codes: {}, days: 0 };
+          // add codes counts
+          Object.entries(map[dateStr].codes).forEach(([code, cnt]) => {
+            bucket.codes[code] = (bucket.codes[code] || 0) + cnt;
+          });
+          bucket.days += 1;
+          bucket.effectifTotal = effectifTotal * bucket.days; // total possible slots in bucket
+          buckets.set(key, bucket);
+        });
+
+        return Array.from(buckets.values()).sort((a, b) => a.key.localeCompare(b.key));
+      }
+
+      // Render stacked bar with one dataset per status code (percentage)
+      function renderPresenceChart(agents, grain = 'month', year = null) {
+        const collected = collectStatusCountsByDate(agents);
+        if (!Object.keys(collected.map || {}).length) {
+          const ctx = document.getElementById('presenceChart').getContext('2d');
+          if (_presenceChart) { _presenceChart.destroy(); _presenceChart = null; }
+          ctx.clearRect(0, 0, 800, 300);
+          return;
+        }
+
+        const step = grain === 'month' ? 'month' : grain === 'year' ? 'year' : 'week';
+        const buckets = aggregateStatusByPeriod(collected, step);
+        const filtered = year ? buckets.filter(b => b.key.startsWith(String(year))) : buckets;
+        const labels = filtered.map(b => b.key);
+
+        // determine all codes from collected set (keep consistent order)
+        const codes = collected.codes;
+
+        // color palette (extend as needed)
+        const colorMap = {
+          'P': '#16a34a', // green
+          'C': '#6b7280', // grey
+          'A': '#f59e0b', // amber
+          'ASTH': '#ef4444', // red
+          'ASTS': '#f97316', // orange
+          '': '#9ca3af'
+        };
+
+        const datasets = codes.map(code => {
+          const data = filtered.map(b => {
+            const cnt = b.codes[code] || 0;
+            const total = b.effectifTotal || 1;
+            return Math.round((cnt / total) * 10000) / 100; // percentage with 2 decimals
+          });
+          const color = colorMap[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+          return { label: code, data, backgroundColor: color, borderColor: color, borderWidth: 1 };
+        });
+
+        const ctx = document.getElementById('presenceChart').getContext('2d');
+        if (_presenceChart) _presenceChart.destroy();
+        _presenceChart = new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            scales: {
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+            },
+            plugins: { tooltip: { mode: 'index', intersect: false } }
+          }
+        });
+      }
+
+      function populatePresenceControls(agents) {
+        const years = new Set();
+        agents.forEach(a => {
+          const pres = a.presences || {};
+          Object.keys(pres).forEach(d => years.add(d.slice(0, 4)));
+        });
+        const yearSel = document.getElementById('presence-year');
+        yearSel.innerHTML = Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
+        if (!yearSel.children.length) yearSel.innerHTML = `<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
+        return yearSel;
+      }
+
+      // Generate pie chart for a given service: distribution of statuses over all days
+      const _servicePieCharts = {};
+      function generateServicePie(agents, service, canvasId) {
+        const filtered = agents.filter(a => (a.service || '—') === service);
+        const counts = {}; let totalSlots = 0;
+        filtered.forEach(a => {
+          const pres = a.presences || {};
+          Object.values(pres).forEach(code => {
+            const k = String(code || '').toUpperCase() || '—';
+            counts[k] = (counts[k] || 0) + 1;
+            totalSlots++;
+          });
+        });
+
+        const labels = Object.keys(counts).sort();
+        const data = labels.map(l => counts[l]);
+        const colors = labels.map(l => {
+          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316' };
+          return cmap[l] || (`hsl(${(l.charCodeAt(0) || 65) % 360} 65% 50%)`);
+        });
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (_servicePieCharts[canvasId]) { _servicePieCharts[canvasId].destroy(); delete _servicePieCharts[canvasId]; }
+        _servicePieCharts[canvasId] = new Chart(ctx, {
+          type: 'pie',
+          data: { labels, datasets: [{ data, backgroundColor: colors }] },
+          options: { responsive: true }
+        });
+      }
+
+      // Create one pie per service and render them
+      function generateServicePies(agents) {
+        const services = [...new Set(agents.map(a => a.service || '—'))].sort();
+        const container = document.getElementById('service-pies');
+        container.innerHTML = '';
+        services.forEach((s, idx) => {
+          const id = `service-pie-${idx}`;
+          const wrapper = document.createElement('div');
+          wrapper.style = 'background:var(--bg-secondary);padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);';
+          wrapper.innerHTML = `<div style="font-weight:600;margin-bottom:6px">${s.replace('_', ' ')}</div><canvas id="${id}" height="160"></canvas>`;
+          container.appendChild(wrapper);
+          generateServicePie(agents, s, id);
+        });
+      }
+
+
+      // Charger les données au démarrage
+      loadStatsData();
+    </script>
+
+    <style>
+      .stats-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .stat-card {
+        background: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+
+      .stat-card h3 {
+        margin: 0 0 1rem 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .stats-charts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .chart-container {
+        background: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
+
+      .chart-container h3 {
+        margin: 0 0 1rem 0;
+        color: var(--primary-color);
+      }
+
+      .bar-item {
+        margin-bottom: 1rem;
+      }
+
+      .bar-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+        color: var(--text-primary);
+      }
+
+      .bar-container {
+        position: relative;
+        height: 25px;
+        background: var(--bg-primary);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 0.5rem;
+        transition: width 0.3s ease;
+      }
+
+      .bar-value {
+        color: white;
+        font-size: 0.7rem;
+        font-weight: bold;
+      }
+    </style>
+  </main>
+  <div class="fab-container">
+    <button class="fab">=</button>
+    <ul class="fab-options">
+      <li><a href="index.html" class="square theme-dark">BM</a></li>
+      <li><a href="prepa.html" class="square theme-red">PC</a></li>
+      <li><a href="agents.html" class="square theme-blue">AG</a></li>
+      <li><a href="planning.html" class="square theme-green">PL</a></li>
+      <li><a href="elements.html" class="square theme-orange">EV</a></li>
+      <li><a href="bihebdo.html" class="square theme-slate">BI</a></li>
+      <li><a href="planification.html" class="square theme-purple">PH</a></li>
+      <li><a href="stats.html" class="square theme-brown">ST</a></li>
+      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
+      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+          aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+            aria-hidden="true">&#9728;&#9790;</span></a></li>
+    </ul>
+  </div>
+  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+  <script src="../js/apps-data.js"></script>
+  <script src="../js/script.js"></script>
+</body>
+
+</html>

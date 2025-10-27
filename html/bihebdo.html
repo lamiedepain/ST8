@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Planning bi-hebdomadaire</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../assets/icons/ST8_slate.svg" type="image/svg+xml">
+  <style>
+    /* Pastilles permis / caces - styles unifiés */
+    .agent-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    // global helper: return Monday of week containing date
+    function getWeekStart(d) {
+      const dt=new Date(d);
+      const day=dt.getDay();
+      const diff=(day===0 ? -6 : 1) - day; // sunday -> -6, else move to Monday
+      dt.setDate(dt.getDate() + diff);
+      dt.setHours(0, 0, 0, 0);
+      return dt;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 26px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+
+    /* Permis: rouge visible (user requested) */
+    .badge.permis {
+      background: linear-gradient(180deg, #7f1d1d, #ef4444);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.12), inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+      color: #fff;
+      text-align: center;
+    }
+
+    /* CACES (category badges reuse .badge + category class for color) */
+    .badge.caces {
+      background: #f59e0b;
+      color: #111
+    }
+
+    .badge.more {
+      background: #94a3b8;
+      color: #fff
+    }
+
+    .agent-name {
+      font-weight: 600
+    }
+
+    table.bi-table th,
+    table.bi-table td {
+      border: 1px solid #e6e6e6
+    }
+
+    table.bi-table td {
+      vertical-align: top;
+      padding: 6px
+    }
+
+    table.bi-table th {
+      padding: 6px;
+      text-align: center
+    }
+
+    /* Badges inside date cells (grouped, consistent height) */
+    .cell-badges {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .cell-badges .group {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .cell-badges .group.permis {
+      margin-right: 6px
+    }
+
+    .cell-badges .group.caces {
+      margin-left: 6px
+    }
+
+    /* .badge.cell will reuse .badge sizing rules */
+    .badge.cell.permis {
+      /* override color for cell permis */
+      background: linear-gradient(180deg, #7f1d1d, #ef4444);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    /* category color hooks (applied as classes like .cat-engin) */
+    .badge.cat-engin {
+      background: #f59e0b;
+      color: #111
+    }
+
+    .badge.cat-nacelle {
+      background: #0ea5a4;
+      color: #fff
+    }
+
+    .badge.cat-chariot {
+      background: #2c6ebd;
+      color: #fff
+    }
+
+    .badge.cat-grue {
+      background: #6d28d9;
+      color: #fff
+    }
+
+    .badge.cat-autre {
+      background: #94a3b8;
+      color: #fff
+    }
+
+    /* legend */
+    .caces-legend {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .caces-legend .legend-item {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 13px
+    }
+
+    .caces-legend .legend-item .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: inline-block
+    }
+
+    .caces-legend .legend-item .label {
+      font-size: 13px;
+      color: var(--muted)
+    }
+  </style>
+</head>
+
+<body class="theme-slate">
+  <header class="theme-slate">
+    <div class="title">
+      <div class="square theme-slate">BI</div>
+      <div class="text">
+        <div style="font-weight:bold;">Planning bi-hebdomadaire</div>
+        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
+      </div>
+    </div>
+    <img src="../assets/icons/logo_blanc.png" class="logo" alt="Logo BM">
+  </header>
+  <main>
+    <p class="page-intro">Visualise quatorze ou sept jours cons&eacute;cutifs et imprime en A3 portrait ou paysage.</p>
+
+    <!-- Contenu direct du planning bi-hebdomadaire -->
+    <div id="planning-bihebdo-content">
+      <p>Chargement...</p>
+    </div>
+  </main>
+  <div class="fab-container">
+    <button class="fab">=</button>
+    <ul class="fab-options">
+      <li><a href="index.html" class="square theme-dark">BM</a></li>
+      <li><a href="prepa.html" class="square theme-red">PC</a></li>
+      <li><a href="agents.html" class="square theme-blue">AG</a></li>
+      <li><a href="planning.html" class="square theme-green">PL</a></li>
+      <li><a href="elements.html" class="square theme-orange">EV</a></li>
+      <li><a href="bihebdo.html" class="square theme-slate">BI</a></li>
+      <li><a href="planification.html" class="square theme-purple">PH</a></li>
+      <li><a href="stats.html" class="square theme-brown">ST</a></li>
+      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
+      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+          aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+            aria-hidden="true">&#9728;&#9790;</span></a></li>
+    </ul>
+  </div>
+  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+  <script src="../js/apps-data.js"></script>
+  <script src="../js/script.js"></script>
+  <script src="../js/api-sync.js"></script>
+  <script src="../js/notify.js"></script>
+  <script src="../js/weekend-utils.js"></script>
+  <script>
+    // Minimal bi-weekly planner implementation
+    const STATUSES = ['', 'P', 'AT', 'C', 'AST-H', 'AST-S', 'AM', 'F', 'RG', 'CE', 'DC', 'JF'];
+    const STATUS_COLORS = { 'P': '#16a34a', 'AT': '#B91C1C', 'C': '#C2410C', 'AST-H': '#1D4ED8', 'AST-S': '#6D28D9', 'AM': '#DC2626', 'F': '#92400E', 'RG': '#BE185D', 'CE': '#B45309', 'DC': 'linear-gradient(90deg,#1F2937 50%, #C2410C 50%)', 'JF': '#B91C1C' };
+
+    let biData = { agents: [], referentiels: {} };
+    let VIEW_DAYS = 14; // default bihebdo
+
+    // Hardcoded CACES mapping (en dur) — simplified categories demandées
+    const HARDCODED_CACES = {
+      // R482 - Engins de chantier
+      "R482_A": { category: 'Engin', label: 'Catégorie A', desc: 'Engins compacts (pelles, chargeuses ≤6t, compacteurs...)' },
+      "R482_B1": { category: 'Engin', label: 'Catégorie B1', desc: 'Engins d\'extraction à déplacement séquentiel (pelles >6t, multifonctions)' },
+      "R482_B2": { category: 'Engin', label: 'Catégorie B2', desc: 'Engins de sondage / forage (machines spécialisées)' },
+      "R482_B3": { category: 'Engin', label: 'Catégorie B3', desc: 'Engins rail-route (pelles rail-route)' },
+      "R482_C1": { category: 'Engin', label: 'Catégorie C1', desc: 'Engins de chargement à déplacement alternatif (chargeuses >6t)' },
+      "R482_C2": { category: 'Engin', label: 'Catégorie C2', desc: 'Engins de réglage à déplacement alternatif (bouteurs, chargeuses chenilles >6t)' },
+      "R482_C3": { category: 'Engin', label: 'Catégorie C3', desc: 'Engins de nivellement (niveleuses)' },
+      "R482_D": { category: 'Engin', label: 'Catégorie D', desc: 'Engins de compactage (compacteurs, rouleaux >6t)' },
+      "R482_E": { category: 'Engin', label: 'Catégorie E', desc: 'Engins de transport (tombereaux, moto-basculeurs >6t)' },
+      "R482_F": { category: 'Engin', label: 'Catégorie F', desc: 'Chariots de manutention tout-terrain (Manitou, télescopiques)' },
+      "R482_G": { category: 'Engin', label: 'Catégorie G', desc: 'Conduite hors production (déplacement/chargement sans production)' },
+
+      // R486 - PEMP (nacelles) groupes A/B, types 1/2/3 -> here shorten to A/B
+      "R486_A": { category: 'Nacelle', label: 'R486 A (PEMP Axe vertical)', desc: 'PEMP axe vertical (type 1/2/3 selon usage)' },
+      "R486_B": { category: 'Nacelle', label: 'R486 B (PEMP multi-directionnel)', desc: 'PEMP multidirectionnelle (bras articulé / ciseaux selon type)' },
+
+      // R489 / R485 - Chariots et gerbeurs
+      "R489_1A": { category: 'Chariot', label: 'R489 1A', desc: 'Transpalettes à conducteur porté / préparateur de commandes (levée ≤1,2m)' },
+      "R489_1B": { category: 'Chariot', label: 'R489 1B', desc: 'Gerbeurs à conducteur porté' },
+      "R489_2": { category: 'Chariot', label: 'R489 2', desc: 'Chariots tracteur à plateau porteur (<6000 kg)' },
+      "R489_3": { category: 'Chariot', label: 'R489 3', desc: 'Chariots élévateurs en porte-à-faux (≤6000 kg)' },
+      "R489_4": { category: 'Chariot', label: 'R489 4', desc: 'Chariots élévateurs en porte-à-faux (>6000 kg)' },
+      "R489_5": { category: 'Chariot', label: 'R489 5', desc: 'Chariots élévateurs à mât rétractable' },
+      "R489_6": { category: 'Chariot', label: 'R489 6', desc: 'Conduite hors production (maintenance / livraison)' },
+      "R485_1": { category: 'Chariot', label: 'R485 (gerbeurs)', desc: 'Gerbeurs à conducteur accompagnant selon hauteur de levée' },
+
+      // R490 - Grues auxiliaires
+      "R490_1": { category: 'Grue', label: 'R490', desc: 'Grues auxiliaires de chargement (montées sur véhicule) - poste fixe / télécommande' },
+
+      // R484 - Ponts roulants / portiques
+      "R484_1": { category: 'Grue', label: 'R484', desc: 'Pont roulant / portique (commande au sol)' }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initBihebdo();
+    });
+
+    async function initBihebdo() {
+      try {
+        const data = await ApiSync.fetchAgentsSource();
+        biData.agents = (data && data.agents) ? data.agents : [];
+        biData.referentiels = (data && data.referentiels) ? data.referentiels : {};
+      } catch (e) {
+        console.warn('bihebdo: failed to load agents', e);
+        biData.agents = [];
+        biData.referentiels = {};
+      }
+      renderControls();
+      const start = new Date(); // default today
+      buildBiTable(start, VIEW_DAYS);
+    }
+
+    function renderControls() {
+      const container = document.getElementById('planning-bihebdo-content');
+      container.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <label>Vue: 
+            <select id="bi-view">
+              <option value="7">Hebdomadaire (7 jours)</option>
+              <option value="14" selected>Bi‑hebdomadaire (14 jours)</option>
+            </select>
+          </label>
+          <label>Début: <input type="date" id="bi-start" /></label>
+          <button id="bi-load" class="st8-btn">Charger</button>
+          <button id="bi-force-save" class="st8-btn">💾 Forcer sauvegarde</button>
+          <button id="bi-show-caces" class="st8-btn secondary">Voir correspondances CACES</button>
+        </div>
+        <div id="bi-table-container"></div>
+        <div class="caces-legend" style="margin-top:8px">
+          <div class="legend-item"><span class="dot" style="background:#f59e0b"></span><span class="label">Engin</span></div>
+          <div class="legend-item"><span class="dot" style="background:#0ea5a4"></span><span class="label">Nacelle</span></div>
+          <div class="legend-item"><span class="dot" style="background:#2c6ebd"></span><span class="label">Chariot</span></div>
+          <div class="legend-item"><span class="dot" style="background:#6d28d9"></span><span class="label">Grue</span></div>
+          <div class="legend-item"><span class="dot" style="background:#94a3b8"></span><span class="label">Autre</span></div>
+        </div>
+        <div id="bi-caces-summary" style="display:none;margin-top:12px;padding:10px;border-radius:8px;background:#fff;border:1px solid #e6e6e6;max-height:320px;overflow:auto"></div>
+      `;
+      // set default date to today
+      const inpt = document.getElementById('bi-start');
+      const d = new Date(); inpt.value = d.toISOString().slice(0, 10);
+      document.getElementById('bi-load').addEventListener('click', () => { const sd = document.getElementById('bi-start').value; const v = parseInt(document.getElementById('bi-view').value, 10) || 14; VIEW_DAYS = v; buildBiTable(new Date(sd), v); });
+      document.getElementById('bi-view').addEventListener('change', (e) => { VIEW_DAYS = parseInt(e.target.value, 10) || 14; const sd = document.getElementById('bi-start').value; buildBiTable(new Date(sd), VIEW_DAYS); });
+      document.getElementById('bi-force-save').addEventListener('click', forceSaveBihebdo);
+      document.getElementById('bi-show-caces').addEventListener('click', () => { toggleCacesSummary(); });
+
+      // header controls (if present) should also be wired
+      const hdrView = document.getElementById('bi-view-header');
+      const hdrStart = document.getElementById('bi-start-header');
+      const hdrLoad = document.getElementById('bi-load-header');
+      const hdrWeek = document.getElementById('bi-week-select');
+      if (hdrView) hdrView.addEventListener('change', (e) => { document.getElementById('bi-view').value = e.target.value; document.getElementById('bi-view').dispatchEvent(new Event('change')); });
+      if (hdrStart) hdrStart.value = inpt.value;
+      if (hdrLoad) hdrLoad.addEventListener('click', () => { document.getElementById('bi-start').value = hdrStart.value; document.getElementById('bi-load').click(); });
+      if (hdrWeek) hdrWeek.addEventListener('click', () => {
+        // align to week start (Monday)
+        const sd = hdrStart.value ? new Date(hdrStart.value) : new Date();
+        const weekStart = getWeekStart(sd);
+        document.getElementById('bi-start').value = weekStart.toISOString().slice(0, 10);
+        document.getElementById('bi-view').value = '7'; VIEW_DAYS = 7;
+        buildBiTable(weekStart, 7);
+      });
+    }
+
+    function buildBiTable(startDate, daysCount = 14) {
+      const container = document.getElementById('bi-table-container');
+      container.innerHTML = '';
+      const days = [];
+      const s = new Date(startDate);
+      for (let i = 0; i < daysCount; i++) { const d = new Date(s); d.setDate(s.getDate() + i); days.push(d); }
+
+      const table = document.createElement('table'); table.className = 'bi-table'; table.style.width = '100%'; table.style.borderCollapse = 'collapse';
+      const thead = document.createElement('thead');
+
+      // Build week grouping header (first row) and day header (second row)
+      const topRow = document.createElement('tr');
+      const agentTh = document.createElement('th'); agentTh.textContent = 'Agent'; agentTh.style.textAlign = 'left'; agentTh.rowSpan = 2; agentTh.style.padding = '6px'; topRow.appendChild(agentTh);
+
+      // group days by ISO week (year-week)
+      const groups = [];
+      const weekKey = (d) => { const dt = new Date(d); const tmp = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate())); const dayNum = tmp.getUTCDay() || 7; tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum); const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1)); const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7); return tmp.getUTCFullYear() + '-W' + String(weekNo).padStart(2, '0'); };
+      for (let i = 0; i < days.length;) {
+        const k = weekKey(days[i]);
+        let j = i + 1;
+        while (j < days.length && weekKey(days[j]) === k) j++;
+        groups.push({ startIndex: i, count: j - i, key: k, start: days[i], end: days[j - 1] });
+        i = j;
+      }
+
+      groups.forEach(g => {
+        const thw = document.createElement('th'); thw.colSpan = g.count; thw.style.padding = '6px'; thw.textContent = `Semaine du ${g.start.toLocaleDateString()} au ${g.end.toLocaleDateString()}`; topRow.appendChild(thw);
+      });
+      thead.appendChild(topRow);
+
+      const dayRow = document.createElement('tr');
+      // second row: one header cell per day
+      groups.forEach(g => {
+        for (let i = 0; i < g.count; i++) {
+          const d = new Date(g.start); d.setDate(g.start.getDate() + i);
+          const thd = document.createElement('th'); thd.style.padding = '6px'; thd.textContent = d.toLocaleDateString(); dayRow.appendChild(thd);
+        }
+      });
+      thead.appendChild(dayRow);
+      table.appendChild(thead);
+      // helper: return Monday for given date (defined globally further down)
+
+      const tbody = document.createElement('tbody');
+      biData.agents.forEach(agent => {
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td'); tdName.style.padding = '6px';
+        // only show agent name here (badges removed per request)
+        const nameDiv = document.createElement('div'); nameDiv.className = 'agent-name'; nameDiv.textContent = (agent.nom || '') + ' ' + (agent.prenom || '');
+        tdName.appendChild(nameDiv);
+        tr.appendChild(tdName);
+        agent.presences = agent.presences || {};
+        days.forEach(d => {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const td = document.createElement('td'); td.style.padding = '6px'; td.style.textAlign = 'center'; td.dataset.agent = agent.matricule || '';
+          let code = agent.presences[key] || '';
+          // weekend detection
+          const wd = d.getDay();
+          const isWeekend = (wd === 0 || wd === 6);
+          if (isWeekend) { td.classList.add('weekend'); td.dataset.weekend = '1'; }
+          // main code label inside cell
+          const codeDiv = document.createElement('div'); codeDiv.textContent = code;
+          // only color background on weekends for astreintes
+          const isAstreinte = (code === 'AST-H' || code === 'AST-S');
+          if (code && STATUS_COLORS[code] && (!isWeekend || isAstreinte)) { td.style.background = STATUS_COLORS[code]; td.style.color = '#fff'; codeDiv.style.color = '#fff'; }
+          td.appendChild(codeDiv);
+          // ensure weekend label/state via shared helper
+          ensureWeekendLabel(td);
+          // show badges in the cell only if present (code === 'P')
+          if (code === 'P') {
+            const cellBadges = renderBadgesInCell(agent);
+            if (cellBadges) td.appendChild(cellBadges);
+          }
+          // shift-click cycle
+          td.addEventListener('click', (ev) => {
+            if (ev.shiftKey) {
+              const idx = STATUSES.indexOf(codeDiv.textContent || '');
+              const next = STATUSES[(idx + 1) % STATUSES.length];
+              codeDiv.textContent = next;
+              // compute weekend and only color if astreinte
+              const wdShift = d.getDay(); const isWeekendShift = (wdShift === 0 || wdShift === 6);
+              const isAstreinteShift = (next === 'AST-H' || next === 'AST-S');
+              if (next && STATUS_COLORS[next] && (!isWeekendShift || isAstreinteShift)) { td.style.background = STATUS_COLORS[next]; td.style.color = '#fff'; codeDiv.style.color = '#fff'; } else { td.style.background = ''; td.style.color = ''; codeDiv.style.color = ''; }
+              if (!agent.presences) agent.presences = {};
+              if (next) agent.presences[key] = next; else delete agent.presences[key];
+              // ensure weekend label state is updated after changing the visible code
+              ensureWeekendLabel(td);
+            }
+          });
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    function renderBadges(agent) {
+      const wrap = document.createElement('div'); wrap.className = 'agent-badges';
+      const grpPerm = document.createElement('div'); grpPerm.className = 'group permis';
+      const grpCac = document.createElement('div'); grpCac.className = 'group caces';
+      // Permis (first)
+      if (Array.isArray(agent.permis) && agent.permis.length > 0) {
+        agent.permis.slice(0, 5).forEach(p => {
+          const sp = document.createElement('span'); sp.className = 'badge permis'; sp.textContent = p; sp.title = (biData.referentiels.permis && biData.referentiels.permis[p]) ? biData.referentiels.permis[p] : p; grpPerm.appendChild(sp);
+        });
+        if (agent.permis.length > 5) { const more = document.createElement('span'); more.className = 'badge more'; more.textContent = '+' + (agent.permis.length - 5); grpPerm.appendChild(more); }
+      }
+      // CACES (second)
+      if (Array.isArray(agent.caces) && agent.caces.length > 0) {
+        agent.caces.slice(0, 4).forEach(c => {
+          const info = classifyCaces(c);
+          const sp = document.createElement('span'); sp.className = 'badge caces';
+          const catKey = String(info.cat || '').toLowerCase().replace(/\s+/g, '-');
+          sp.classList.add('cat-' + catKey);
+          sp.textContent = c; sp.title = (biData.referentiels.caces && biData.referentiels.caces[c]) ? biData.referentiels.caces[c] : c; grpCac.appendChild(sp);
+        });
+        if (agent.caces.length > 4) { const more = document.createElement('span'); more.className = 'badge more'; more.textContent = '+' + (agent.caces.length - 4); grpCac.appendChild(more); }
+      }
+      if (grpPerm.children.length) wrap.appendChild(grpPerm);
+      if (grpCac.children.length) wrap.appendChild(grpCac);
+      return wrap;
+    }
+
+    function classifyCaces(code) {
+      // Prefer hardcoded mapping when available
+      if (HARDCODED_CACES && HARDCODED_CACES[code]) {
+        const h = HARDCODED_CACES[code];
+        return { cat: h.category || 'Autre', desc: h.desc || h.label || code };
+      }
+      // Fallback to local referentiel descriptions and heuristics
+      const desc = (biData.referentiels && biData.referentiels.caces && biData.referentiels.caces[code]) ? biData.referentiels.caces[code] : code;
+      const s = String(desc).toLowerCase();
+      if (s.includes('pemp') || s.includes('nacell') || s.includes('élévation') || s.includes('elevation')) return { cat: 'Nacelle', desc };
+      if (s.includes('grue')) return { cat: 'Grue', desc };
+      if (s.includes('chariot') || s.includes('manutention') || s.includes('élévateur')) return { cat: 'Chariot', desc };
+      if (s.includes('engin') || s.includes('extraction') || s.includes('chargement') || s.includes('compact') || s.includes('conduite')) return { cat: 'Engin', desc };
+      return { cat: 'Autre', desc };
+    }
+
+    function renderBadgesInCell(agent) {
+      const wrap = document.createElement('div'); wrap.className = 'cell-badges';
+      const grpPerm = document.createElement('div'); grpPerm.className = 'group permis';
+      const grpCac = document.createElement('div'); grpCac.className = 'group caces';
+
+      // Show permis first (all, but limited space)
+      if (Array.isArray(agent.permis) && agent.permis.length > 0) {
+        agent.permis.forEach(p => {
+          const sp = document.createElement('span'); sp.className = 'badge cell permis'; sp.textContent = p; sp.title = (biData.referentiels.permis && biData.referentiels.permis[p]) ? biData.referentiels.permis[p] : p; grpPerm.appendChild(sp);
+        });
+      }
+
+      // For CACES use classifyCaces to map to common categories and avoid duplicates
+      if (Array.isArray(agent.caces) && agent.caces.length > 0) {
+        const seen = new Set();
+        agent.caces.forEach(code => {
+          const info = classifyCaces(code);
+          if (!seen.has(info.cat)) {
+            seen.add(info.cat);
+            const sp = document.createElement('span'); sp.className = 'badge cell caces';
+            const catKey = String(info.cat || '').toLowerCase().replace(/\s+/g, '-');
+            sp.classList.add('cat-' + catKey);
+            sp.textContent = info.cat; sp.title = info.desc + (code ? (' (' + code + ')') : ''); grpCac.appendChild(sp);
+          }
+        });
+      }
+
+      if (grpPerm.children.length) wrap.appendChild(grpPerm);
+      if (grpCac.children.length) wrap.appendChild(grpCac);
+      return wrap.children.length ? wrap : null;
+    }
+
+    async function toggleCacesSummary() {
+      const box = document.getElementById('bi-caces-summary');
+      if (!box) return;
+      if (box.style.display === 'none') { await buildCacesSummary(box); box.style.display = 'block'; }
+      else { box.style.display = 'none'; }
+    }
+
+    async function buildCacesSummary(box) {
+      // Build summary from the hardcoded mapping in the page (single source of truth en dur)
+      const refs = (biData.referentiels && biData.referentiels.caces) ? biData.referentiels.caces : {};
+      const table = {};
+      // Use HARDCODED_CACES keys first
+      Object.keys(HARDCODED_CACES).forEach(code => {
+        const h = HARDCODED_CACES[code];
+        const cat = h.category || 'Autre';
+        if (!table[cat]) table[cat] = [];
+        table[cat].push({ code, desc: h.label + ' - ' + (h.desc || refs[code] || ''), source: h.source || 'Hardcoded' });
+      });
+      // Also include any codes present in local referentiel but not in HARDCODED_CACES
+      Object.keys(refs).forEach(code => {
+        if (HARDCODED_CACES[code]) return;
+        const info = classifyCaces(code);
+        if (!table[info.cat]) table[info.cat] = [];
+        table[info.cat].push({ code, desc: refs[code] });
+      });
+
+      // render HTML
+      let html = '<h3>Correspondances CACES (résumé)</h3>';
+      html += '<p>Source: mapping CACES intégré en dur dans la page.</p>';
+      Object.keys(table).forEach(cat => {
+        html += `<h4 style="margin-bottom:4px">${cat} (${table[cat].length})</h4><ul style="margin-top:4px;margin-bottom:10px">`;
+        table[cat].forEach(item => { html += `<li><strong>${item.code}</strong>: ${item.desc}` + (item.source ? ` <small style="color:#666">[${item.source}]</small>` : '') + `</li>`; });
+        html += '</ul>';
+      });
+      box.innerHTML = html;
+    }
+
+    async function forceSaveBihebdo() {
+      try {
+        const ok = await ApiSync.postAgents(biData.agents);
+        if (ok) { if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Envoi forcé : planning bi-hebdo synchronisé', 'success'); }
+        else { if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Envoi forcé échoué — serveur indisponible', 'error'); }
+      } catch (e) { console.error(e); if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Erreur lors de l\'envoi forcé', 'error'); }
+    }
+  </script>
+</body>
+
+</html>
