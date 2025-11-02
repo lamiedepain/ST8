@@ -75,6 +75,14 @@
                 <input id="presence-month" type="month" class="month-picker" aria-label="Sélectionner le mois">
                 <button id="next-month" title="Mois suivant" class="btn-small">▶</button>
               </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label for="presence-service">Groupes</label>
+                <select id="presence-service" multiple size="4" style="min-width:160px"></select>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-left:6px;">
+                  <button id="service-all" class="btn-small" title="Sélectionner tous">Tous</button>
+                  <button id="service-clear" class="btn-small" title="Effacer la sélection">Effacer</button>
+                </div>
+              </div>
             </div>
             <canvas id="presenceChart" height="220"></canvas>
           </div>
@@ -113,9 +121,8 @@
         const uniqueCompetences = [...new Set(allCompetences)];
         document.getElementById('total-competences').textContent = uniqueCompetences.length;
 
-        // Graphiques
-        // Remplacés par les camemberts par service
-        generateServicePies(agents);
+  // Graphiques
+  // Remplacés par les camemberts par service
 
         // Présences: préparer contrôles et rendre le graphique
         const yearSel = populatePresenceControls(agents);
@@ -123,23 +130,45 @@
         const monthInput = document.getElementById('presence-month');
         const prevBtn = document.getElementById('prev-month');
         const nextBtn = document.getElementById('next-month');
+        const serviceSel = document.getElementById('presence-service');
+        const serviceAll = document.getElementById('service-all');
+        const serviceClear = document.getElementById('service-clear');
 
         // initialize month input to latest available month (or current)
         initMonthControl(agents, monthInput, yearSel);
 
+        // populate services control
+        populateServiceControls(agents);
+
+        // compute filtered agents based on service selection
+        function getFilteredAgents() {
+          const selected = getSelectedServices();
+          if (!selected || !selected.length) return agents;
+          return agents.filter(a => selected.includes(a.service || '—'));
+        }
+
         const defaultYear = yearSel && yearSel.value ? yearSel.value : (new Date().getFullYear());
-        renderPresenceChart(agents, grainSel.value, defaultYear, monthInput.value);
+        const initialAgents = getFilteredAgents();
+        renderPresenceChart(initialAgents, grainSel.value, defaultYear, monthInput.value);
+        generateServicePies(initialAgents);
 
         // interactions
-        yearSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value));
-        grainSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value));
+        yearSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+        grainSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
         monthInput.addEventListener('change', () => {
           // keep year in sync with month
           if (monthInput.value && yearSel) yearSel.value = monthInput.value.slice(0, 4);
-          renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value);
+          const fa = getFilteredAgents();
+          renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value);
+          generateServicePies(fa);
         });
-        prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value)));
-        nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value)));
+        prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
+        nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
+
+        // service selection handlers
+        serviceSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+        serviceAll.addEventListener('click', (e) => { e.preventDefault(); selectAllServices(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+        serviceClear.addEventListener('click', (e) => { e.preventDefault(); clearServiceSelection(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
 
         // generate one pie per service
         generateServicePies(agents);
@@ -303,6 +332,31 @@
         yearSel.innerHTML = Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
         if (!yearSel.children.length) yearSel.innerHTML = `<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
         return yearSel;
+      }
+
+      function populateServiceControls(agents) {
+        const services = [...new Set(agents.map(a => a.service || '—'))].sort();
+        const sel = document.getElementById('presence-service');
+        if (!sel) return;
+        sel.innerHTML = services.map(s => `<option value="${s}">${s}</option>`).join('');
+      }
+
+      function getSelectedServices() {
+        const sel = document.getElementById('presence-service');
+        if (!sel) return [];
+        return Array.from(sel.selectedOptions).map(o => o.value);
+      }
+
+      function selectAllServices() {
+        const sel = document.getElementById('presence-service');
+        if (!sel) return;
+        Array.from(sel.options).forEach(o => o.selected = true);
+      }
+
+      function clearServiceSelection() {
+        const sel = document.getElementById('presence-service');
+        if (!sel) return;
+        Array.from(sel.options).forEach(o => o.selected = false);
       }
 
       // Initialize the month picker to the latest month found in data or current month
@@ -498,6 +552,8 @@
       .month-picker {
         height: 34px;
       }
+      /* service selector appearance */
+      #presence-service { padding:6px 8px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary); }
     </style>
   </main>
   <div class="fab-container">
