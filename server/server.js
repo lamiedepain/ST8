@@ -109,5 +109,10 @@ app.get('*', (req, res, next) => {
   return res.sendFile(path.join(rootHtml, 'index.html'));
 });
 
+// Health endpoint for quick checks (Render health check can use this)
+app.get('/health', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('ST8 server running on', port));
