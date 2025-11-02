@@ -10,6 +10,13 @@
     --ds-surface: #ffffff;
     --ds-text: #0f172a;
     --ds-muted: #64748b;
+    /* compatibility variables used by existing pages */
+    --primary-color: var(--ds-primary);
+    --accent-color: #f2994a;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --border-color: rgba(15, 23, 42, 0.06);
+    --text-secondary: #374151;
     --ds-radius: 12px;
     --ds-gap: 12px;
     --ds-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
@@ -204,18 +211,52 @@ footer {
     gap: 1rem;
 }
 
-#presence-service { min-width: 160px; }
-.service-control-wrapper { display:flex; align-items:center; gap:8px; }
+#presence-service {
+    min-width: 160px;
+}
 
-.error { color: #b91c1c; }
-.card-title { font-weight:600; margin-bottom:6px }
+.service-control-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-.count-info { background:#f1f5ff; padding:6px; border-radius:8px; border:1px solid #dbe5f2 }
-.legend-right { margin-left:auto }
+.error {
+    color: #b91c1c;
+}
 
-.selection-badge { padding:6px; border-radius:8px; background:#fff; border:1px solid rgba(15,23,42,0.04); }
+.card-title {
+    font-weight: 600;
+    margin-bottom: 6px
+}
+
+.count-info {
+    background: #f1f5ff;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #dbe5f2
+}
+
+.legend-right {
+    margin-left: auto
+}
+
+.selection-badge {
+    padding: 6px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+}
 
 /* Modal helpers (keep markup but centralize display control) */
-#status-modal { display:none; }
-.modal-visible { display:block }
-#modal-backdrop { display:none }
+#status-modal {
+    display: none;
+}
+
+.modal-visible {
+    display: block
+}
+
+#modal-backdrop {
+    display: none
+}
