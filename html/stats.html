@@ -32,7 +32,7 @@
     <div id="stats-content">
       <div class="stats-dashboard">
         <div class="stats-overview">
-          <div class="stat-card">
+          <div class="stat-card card">
             <h3>Effectif Total</h3>
             <div class="stat-number" id="total-agents">-</div>
           </div>
@@ -58,7 +58,7 @@
 
           <div class="chart-container">
             <h3>Tendance de présence</h3>
-            <div class="presence-controls"
+            <div class="presence-controls ds-panel"
               style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
               <label for="presence-year">Année</label>
               <select id="presence-year"></select>
@@ -72,19 +72,19 @@
               </select>
 
               <div class="month-controls" style="display:flex;align-items:center;gap:6px;">
-                <button id="prev-month" title="Mois précédent" class="btn-small">◀</button>
+                <button id="prev-month" title="Mois précédent" class="btn-small ds-btn">◀</button>
                 <input id="presence-month" type="month" class="month-picker" aria-label="Sélectionner le mois">
-                <button id="next-month" title="Mois suivant" class="btn-small">▶</button>
+                <button id="next-month" title="Mois suivant" class="btn-small ds-btn">▶</button>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <label for="presence-service">Groupes</label>
                 <select id="presence-service" multiple size="4" style="min-width:160px"></select>
                 <div style="display:flex;flex-direction:column;gap:6px;margin-left:6px;">
-                  <button id="service-all" class="btn-small" title="Sélectionner tous">Tous</button>
-                  <button id="service-clear" class="btn-small" title="Effacer la sélection">Effacer</button>
+                  <button id="service-all" class="btn-small ds-btn" title="Sélectionner tous">Tous</button>
+                  <button id="service-clear" class="btn-small ds-btn" title="Effacer la sélection">Effacer</button>
                 </div>
               </div>
-              <div id="code-legend" style="display:flex;gap:8px;align-items:center;margin-left:8px;flex-wrap:wrap">
+              <div id="code-legend" class="ds-legend" style="display:flex;gap:8px;align-items:center;margin-left:8px;flex-wrap:wrap">
               </div>
             </div>
             <canvas id="presenceChart" height="220"></canvas>

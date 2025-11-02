@@ -314,17 +314,17 @@
         </select></label>
       <input id="search-agents" placeholder="Recherche nom/matricule">
       <div class="controls-right">
-        <button id="btn-load" class="btn">Charger</button>
-        <button id="btn-save" class="btn">Exporter JSON</button>
-        <button id="btn-force-save" class="btn">💾 Forcer sauvegarde</button>
-        <button id="btn-copy" class="btn">Copier JSON</button>
-        <button id="btn-all-present" class="btn">Tous présents</button>
-        <button id="btn-undo" class="btn" disabled>Annuler</button>
+        <button id="btn-load" class="btn ds-btn">Charger</button>
+        <button id="btn-save" class="btn ds-btn">Exporter JSON</button>
+        <button id="btn-force-save" class="btn ds-btn">💾 Forcer sauvegarde</button>
+        <button id="btn-copy" class="btn ds-btn">Copier JSON</button>
+        <button id="btn-all-present" class="btn ds-btn">Tous présents</button>
+        <button id="btn-undo" class="btn ds-btn" disabled>Annuler</button>
         <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
           <div id="selection-badge" style="padding:6px;border-radius:8px;background:#fff;border:1px solid #e6edf9">
             Sélection: <span id="selection-count">0</span></div>
-          <button id="btn-modify-selection" class="btn">Modifier sélection</button>
-          <button id="btn-clear-selection" class="btn">Effacer sélection</button>
+          <button id="btn-modify-selection" class="btn ds-btn">Modifier sélection</button>
+          <button id="btn-clear-selection" class="btn ds-btn">Effacer sélection</button>
         </div>
       </div>
     </div>
@@ -334,7 +334,7 @@
         <div style="font-weight:800">Planning</div>
         <div id="count-info" style="background:#f1f5ff;padding:6px;border-radius:8px;border:1px solid #dbe5f2">0 agents
         </div>
-        <div class="legend" style="margin-left:auto">
+        <div class="legend ds-legend" style="margin-left:auto">
           <div class="item"><span class="dot" style="background:#16a34a"></span>P</div>
           <div class="item"><span class="dot" style="background:#B91C1C"></span>AT</div>
           <div class="item"><span class="dot" style="background:#C2410C"></span>C</div>
@@ -367,8 +367,8 @@
       <!-- status buttons inserted here -->
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
-      <button id="modal-clear" class="btn">Effacer</button>
-      <button id="modal-apply" class="btn">Appliquer</button>
+      <button id="modal-clear" class="btn ds-btn">Effacer</button>
+      <button id="modal-apply" class="btn ds-btn">Appliquer</button>
     </div>
   </div>
 
