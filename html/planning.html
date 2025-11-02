@@ -179,6 +179,11 @@
       color: #fff
     }
 
+    .status-PREV {
+      background: #3b82f6;
+      color: #fff
+    }
+
     .status-AM {
       background: #DC2626;
       color: #fff
@@ -335,6 +340,7 @@
           <div class="item"><span class="dot" style="background:#1D4ED8"></span>AST-H</div>
           <div class="item"><span class="dot" style="background:#6D28D9"></span>AST-S</div>
           <div class="item"><span class="dot" style="background:#DC2626"></span>AM</div>
+          <div class="item"><span class="dot" style="background:#3b82f6"></span>PREV</div>
           <div class="item"><span class="dot" style="background:#92400E"></span>F</div>
           <div class="item"><span class="dot" style="background:#BE185D"></span>RG</div>
           <div class="item"><span class="dot" style="background:#B45309"></span>CE</div>
@@ -396,8 +402,9 @@
 
   <script>
     // Small self-contained planner logic — loads agents from ../data/agents_source.json
-    const STATUSES = ['', 'P', 'AT', 'C', 'AST-H', 'AST-S', 'AM', 'F', 'RG', 'CE', 'DC', 'JF'];
-    const STATUS_COLORS = { 'P': '#16a34a', 'AT': '#B91C1C', 'C': '#C2410C', 'AST-H': '#1D4ED8', 'AST-S': '#6D28D9', 'AM': '#DC2626', 'F': '#92400E', 'RG': '#BE185D', 'CE': '#B45309', 'DC': 'linear-gradient(90deg,#1F2937 50%, #C2410C 50%)', 'JF': '#B91C1C' };
+    // Added 'PREV' status (Prévisionnelle) to planning codes
+    const STATUSES = ['', 'P', 'PREV', 'AT', 'C', 'AST-H', 'AST-S', 'AM', 'F', 'RG', 'CE', 'DC', 'JF'];
+    const STATUS_COLORS = { 'P': '#16a34a', 'PREV': '#3b82f6', 'AT': '#B91C1C', 'C': '#C2410C', 'AST-H': '#1D4ED8', 'AST-S': '#6D28D9', 'AM': '#DC2626', 'F': '#92400E', 'RG': '#BE185D', 'CE': '#B45309', 'DC': 'linear-gradient(90deg,#1F2937 50%, #C2410C 50%)', 'JF': '#B91C1C' };
     let planningData = null;
 
     // UI refs
