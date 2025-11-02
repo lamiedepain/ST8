@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <title>ST8 • Rapport Global Connecté</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/system.css">
   <script src="../js/libs/chart.min.js"></script>
   <script src="../js/libs/xlsx.full.min.js"></script>
 
@@ -21,10 +23,13 @@
       color: #fff;
       text-align: center;
       padding: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
-    header h1 { margin: 0; font-size: 22px; }
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
 
     main {
       max-width: 1200px;
@@ -35,7 +40,7 @@
     section {
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       margin-bottom: 20px;
       padding: 16px 20px;
     }
@@ -62,9 +67,16 @@
       text-align: center;
     }
 
-    .kpi-bar b { font-size: 18px; color: #0f172a; }
+    .kpi-bar b {
+      font-size: 18px;
+      color: #0f172a;
+    }
 
-    canvas { width: 100%; max-height: 360px; margin-top: 10px; }
+    canvas {
+      width: 100%;
+      max-height: 360px;
+      margin-top: 10px;
+    }
 
     .table-mini {
       width: 100%;
@@ -72,7 +84,8 @@
       margin-top: 10px;
     }
 
-    .table-mini th, .table-mini td {
+    .table-mini th,
+    .table-mini td {
       border: 1px solid #cbd5e1;
       padding: 6px 8px;
       text-align: left;
@@ -90,12 +103,25 @@
       font-weight: 600;
     }
 
-    .print-btn:hover { background: #334155; }
+    .print-btn:hover {
+      background: #334155;
+    }
 
     @media print {
-      .print-btn { display: none !important; }
-      header { background: none; color: #000; border-bottom: 2px solid #000; }
-      @page { size: A4 portrait; margin: 15mm; }
+      .print-btn {
+        display: none !important;
+      }
+
+      header {
+        background: none;
+        color: #000;
+        border-bottom: 2px solid #000;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 15mm;
+      }
     }
   </style>
 </head>
@@ -133,8 +159,19 @@
     <section id="rapport-prepa">
       <h2>🚧 Préparation de chantier</h2>
       <table class="table-mini" id="tablePrepa">
-        <thead><tr><th>Chantier</th><th>Chef d'équipe</th><th>Date</th><th>Statut</th></tr></thead>
-        <tbody><tr><td colspan="4" style="text-align:center;">Chargement…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Chantier</th>
+            <th>Chef d'équipe</th>
+            <th>Date</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="4" style="text-align:center;">Chargement…</td>
+          </tr>
+        </tbody>
       </table>
     </section>
 
@@ -142,8 +179,18 @@
     <section id="rapport-ev">
       <h2>🧩 Éléments Variables</h2>
       <table class="table-mini" id="tableEV">
-        <thead><tr><th>Type</th><th>Quantité</th><th>Valeur</th></tr></thead>
-        <tbody><tr><td colspan="3" style="text-align:center;">Chargement…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Quantité</th>
+            <th>Valeur</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="3" style="text-align:center;">Chargement…</td>
+          </tr>
+        </tbody>
       </table>
     </section>
 
@@ -165,14 +212,14 @@
       try {
         const res = await fetch(`../data/${file}`);
         if (res.ok) return await res.json();
-      } catch {}
+      } catch { }
       return null;
     }
 
     function getLocalOrFile(key, fallbackFile) {
       const local = localStorage.getItem(key);
       if (local) {
-        try { return JSON.parse(local); } catch {}
+        try { return JSON.parse(local); } catch { }
       }
       return loadJson(fallbackFile);
     }
@@ -215,8 +262,8 @@
             datasets: [{
               data: [taux],
               backgroundColor: taux >= 85 ? "#22c55e" :
-                               taux >= 70 ? "#eab308" :
-                               taux >= 50 ? "#f97316" : "#ef4444"
+                taux >= 70 ? "#eab308" :
+                  taux >= 50 ? "#f97316" : "#ef4444"
             }]
           },
           options: {
@@ -261,4 +308,5 @@
     loadRapport();
   </script>
 </body>
+
 </html>
