@@ -195,6 +195,23 @@
         return k;
       }
 
+      // Human-friendly labels for codes
+      const CODE_LABELS = {
+        '': '(vide)',
+        'P': 'Présent',
+        'C': 'Congé',
+        'A': 'Absence',
+        'ASTH': 'Astreinte H',
+        'ASTS': 'Astreinte S',
+        'PREV': 'Prévisionnelle',
+        'JF': 'Jour férié',
+        'DC': 'DC',
+        'AT': 'Arrêt travail',
+        'AM': 'AM',
+      };
+
+      function displayLabel(code) { return CODE_LABELS[code] || code || '(vide)'; }
+
       function collectStatusCountsByDate(agents) {
         const effectifTotal = agents.length || 0;
         const map = {}; // date -> { codes: { CODE: count }, daysSlots: effectifTotal }
@@ -300,8 +317,8 @@
           return;
         }
 
-        // determine all codes from collected set (keep consistent order)
-        const codes = collected.codes;
+  // determine all codes from collected set (keep consistent order)
+  const codes = collected.codes;
 
         // color palette (extend as needed) — use canonical codes only
         const colorMap = {
@@ -321,7 +338,7 @@
             return Math.round((cnt / total) * 10000) / 100; // percentage with 2 decimals
           });
           const color = colorMap[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
-          return { label: code, data, backgroundColor: color, borderColor: color, borderWidth: 1 };
+          return { label: displayLabel(code), data, backgroundColor: color, borderColor: color, borderWidth: 1 };
         });
 
         _presenceChart = new Chart(ctx, {
@@ -417,11 +434,12 @@
           });
         });
 
-        const labels = Object.keys(counts).sort();
-        const data = labels.map(l => counts[l]);
-        const colors = labels.map(l => {
+        const codes = Object.keys(counts).sort();
+        const labels = codes.map(c => displayLabel(c));
+        const data = codes.map(c => counts[c]);
+        const colors = codes.map(c => {
           const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316', 'PREV': '#3b82f6' };
-          return cmap[l] || (`hsl(${(l.charCodeAt(0) || 65) % 360} 65% 50%)`);
+          return cmap[c] || (`hsl(${(c.charCodeAt(0) || 65) % 360} 65% 50%)`);
         });
 
         const canvas = document.getElementById(canvasId);

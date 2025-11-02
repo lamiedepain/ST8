@@ -47,6 +47,17 @@ function readData() {
   try { return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8')); } catch (e) { return null; }
 }
 
+// normalize status codes server-side to canonical forms (similar to client)
+function normalizeCode(code) {
+  if (!code) return '';
+  let k = String(code).trim().toUpperCase();
+  k = k.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  if (k === 'PREVISIONELLE' || k === 'PREVISIONNEL' || k === 'PREVISION' || k === 'PREV' || k === 'PR') return 'PREV';
+  if (k === 'ASTH' || k === 'AST-H') return 'ASTH';
+  if (k === 'ASTS' || k === 'AST-S') return 'ASTS';
+  return k;
+}
+
 function writeData(obj) {
   const tmp = DATA_PATH + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
@@ -57,14 +68,29 @@ function writeData(obj) {
 
 app.get('/api/agents', (req, res) => {
   const data = readData(); if (!data) return res.status(500).json({ error: 'cannot read data' });
+  // Normalize presence codes before sending
+  if (Array.isArray(data.agents)) {
+    data.agents.forEach(a => {
+      if (a.presences) {
+        Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+      }
+    });
+  }
   res.json(data);
 });
 
 app.post('/api/agents', (req, res) => {
   const body = req.body;
   if (!body || !body.agents) return res.status(400).json({ error: 'missing agents' });
+  // normalize incoming agents' presences to canonical codes before writing
+  const incoming = body.agents || [];
+  incoming.forEach(a => {
+    if (a.presences) {
+      Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+    }
+  });
   const data = readData() || {};
-  data.agents = body.agents;
+  data.agents = incoming;
   data.metadata = data.metadata || {};
   data.metadata.last_modified = new Date().toISOString();
   try { writeData(data); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ error: e.message }); }
