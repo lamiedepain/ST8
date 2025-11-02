@@ -430,8 +430,28 @@
       months.forEach((m, i) => { const o = document.createElement('option'); o.value = i + 1; o.textContent = m; if (i === now.getMonth()) o.selected = true; monthSelect.appendChild(o); });
     }
 
+    // Normalization helper (align with stats normalization)
+    function normalizeCode(code) {
+      if (!code) return '';
+      let k = String(code).trim().toUpperCase();
+      k = k.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+      if (k === 'PREVISIONELLE' || k === 'PREVISIONNEL' || k === 'PREVISION' || k === 'PREV' || k === 'PR') return 'PREV';
+      if (k === 'ASTH' || k === 'AST-H') return 'AST-H';
+      if (k === 'ASTS' || k === 'AST-S') return 'AST-S';
+      return k;
+    }
+
     function buildTable(year, month) {
       const agents = planningData?.agents || [];
+      // normalize codes in planningData to canonical codes (PREV etc.) to keep model consistent
+      agents.forEach(a => {
+        a.presences = a.presences || {};
+        Object.keys(a.presences).forEach(d => {
+          const raw = a.presences[d];
+          const k = normalizeCode ? normalizeCode(raw) : raw;
+          a.presences[d] = k;
+        });
+      });
       const days = new Date(year, month, 0).getDate();
       // filter agents by group/search
       let flat = agents.map(a => ({ ...a }));

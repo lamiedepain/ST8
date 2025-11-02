@@ -181,6 +181,20 @@
       let _presenceChart = null;
 
       // Collect counts per date and per status code
+      // Normalize status codes to canonical keys (no accents, short codes)
+      function normalizeCode(code) {
+        if (!code) return '';
+        let k = String(code).trim().toUpperCase();
+        // replace accented E
+        k = k.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+        // common synonyms
+        if (k === 'PREVISIONELLE' || k === 'PREVISIONNEL' || k === 'PREVISION' || k === 'PREV' || k === 'PR' || k === 'PREVION') return 'PREV';
+        // also accept variants with/without hyphen
+        if (k === 'ASTH' || k === 'AST-H') return 'ASTH';
+        if (k === 'ASTS' || k === 'AST-S') return 'ASTS';
+        return k;
+      }
+
       function collectStatusCountsByDate(agents) {
         const effectifTotal = agents.length || 0;
         const map = {}; // date -> { codes: { CODE: count }, daysSlots: effectifTotal }
@@ -189,7 +203,8 @@
         agents.forEach(agent => {
           const pres = agent.presences || {};
           Object.keys(pres).forEach(d => {
-            const code = String(pres[d] || '').toUpperCase() || 'UNKNOWN';
+            const raw = pres[d] || '';
+            const code = normalizeCode(raw) || 'UNKNOWN';
             codes.add(code);
             map[d] = map[d] || { codes: {}, effectif: effectifTotal };
             map[d].codes[code] = (map[d].codes[code] || 0) + 1;
@@ -288,19 +303,15 @@
         // determine all codes from collected set (keep consistent order)
         const codes = collected.codes;
 
-        // color palette (extend as needed)
+        // color palette (extend as needed) — use canonical codes only
         const colorMap = {
           'P': '#16a34a', // green
           'C': '#6b7280', // grey
           'A': '#f59e0b', // amber
           'ASTH': '#ef4444', // red
           'ASTS': '#f97316', // orange
-          '': '#9ca3af',
-          // Prévisionnelle (accept common variants)
-          'PREVISIONELLE': '#3b82f6',
-          'PRÉVISIONELLE': '#3b82f6',
-          'PREV': '#3b82f6',
-          'PR': '#3b82f6'
+          'PREV': '#3b82f6', // prévisionnelle (canonique)
+          '': '#9ca3af'
         };
 
         const datasets = codes.map(code => {
@@ -409,7 +420,7 @@
         const labels = Object.keys(counts).sort();
         const data = labels.map(l => counts[l]);
         const colors = labels.map(l => {
-          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316', 'PREV': '#3b82f6', 'PREVISIONELLE': '#3b82f6', 'PRÉVISIONELLE': '#3b82f6' };
+          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316', 'PREV': '#3b82f6' };
           return cmap[l] || (`hsl(${(l.charCodeAt(0) || 65) % 360} 65% 50%)`);
         });
 
