@@ -7,6 +7,10 @@ const cors = require('cors');
 const app = express();
 // Serve static files from the project root so pages under /html are available
 app.use(express.static(path.join(__dirname, '..')));
+// Ensure root URL serves the main app landing page (index is under /html)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'html', 'index.html'));
+});
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
 
