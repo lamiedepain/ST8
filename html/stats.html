@@ -121,8 +121,8 @@
         const uniqueCompetences = [...new Set(allCompetences)];
         document.getElementById('total-competences').textContent = uniqueCompetences.length;
 
-  // Graphiques
-  // Remplacés par les camemberts par service
+        // Graphiques
+        // Remplacés par les camemberts par service
 
         // Présences: préparer contrôles et rendre le graphique
         const yearSel = populatePresenceControls(agents);
@@ -295,7 +295,12 @@
           'A': '#f59e0b', // amber
           'ASTH': '#ef4444', // red
           'ASTS': '#f97316', // orange
-          '': '#9ca3af'
+          '': '#9ca3af',
+          // Prévisionnelle (accept common variants)
+          'PREVISIONELLE': '#3b82f6',
+          'PRÉVISIONELLE': '#3b82f6',
+          'PREV': '#3b82f6',
+          'PR': '#3b82f6'
         };
 
         const datasets = codes.map(code => {
@@ -404,7 +409,7 @@
         const labels = Object.keys(counts).sort();
         const data = labels.map(l => counts[l]);
         const colors = labels.map(l => {
-          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316' };
+          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316', 'PREV': '#3b82f6', 'PREVISIONELLE': '#3b82f6', 'PRÉVISIONELLE': '#3b82f6' };
           return cmap[l] || (`hsl(${(l.charCodeAt(0) || 65) % 360} 65% 50%)`);
         });
 
@@ -552,8 +557,15 @@
       .month-picker {
         height: 34px;
       }
+
       /* service selector appearance */
-      #presence-service { padding:6px 8px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary); }
+      #presence-service {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
     </style>
   </main>
   <div class="fab-container">
