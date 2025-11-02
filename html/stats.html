@@ -57,17 +57,26 @@
 
           <div class="chart-container">
             <h3>Tendance de présence</h3>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+            <div class="presence-controls"
+              style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
               <label for="presence-year">Année</label>
               <select id="presence-year"></select>
+
               <label for="presence-grain">Granularité</label>
               <select id="presence-grain">
+                <option value="day">Jour</option>
                 <option value="week">Hebdo</option>
                 <option value="month" selected>Mensuel</option>
                 <option value="year">Annuel</option>
               </select>
+
+              <div class="month-controls" style="display:flex;align-items:center;gap:6px;">
+                <button id="prev-month" title="Mois précédent" class="btn-small">◀</button>
+                <input id="presence-month" type="month" class="month-picker" aria-label="Sélectionner le mois">
+                <button id="next-month" title="Mois suivant" class="btn-small">▶</button>
+              </div>
             </div>
-            <canvas id="presenceChart" height="140"></canvas>
+            <canvas id="presenceChart" height="220"></canvas>
           </div>
         </div>
       </div>
@@ -111,12 +120,26 @@
         // Présences: préparer contrôles et rendre le graphique
         const yearSel = populatePresenceControls(agents);
         const grainSel = document.getElementById('presence-grain');
+        const monthInput = document.getElementById('presence-month');
+        const prevBtn = document.getElementById('prev-month');
+        const nextBtn = document.getElementById('next-month');
+
+        // initialize month input to latest available month (or current)
+        initMonthControl(agents, monthInput, yearSel);
+
         const defaultYear = yearSel && yearSel.value ? yearSel.value : (new Date().getFullYear());
-        renderPresenceChart(agents, grainSel.value, defaultYear);
+        renderPresenceChart(agents, grainSel.value, defaultYear, monthInput.value);
 
         // interactions
-        yearSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value));
-        grainSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value));
+        yearSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value));
+        grainSel.addEventListener('change', () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value));
+        monthInput.addEventListener('change', () => {
+          // keep year in sync with month
+          if (monthInput.value && yearSel) yearSel.value = monthInput.value.slice(0, 4);
+          renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value);
+        });
+        prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value)));
+        nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => renderPresenceChart(agents, grainSel.value, yearSel.value, monthInput.value)));
 
         // generate one pie per service
         generateServicePies(agents);
@@ -156,7 +179,8 @@
           const d = DateTimeUtils.toDate(dateStr);
           if (!d) return;
           let key;
-          if (step === 'month') key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          if (step === 'day') key = dateStr; // keep yyyy-mm-dd
+          else if (step === 'month') key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
           else if (step === 'year') key = `${d.getFullYear()}`;
           else {
             const tmp = PresenceUtils.getIsoWeek(d);
@@ -177,7 +201,7 @@
       }
 
       // Render stacked bar with one dataset per status code (percentage)
-      function renderPresenceChart(agents, grain = 'month', year = null) {
+      function renderPresenceChart(agents, grain = 'month', year = null, month = null) {
         const collected = collectStatusCountsByDate(agents);
         if (!Object.keys(collected.map || {}).length) {
           const ctx = document.getElementById('presenceChart').getContext('2d');
@@ -186,10 +210,51 @@
           return;
         }
 
-        const step = grain === 'month' ? 'month' : grain === 'year' ? 'year' : 'week';
+        const step = grain === 'day' ? 'day' : (grain === 'month' ? 'month' : grain === 'year' ? 'year' : 'week');
         const buckets = aggregateStatusByPeriod(collected, step);
-        const filtered = year ? buckets.filter(b => b.key.startsWith(String(year))) : buckets;
-        const labels = filtered.map(b => b.key);
+        // filter by year and/or month if provided
+        let filtered = year ? buckets.filter(b => b.key.startsWith(String(year))) : buckets;
+        if (month) {
+          // month expected as YYYY-MM
+          filtered = filtered.filter(b => b.key.startsWith(month));
+        }
+        // pretty labels depending on step
+        const labels = filtered.map(b => {
+          if (step === 'day') return b.key; // dd/mm handled later
+          if (step === 'month') {
+            const parts = b.key.split('-');
+            return parts.length === 2 ? `${parts[1]}/${parts[0]}` : b.key;
+          }
+          return b.key;
+        });
+
+        // If the selected grain is 'day', render a simple daily % presence chart for code 'P'
+        const ctx = document.getElementById('presenceChart').getContext('2d');
+        if (_presenceChart) _presenceChart.destroy();
+
+        if (step === 'day') {
+          // labels are yyyy-mm-dd; display as dd/MM for readability
+          const dayLabels = filtered.map(b => {
+            const parts = b.key.split('-');
+            return parts.length === 3 ? `${parts[2]}/${parts[1]}` : b.key;
+          });
+          const data = filtered.map(b => {
+            const cntP = (b.codes && (b.codes['P'] || b.codes['p'])) ? (b.codes['P'] || b.codes['p']) : 0;
+            const total = b.effectifTotal || 1;
+            return Math.round((cntP / total) * 10000) / 100;
+          });
+
+          _presenceChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: dayLabels, datasets: [{ label: 'Taux présence (%)', data, backgroundColor: '#16a34a' }] },
+            options: {
+              responsive: true,
+              scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+              plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}%` } } }
+            }
+          });
+          return;
+        }
 
         // determine all codes from collected set (keep consistent order)
         const codes = collected.codes;
@@ -214,8 +279,6 @@
           return { label: code, data, backgroundColor: color, borderColor: color, borderWidth: 1 };
         });
 
-        const ctx = document.getElementById('presenceChart').getContext('2d');
-        if (_presenceChart) _presenceChart.destroy();
         _presenceChart = new Chart(ctx, {
           type: 'bar',
           data: { labels, datasets },
@@ -240,6 +303,34 @@
         yearSel.innerHTML = Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
         if (!yearSel.children.length) yearSel.innerHTML = `<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
         return yearSel;
+      }
+
+      // Initialize the month picker to the latest month found in data or current month
+      function initMonthControl(agents, monthInput, yearSel) {
+        if (!monthInput) return;
+        let maxDate = null;
+        agents.forEach(a => {
+          const pres = a.presences || {};
+          Object.keys(pres).forEach(d => {
+            if (!maxDate || d > maxDate) maxDate = d;
+          });
+        });
+        const now = new Date();
+        const val = maxDate ? maxDate.slice(0, 7) : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        monthInput.value = val;
+        if (yearSel) yearSel.value = val.slice(0, 4);
+      }
+
+      function shiftMonth(monthInput, delta, callback) {
+        if (!monthInput) return;
+        if (!monthInput.value) return;
+        const [y, m] = monthInput.value.split('-').map(Number);
+        const dt = new Date(y, m - 1 + delta, 1);
+        const nv = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+        monthInput.value = nv;
+        const yearSel = document.getElementById('presence-year');
+        if (yearSel) yearSel.value = String(dt.getFullYear());
+        if (typeof callback === 'function') callback();
       }
 
       // Generate pie chart for a given service: distribution of statuses over all days
@@ -377,6 +468,35 @@
         color: white;
         font-size: 0.7rem;
         font-weight: bold;
+      }
+
+      /* Presence controls styling */
+      .presence-controls label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        margin-right: 4px;
+      }
+
+      .presence-controls select,
+      .presence-controls .month-picker {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      .btn-small {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        cursor: pointer;
+      }
+
+      .month-picker {
+        height: 34px;
       }
     </style>
   </main>
