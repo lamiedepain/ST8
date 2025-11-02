@@ -302,6 +302,7 @@ function initMeteoCard() {
     return;
   }
 
+  // Fetch fresh data and render
   fetchMeteoData()
     .then(data => {
       const pontInfo = findNextPontEvent(now);
@@ -314,6 +315,25 @@ function initMeteoCard() {
       console.error('M\u00e9t\u00e9o ST8', error);
       card.innerHTML = '<div>Impossible de r\u00e9cup\u00e9rer les donn\u00e9es m\u00e9t\u00e9o pour le moment.</div>';
     });
+
+  // Auto-refresh meteor every 30 minutes while the card is visible and during display hours
+  try {
+    setInterval(() => {
+      try {
+        const now2 = new Date();
+        if (!shouldDisplayMeteo(now2)) return;
+        // force refresh by bypassing cache
+        fetchMeteoData().then(data => {
+          const pontInfo2 = findNextPontEvent(now2);
+          const entry2 = buildMeteoEntry(now2.toISOString().slice(0,10), data, pontInfo2, now2);
+          const cache2 = safeParseJson(localStorage.getItem(METEO_STORAGE_KEY)) || {};
+          cache2[now2.toISOString().slice(0,10)] = entry2;
+          localStorage.setItem(METEO_STORAGE_KEY, JSON.stringify(cache2));
+          renderMeteoCard(card, entry2);
+        }).catch(() => {});
+      } catch (e) { /* ignore */ }
+    }, 30 * 60 * 1000);
+  } catch (e) { /* ignore timers failing in odd envs */ }
 }
 
 function getCachedMeteoData(now) {
