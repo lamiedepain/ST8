@@ -83,6 +83,8 @@
                   <button id="service-clear" class="btn-small" title="Effacer la sélection">Effacer</button>
                 </div>
               </div>
+              <div id="code-legend" style="display:flex;gap:8px;align-items:center;margin-left:8px;flex-wrap:wrap">
+              </div>
             </div>
             <canvas id="presenceChart" height="220"></canvas>
           </div>
@@ -212,6 +214,20 @@
 
       function displayLabel(code) { return CODE_LABELS[code] || code || '(vide)'; }
 
+      // Canonical color map used across charts
+      const CODE_COLOR_MAP = {
+        'P': '#16a34a',
+        'C': '#6b7280',
+        'A': '#f59e0b',
+        'ASTH': '#ef4444',
+        'ASTS': '#f97316',
+        'PREV': '#3b82f6',
+        'JF': '#B91C1C',
+        'DC': '#1f2937',
+        'AT': '#B91C1C',
+        'AM': '#DC2626'
+      };
+
       function collectStatusCountsByDate(agents) {
         const effectifTotal = agents.length || 0;
         const map = {}; // date -> { codes: { CODE: count }, daysSlots: effectifTotal }
@@ -289,25 +305,33 @@
           return b.key;
         });
 
-        // If the selected grain is 'day', render a simple daily % presence chart for code 'P'
+        // get currently selected codes from legend (if any)
+        const selectedCodes = getSelectedCodes();
+
+        // If the selected grain is 'day', render daily stacked % chart for selected codes
         const ctx = document.getElementById('presenceChart').getContext('2d');
         if (_presenceChart) _presenceChart.destroy();
-
         if (step === 'day') {
           // labels are yyyy-mm-dd; display as dd/MM for readability
           const dayLabels = filtered.map(b => {
             const parts = b.key.split('-');
             return parts.length === 3 ? `${parts[2]}/${parts[1]}` : b.key;
           });
-          const data = filtered.map(b => {
-            const cntP = (b.codes && (b.codes['P'] || b.codes['p'])) ? (b.codes['P'] || b.codes['p']) : 0;
-            const total = b.effectifTotal || 1;
-            return Math.round((cntP / total) * 10000) / 100;
+
+          const codesToShow = selectedCodes.length ? selectedCodes : collected.codes;
+          const datasets = codesToShow.map(code => {
+            const data = filtered.map(b => {
+              const cnt = b.codes && (b.codes[code] || 0) ? (b.codes[code] || 0) : 0;
+              const total = b.effectifTotal || 1;
+              return Math.round((cnt / total) * 10000) / 100;
+            });
+            const color = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+            return { label: displayLabel(code), data, backgroundColor: color, borderColor: color, borderWidth: 1 };
           });
 
           _presenceChart = new Chart(ctx, {
             type: 'bar',
-            data: { labels: dayLabels, datasets: [{ label: 'Taux présence (%)', data, backgroundColor: '#16a34a' }] },
+            data: { labels: dayLabels, datasets },
             options: {
               responsive: true,
               scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
@@ -317,27 +341,17 @@
           return;
         }
 
-  // determine all codes from collected set (keep consistent order)
-  const codes = collected.codes;
+        // determine all codes from collected set (keep consistent order)
+        const codes = collected.codes;
+        const codesToShow = getSelectedCodes().length ? getSelectedCodes() : codes;
 
-        // color palette (extend as needed) — use canonical codes only
-        const colorMap = {
-          'P': '#16a34a', // green
-          'C': '#6b7280', // grey
-          'A': '#f59e0b', // amber
-          'ASTH': '#ef4444', // red
-          'ASTS': '#f97316', // orange
-          'PREV': '#3b82f6', // prévisionnelle (canonique)
-          '': '#9ca3af'
-        };
-
-        const datasets = codes.map(code => {
+        const datasets = codesToShow.map(code => {
           const data = filtered.map(b => {
             const cnt = b.codes[code] || 0;
             const total = b.effectifTotal || 1;
             return Math.round((cnt / total) * 10000) / 100; // percentage with 2 decimals
           });
-          const color = colorMap[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+          const color = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
           return { label: displayLabel(code), data, backgroundColor: color, borderColor: color, borderWidth: 1 };
         });
 
@@ -372,12 +386,53 @@
         const sel = document.getElementById('presence-service');
         if (!sel) return;
         sel.innerHTML = services.map(s => `<option value="${s}">${s}</option>`).join('');
+        // after services populated, build code legend (codes depend on agents presences)
+        renderCodeLegend(agents);
       }
 
       function getSelectedServices() {
         const sel = document.getElementById('presence-service');
         if (!sel) return [];
         return Array.from(sel.selectedOptions).map(o => o.value);
+      }
+
+      // Render code legend with checkboxes to toggle codes on charts
+      function renderCodeLegend(agents) {
+        const container = document.getElementById('code-legend');
+        if (!container) return;
+        const collected = collectStatusCountsByDate(agents);
+        const codes = collected.codes;
+        container.innerHTML = '';
+        codes.forEach(code => {
+          const id = 'legend-' + code;
+          const label = document.createElement('label');
+          label.style.display = 'inline-flex';
+          label.style.alignItems = 'center';
+          label.style.gap = '6px';
+          label.style.padding = '4px 6px';
+          label.style.borderRadius = '6px';
+          label.style.background = 'var(--bg-primary)';
+          const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = true; chk.value = code; chk.id = id; chk.dataset.code = code;
+          chk.addEventListener('change', () => {
+            const fa = (typeof getFilteredAgents === 'function') ? getFilteredAgents() : agents;
+            const grainSel = document.getElementById('presence-grain');
+            const yearSel = document.getElementById('presence-year');
+            const monthInput = document.getElementById('presence-month');
+            renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value);
+            generateServicePies(fa);
+          });
+          const dot = document.createElement('span'); dot.style.width = '12px'; dot.style.height = '12px'; dot.style.display = 'inline-block'; dot.style.borderRadius = '50%'; dot.style.background = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+          const text = document.createElement('span'); text.textContent = displayLabel(code);
+          label.appendChild(chk); label.appendChild(dot); label.appendChild(text);
+          container.appendChild(label);
+        });
+      }
+
+      function getSelectedCodes() {
+        const container = document.getElementById('code-legend');
+        if (!container) return [];
+        const checks = Array.from(container.querySelectorAll('input[type="checkbox"]'));
+        return checks.filter(c => c.checked).map(c => c.value);
       }
 
       function selectAllServices() {
@@ -427,8 +482,8 @@
         const counts = {}; let totalSlots = 0;
         filtered.forEach(a => {
           const pres = a.presences || {};
-          Object.values(pres).forEach(code => {
-            const k = String(code || '').toUpperCase() || '—';
+          Object.values(pres).forEach(raw => {
+            const k = normalizeCode ? normalizeCode(raw) : (String(raw || '').toUpperCase() || '—');
             counts[k] = (counts[k] || 0) + 1;
             totalSlots++;
           });
@@ -438,8 +493,7 @@
         const labels = codes.map(c => displayLabel(c));
         const data = codes.map(c => counts[c]);
         const colors = codes.map(c => {
-          const cmap = { 'P': '#16a34a', 'C': '#6b7280', 'ASTH': '#ef4444', 'ASTS': '#f97316', 'PREV': '#3b82f6' };
-          return cmap[c] || (`hsl(${(c.charCodeAt(0) || 65) % 360} 65% 50%)`);
+          return CODE_COLOR_MAP[c] || (`hsl(${(c.charCodeAt(0) || 65) % 360} 65% 50%)`);
         });
 
         const canvas = document.getElementById(canvasId);
