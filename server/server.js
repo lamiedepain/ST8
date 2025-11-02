@@ -7,6 +7,29 @@ const cors = require('cors');
 const app = express();
 // Serve static files from the project root so pages under /html are available
 app.use(express.static(path.join(__dirname, '..')));
+// Quick redirect middleware for friendly routes when a matching HTML exists
+// This helps when the host serves static files or the URL is requested directly
+// (e.g. GET /agents -> redirect to /html/agents.html)
+app.use((req, res, next) => {
+  try {
+    if (req.method !== 'GET') return next();
+    if (req.path === '/' || req.path === '') return next();
+    if (req.path.startsWith('/api')) return next();
+    if (req.path.startsWith('/html') || req.path.startsWith('/assets')) return next();
+
+    const rel = req.path.replace(/^\/+/, ''); // remove leading slash
+    if (!rel) return next();
+    const candidate = path.join(__dirname, '..', 'html', rel + '.html');
+    if (fs.existsSync(candidate)) {
+      // Redirect to the canonical /html/... page so static hosts will serve it
+      return res.redirect(302, '/html/' + rel + '.html');
+    }
+  } catch (e) {
+    // any error, continue to next handler
+  }
+  return next();
+});
+
 // Ensure root URL serves the main app landing page (index is under /html)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'html', 'index.html'));
@@ -52,6 +75,34 @@ app.delete('/api/agents/:matricule', (req, res) => {
   data.metadata = data.metadata || {};
   data.metadata.last_modified = new Date().toISOString();
   try { writeData(data); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ error: e.message }); }
+});
+
+// Serve html files for friendly routes (e.g. /agents -> /html/agents.html)
+// Only apply to non-API GET requests. Static middleware will handle existing files first.
+app.get('*', (req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path && req.path.startsWith('/api')) return next();
+
+  const rootHtml = path.join(__dirname, '..', 'html');
+  // If requesting '/', return the landing page
+  if (req.path === '/' || req.path === '') {
+    return res.sendFile(path.join(rootHtml, 'index.html'));
+  }
+
+  // Try mapping /foo -> /html/foo.html
+  const candidate = path.join(rootHtml, req.path + '.html');
+  if (fs.existsSync(candidate)) {
+    return res.sendFile(candidate);
+  }
+
+  // Try direct file under html (if user requested /html/xxx)
+  const direct = path.join(__dirname, '..', req.path);
+  if (fs.existsSync(direct)) {
+    return res.sendFile(direct);
+  }
+
+  // Fallback to index.html so client-side routes continue to work
+  return res.sendFile(path.join(rootHtml, 'index.html'));
 });
 
 const port = process.env.PORT || 3000;
