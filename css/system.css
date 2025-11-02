@@ -196,3 +196,26 @@ main {
 footer {
     /* no-op to avoid accidental inheritance */
 }
+
+/* Additional helpers for stats/planning */
+.service-pies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+#presence-service { min-width: 160px; }
+.service-control-wrapper { display:flex; align-items:center; gap:8px; }
+
+.error { color: #b91c1c; }
+.card-title { font-weight:600; margin-bottom:6px }
+
+.count-info { background:#f1f5ff; padding:6px; border-radius:8px; border:1px solid #dbe5f2 }
+.legend-right { margin-left:auto }
+
+.selection-badge { padding:6px; border-radius:8px; background:#fff; border:1px solid rgba(15,23,42,0.04); }
+
+/* Modal helpers (keep markup but centralize display control) */
+#status-modal { display:none; }
+.modal-visible { display:block }
+#modal-backdrop { display:none }

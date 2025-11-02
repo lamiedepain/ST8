@@ -321,7 +321,7 @@
         <button id="btn-all-present" class="btn ds-btn">Tous présents</button>
         <button id="btn-undo" class="btn ds-btn" disabled>Annuler</button>
         <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
-          <div id="selection-badge" style="padding:6px;border-radius:8px;background:#fff;border:1px solid #e6edf9">
+          <div id="selection-badge" class="selection-badge">
             Sélection: <span id="selection-count">0</span></div>
           <button id="btn-modify-selection" class="btn ds-btn">Modifier sélection</button>
           <button id="btn-clear-selection" class="btn ds-btn">Effacer sélection</button>
@@ -330,11 +330,11 @@
     </div>
 
     <section class="panel">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
         <div style="font-weight:800">Planning</div>
-        <div id="count-info" style="background:#f1f5ff;padding:6px;border-radius:8px;border:1px solid #dbe5f2">0 agents
+        <div id="count-info" class="count-info">0 agents
         </div>
-        <div class="legend ds-legend" style="margin-left:auto">
+        <div class="legend ds-legend legend-right">
           <div class="item"><span class="dot" style="background:#16a34a"></span>P</div>
           <div class="item"><span class="dot" style="background:#B91C1C"></span>AT</div>
           <div class="item"><span class="dot" style="background:#C2410C"></span>C</div>
@@ -357,8 +357,7 @@
   </main>
 
   <!-- Status modal -->
-  <div id="status-modal" class="hidden"
-    style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);min-width:280px;max-width:420px;background:#fff;border:1px solid #dbe5f2;border-radius:10px;box-shadow:0 20px 40px rgba(2,6,23,0.2);padding:12px;z-index:9999">
+  <div id="status-modal" class="hidden" role="dialog" aria-modal="true">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-weight:800">Choisir un statut</div>
       <button id="modal-close" style="background:transparent;border:0;cursor:pointer;font-size:18px">✕</button>
