@@ -5,7 +5,7 @@
     "date": "2025-10-20",
     "description": "Fichier source unique contenant agents, compétences, permis, CACES et présences",
     "editable": true,
-    "last_modified": "2025-10-27T20:58:28.585Z"
+    "last_modified": "2025-11-02T10:09:48.540Z"
   },
   "agents": [
     {
@@ -54,7 +54,6 @@
         "2025-10-24": "P",
         "2025-10-27": "P",
         "2025-10-28": "P",
-        "2025-10-29": "P",
         "2025-10-30": "P",
         "2025-10-31": "P"
       }

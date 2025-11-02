@@ -4,8 +4,9 @@
 (function (global) {
     async function fetchAgentsSource() {
         // Try explicit API host (node server) first, then origin, then fallback to file
+        // Prefer relative API path (works whether served by node or static host).
         const candidates = [
-            'http://127.0.0.1:3000/api/agents',
+            '/api/agents',
             (window.location && window.location.origin ? window.location.origin + '/api/agents' : '/api/agents')
         ];
 
@@ -36,8 +37,9 @@
 
     async function postAgents(agents) {
         // Try multiple API endpoints (node server on 3000 first, then origin)
+        // POST endpoints: use relative path first to avoid cross-origin/CSP issues.
         const endpoints = [
-            'http://127.0.0.1:3000/api/agents',
+            '/api/agents',
             (window.location && window.location.origin ? window.location.origin + '/api/agents' : '/api/agents')
         ];
 

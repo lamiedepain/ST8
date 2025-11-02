@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Planification — ST8</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="../assets/icons/faviconplanning.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --agentw: 180px;
+            --dayw: 28px;
+            --dayfs: 12px
+        }
+
+        body {
+            font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 0;
+            background: #f6f9ff;
+            color: #0f172a
+        }
+
+        header.theme-purple {
+            background: var(--color);
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        header .title {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        header .square {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #ffffff10;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.06)
+        }
+
+        header .title h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 0.2px
+        }
+
+        header .meta {
+            font-size: 13px;
+            opacity: 0.9
+        }
+
+        main {
+            padding: 16px
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid #e6edf9;
+            border-radius: 10px;
+            padding: 10px
+        }
+
+        .note {
+            padding: 10px;
+            background: #fff7ed;
+            border: 1px solid #fde3c6;
+            border-radius: 8px;
+            color: #92400e;
+        }
+    </style>
+</head>
+
+<body class="theme-purple">
+    <header class="theme-purple">
+        <div class="title">
+            <div class="square theme-purple">PH</div>
+            <div class="text">
+                <div style="font-weight:bold;">Planification</div>
+                <div style="font-size:12px;">Outil de planification & prévision</div>
+            </div>
+        </div>
+
+        <img src="../assets/icons/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
+    </header>
+
+    <main>
+        <section class="panel">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                <div style="font-weight:800">Planification</div>
+                <div style="margin-left:auto">
+                    <a href="planning.html" class="btn" style="text-decoration:none">Ouvrir Planning mensuel</a>
+                    <a href="bihebdo.html" class="btn" style="text-decoration:none;margin-left:8px">Ouvrir Bihebdo</a>
+                </div>
+            </div>
+
+            <div class="note">
+                Cette page sert d'espace pour les tâches de planification à moyen terme. Elle réutilise les mêmes
+                données que
+                le planning mensuel. Pour l'instant, utilisez l'éditeur mensuel ou bihebdomadaire — je peux enrichir
+                cette page
+                (vues par service, export avancé, simulations) si vous me donnez la spécification.
+            </div>
+
+            <div style="margin-top:12px">
+                <h3>Ressources</h3>
+                <ul>
+                    <li><a href="../data/agents_source.json" target="_blank">Données agents (agents_source.json)</a>
+                    </li>
+                    <li><a href="planning.html">Outil : Planning mensuel (édition)</a></li>
+                    <li><a href="bihebdo.html">Outil : Bihebdomadaire</a></li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer style="padding:12px;text-align:center;color:#64748b">Service Territorial Bordeaux Maritime / Bastide N°8
+    </footer>
+
+</body>
+
+</html>
