@@ -46,9 +46,25 @@
         nodes.forEach(n => loadInclude(n));
     }
 
+    // Normalize root-level page links like '/agents.html' -> '/html/agents.html'
+    // This avoids 404s when the server hasn't been restarted to map routes.
+    function normalizeRootHtmlLinks() {
+        const anchors = Array.from(document.querySelectorAll('a[href^="/"]'));
+        anchors.forEach(a => {
+            try {
+                const href = a.getAttribute('href');
+                // match '/name.html' but not '/html/name.html' and not deeper paths
+                const m = href && href.match(/^\/([^\/]+\.html)$/);
+                if (m) {
+                    a.setAttribute('href', '/html/' + m[1]);
+                }
+            } catch (e) { /* ignore */ }
+        });
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function () { init(); normalizeRootHtmlLinks(); });
     } else {
-        init();
+        init(); normalizeRootHtmlLinks();
     }
 })();
