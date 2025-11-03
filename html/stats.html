@@ -179,6 +179,8 @@
         generateServicePies(initialAgents);
         // tableau par agent
         generateAgentTable(initialAgents);
+        // setup controls une seule fois
+        setupAgentControls(initialAgents);
 
         // interactions
         yearSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); });
@@ -249,16 +251,13 @@
             tr.innerHTML = `<td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.matricule}</td>
                           <td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.nom}</td>
                           <td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.service}</td>
-                          <td style="padding:6px;text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">${r.present}</td>
-                          <td style="padding:6px;text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">${r.conges}</td>
-                          <td style="padding:6px;text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">${r.prev}</td>
-                          <td style="padding:6px;text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">${r.asth}</td>
-                          <td style="padding:6px;text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">${r.asts}</td>`;
+                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.present}</td>
+                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.conges}</td>
+                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.prev}</td>
+                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.asth}</td>
+                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.asts}</td>`;
             tbody.appendChild(tr);
           });
-
-          // setup controls (search + export) once
-          setupAgentControls(agentsList);
         }
 
         function setupAgentControls(latestAgents) {
