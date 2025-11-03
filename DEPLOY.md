@@ -1,4 +1,4 @@
-DEPLOY to Render (Web Service) — ST8
+ DEPLOY to Render (Web Service) — ST8
 
 This document describes the recommended Render configuration to run the Express server and serve both the static pages and the API (`/api/agents`).
 

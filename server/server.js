@@ -7,6 +7,23 @@ const cors = require('cors');
 const app = express();
 // Serve static files from the project root so pages under /html are available
 app.use(express.static(path.join(__dirname, '..')));
+
+// Map requests for '/name.html' to '/html/name.html' when appropriate
+app.use((req, res, next) => {
+  try {
+    if (req.method !== 'GET') return next();
+    if (!req.path || !req.path.endsWith('.html')) return next();
+    // basename includes the .html
+    const name = path.basename(req.path);
+    const candidate = path.join(__dirname, '..', 'html', name);
+    if (fs.existsSync(candidate)) {
+      return res.sendFile(candidate);
+    }
+  } catch (e) {
+    // ignore and continue
+  }
+  return next();
+});
 // Quick redirect middleware for friendly routes when a matching HTML exists
 // This helps when the host serves static files or the URL is requested directly
 // (e.g. GET /agents -> redirect to /html/agents.html)

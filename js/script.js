@@ -325,12 +325,12 @@ function initMeteoCard() {
         // force refresh by bypassing cache
         fetchMeteoData().then(data => {
           const pontInfo2 = findNextPontEvent(now2);
-          const entry2 = buildMeteoEntry(now2.toISOString().slice(0,10), data, pontInfo2, now2);
+          const entry2 = buildMeteoEntry(now2.toISOString().slice(0, 10), data, pontInfo2, now2);
           const cache2 = safeParseJson(localStorage.getItem(METEO_STORAGE_KEY)) || {};
-          cache2[now2.toISOString().slice(0,10)] = entry2;
+          cache2[now2.toISOString().slice(0, 10)] = entry2;
           localStorage.setItem(METEO_STORAGE_KEY, JSON.stringify(cache2));
           renderMeteoCard(card, entry2);
-        }).catch(() => {});
+        }).catch(() => { });
       } catch (e) { /* ignore */ }
     }, 30 * 60 * 1000);
   } catch (e) { /* ignore timers failing in odd envs */ }

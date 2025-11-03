@@ -10,17 +10,8 @@
 </head>
 
 <body>
-    <header class="theme-dark">
-        <div class="title">
-            <div class="square theme-dark">BM</div>
-            <div class="text">
-                <div style="font-weight:bold;">ST8 PRO • Accueil</div>
-                <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
-            </div>
-        </div>
-        <!-- Conteneur pour la météo et le pont, intégré dans le header -->
-        <div id="meteo-card" class="meteo-header-bar is-hidden"></div>
-        <img src="assets/icons/logo_blanc.png" class="logo" alt="Logo BM">
+    <header class="theme-dark" data-square="BM" data-title="ST8 PRO • Accueil">
+        <div data-include="header"></div>
     </header>
     <main>
         <div class="home-intro">
@@ -49,7 +40,8 @@
                         aria-hidden="true">&#9728;&#9790;</span></a></li>
         </ul>
     </div>
-    <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+    <footer data-include="footer"></footer>
+    <script src="js/include-partials.js"></script>
     <script src="js/apps-data.js"></script>
     <script src="js/script.js"></script>
 </body>

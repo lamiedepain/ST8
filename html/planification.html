@@ -83,16 +83,8 @@
 </head>
 
 <body class="theme-purple">
-    <header class="theme-purple">
-        <div class="title">
-            <div class="square theme-purple">PH</div>
-            <div class="text">
-                <div style="font-weight:bold;">Planification</div>
-                <div style="font-size:12px;">Outil de planification & prévision</div>
-            </div>
-        </div>
-
-        <img src="../assets/icons/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
+    <header class="theme-purple" data-square="PH" data-title="Planification">
+        <div data-include="header"></div>
     </header>
 
     <main>
@@ -125,8 +117,9 @@
         </section>
     </main>
 
-    <footer style="padding:12px;text-align:center;color:#64748b">Service Territorial Bordeaux Maritime / Bastide N°8
-    </footer>
+    <footer data-include="footer"></footer>
+
+    <script src="../js/include-partials.js"></script>
 
 </body>
 

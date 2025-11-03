@@ -289,17 +289,8 @@
 </head>
 
 <body class="theme-green">
-  <header class="theme-green">
-    <div class="title">
-      <div class="square theme-green">PL</div>
-      <div class="text">
-        <div style="font-weight:bold;">Planning mensuel</div>
-        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8 <span id="header-group"
-            style="display:none">Tous</span></div>
-      </div>
-    </div>
-
-    <img src="../assets/icons/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
+  <header class="theme-green" data-square="PL" data-title="Planning mensuel">
+    <div data-include="header"></div>
   </header>
 
   <main>
@@ -330,7 +321,7 @@
     </div>
 
     <section class="panel">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
         <div style="font-weight:800">Planning</div>
         <div id="count-info" class="count-info">0 agents
         </div>
@@ -374,26 +365,26 @@
   <div id="modal-backdrop" class="hidden"></div>
 
 
-  <footer style="padding:12px;text-align:center;color:#64748b">Service Territorial Bordeaux Maritime / Bastide N°8
-  </footer>
+  <footer data-include="footer"></footer>
   <div class="fab-container">
     <button class="fab">=</button>
     <ul class="fab-options">
-      <li><a href="index.html" class="square theme-dark">BM</a></li>
-      <li><a href="prepa.html" class="square theme-red">PC</a></li>
-      <li><a href="agents.html" class="square theme-blue">AG</a></li>
-      <li><a href="planning.html" class="square theme-green">PL</a></li>
-      <li><a href="elements.html" class="square theme-orange">EV</a></li>
-      <li><a href="bihebdo.html" class="square theme-slate">BI</a></li>
-      <li><a href="planification.html" class="square theme-purple">PH</a></li>
-      <li><a href="stats.html" class="square theme-brown">ST</a></li>
-      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
+      <li><a href="/" class="square theme-dark">BM</a></li>
+      <li><a href="/html/prepa.html" class="square theme-red">PC</a></li>
+      <li><a href="/html/agents.html" class="square theme-blue">AG</a></li>
+      <li><a href="/html/planning.html" class="square theme-green">PL</a></li>
+      <li><a href="/html/elements.html" class="square theme-orange">EV</a></li>
+      <li><a href="/html/bihebdo.html" class="square theme-slate">BI</a></li>
+      <li><a href="/html/planification.html" class="square theme-purple">PH</a></li>
+      <li><a href="/html/stats.html" class="square theme-brown">ST</a></li>
+      <li><a href="/html/easydict.html" class="square theme-yellow">ED</a></li>
       <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
           aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
             aria-hidden="true">&#9728;&#9790;</span></a></li>
     </ul>
   </div>
 
+  <script src="../js/include-partials.js"></script>
   <script src="../js/apps-data.js"></script>
   <script src="../js/script.js"></script>
   <script src="../js/api-sync.js"></script>
