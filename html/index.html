@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=/index.html">
+    <meta name="robots" content="noindex">
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <p>Redirection vers la page principale — si la redirection ne fonctionne pas, <a href="/index.html">cliquez ici</a>.</p>
+    <script>location.replace('/index.html');</script>
+  </body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ST8 PRO • Accueil</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../assets/icons/ST8_multi.svg" type="image/svg+xml">
+</head>
+
+<body>
+  <header class="theme-dark" data-square="BM" data-title="ST8 PRO • Accueil">
+    <div data-include="header"></div>
+  </header>
+  <main>
+    <div class="home-intro">
+      <p class="page-intro">Bienvenue sur l'interface de gestion du service territorial. Choisissez un module pour
+        commencer.</p>
+      <!-- Grille des applications -->
+      <div class="app-grid" data-app-page="index" data-app-layout="home"
+        data-app-empty="Chargement des applications...">
+      </div>
+    </div>
+  </main>
+  <div class="fab-container">
+    <button class="fab">=</button>
+    <ul class="fab-options">
+      <li><a href="index.html" class="square theme-dark">BM</a></li>
+      <li><a href="prepa.html" class="square theme-red">PC</a></li>
+      <li><a href="agents.html" class="square theme-blue">AG</a></li>
+      <li><a href="planning.html" class="square theme-green">PL</a></li>
+      <li><a href="elements.html" class="square theme-orange">EV</a></li>
+      <li><a href="bihebdo.html" class="square theme-slate">BI</a></li>
+      <li><a href="planification.html" class="square theme-purple">PH</a></li>
+      <li><a href="stats.html" class="square theme-brown">ST</a></li>
+      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
+      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+          aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+            aria-hidden="true">&#9728;&#9790;</span></a></li>
+    </ul>
+  </div>
+  <footer data-include="footer"></footer>
+  <script src="../js/include-partials.js"></script>
+  <script src="../js/apps-data.js"></script>
+  <script src="../js/script.js"></script>
+</body>
+
+</html>
