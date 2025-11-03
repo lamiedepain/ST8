@@ -1,0 +1,98 @@
+<!-- apps/planning-biweekly.html -->
+<div class="biweekly-wrapper">
+  <style>
+    :root { --agent-col-width: 220px; --day-col-width: 72px; --day-font-size: 12px; }
+    .biweekly-wrapper{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#f6f9ff;color:#0f172a;padding:16px}
+    .biweekly-wrapper .container{display:flex;flex-direction:column;gap:16px;max-width:100%;margin:0 auto}
+    .biweekly-wrapper .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#fff;border:1px solid #e6edf9;border-radius:12px;padding:12px}
+    .biweekly-wrapper .toolbar .group{display:flex;align-items:center;gap:8px}
+    .biweekly-wrapper .toolbar label{font-weight:600;font-size:13px;color:#1e3661}
+    .biweekly-wrapper .toolbar select,
+    .biweekly-wrapper .toolbar input{border:1px solid #dbe5f2;border-radius:10px;padding:6px 10px;font-size:14px;background:#fff;color:#0f172a}
+    .biweekly-wrapper .toolbar .btn{border:1px solid #dbe5f2;border-radius:10px;padding:6px 12px;background:#eef4ff;color:#1e3a8a;font-weight:600;cursor:pointer}
+    .biweekly-wrapper .toolbar .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .biweekly-wrapper .panel{background:#fff;border:1px solid #e6edf9;border-radius:12px;overflow:hidden}
+    .biweekly-wrapper .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#eef4ff}
+    .biweekly-wrapper .panel-head .title{font-weight:800;font-size:18px;color:#0b1324}
+    .biweekly-wrapper .panel-head .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;background:#f1f5ff;color:#0f172a;border:1px solid #dbe5f2;font-weight:700;font-size:12px}
+    .biweekly-wrapper .panel-body{padding:12px;overflow:auto}
+    .biweekly-table{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;background:#fff;border:1px solid #e6edf9;border-radius:12px;overflow:hidden}
+    .biweekly-table thead th{position:sticky;top:0;background:#f0f7ff;z-index:2}
+    .biweekly-table th,.biweekly-table td{border-right:1px solid #eef4ff;border-bottom:1px solid #eef4ff;padding:6px;font-size:var(--day-font-size);text-align:center}
+    .biweekly-table th.agent{position:sticky;left:0;z-index:3;background:#f7fbff;font-weight:700;color:#1e3661;width:var(--agent-col-width);max-width:var(--agent-col-width);text-align:left}
+    .biweekly-table th.agent .meta{display:flex;flex-direction:column;gap:4px}
+    .biweekly-table th.agent .header-line{display:flex;align-items:center;gap:10px}
+    .biweekly-table th.agent .swatch{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);flex-shrink:0}
+    .biweekly-table th.agent .name{font-size:14px;font-weight:700}
+    .biweekly-table th.agent .id{font-size:12px;font-weight:500;opacity:0.7}
+    .biweekly-table th.day,.biweekly-table td.day{width:var(--day-col-width);min-width:var(--day-col-width)}
+    .biweekly-table .day-header{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center}
+    .biweekly-table .day-header .label{font-size:11px;font-weight:600;text-transform:uppercase;color:#1e3661}
+    .biweekly-table .day-header .label.weekend{color:#b91c1c}
+    .biweekly-table .day-header .date{font-size:15px;font-weight:800}
+    .biweekly-table td{height:36px;cursor:default}
+    .biweekly-table td.weekend{background:#f8fafc;color:#64748b}
+    .biweekly-table td.holiday{background:#fff1f2;color:#be123c}
+    .biweekly-table td.empty{color:#94a3b8}
+    .cell-stack{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .cell-stack .status-code{font-weight:700}
+    .cell-caps{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+    .cell-caps .cap-badge{font-size:10px;padding:1px 4px}
+    .capabilities{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .cap-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:999px;font-size:11px;font-weight:700;color:#0f172a;border:1px solid rgba(15,23,42,0.08)}
+    .cap-permis-be{background:#facc15;color:#422006}
+    .cap-permis-c{background:#f59e0b;color:#422006}
+    .cap-permis-ce{background:#d97706;color:#431407}
+    .cap-engins{background:#22c55e;color:#022c22}
+    .cap-nacelles{background:#16a34a;color:#022c22}
+    .cap-chariots{background:#15803d;color:#f0fdf4}
+    .cap-grues{background:#14532d;color:#f0fdf4}
+    .legend{display:flex;flex-wrap:wrap;gap:8px}
+    .legend .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:#0f172a;background:#f8fafc;border:1px solid #e6edf9}
+    .legend .dot{width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,0.6)}
+    .empty-placeholder{padding:24px;text-align:center;color:#64748b;font-size:14px}
+  </style>
+
+  <div class="container">
+    <div class="toolbar">
+      <div class="group">
+        <label for="window-start">D&eacute;but</label>
+        <input type="date" id="window-start">
+      </div>
+      <div class="group">
+        <button class="btn" id="btn-prev-window">&laquo; 14 jours</button>
+        <button class="btn" id="btn-next-window">14 jours &raquo;</button>
+      </div>
+      <div class="group">
+        <label for="group-select">Groupe</label>
+        <select id="group-select"><option value="">Tous</option></select>
+      </div>
+      <div class="group" style="flex:1 1 240px">
+        <input id="search-agents" placeholder="Recherche agent ou matricule" style="width:100%">
+      </div>
+      <div class="group">
+        <button class="btn" id="btn-print">Imprimer</button>
+      </div>
+      <div class="group info-badge">
+        <span class="badge" id="count-info">0 agents</span>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="title">Planning bi-hebdomadaire</div>
+        <div class="badge" id="window-label"></div>
+      </div>
+      <div class="panel-body">
+        <div id="biweekly-grid">
+          <div class="empty-placeholder">Aucun agent disponible pour la p&eacute;riode s&eacute;lectionn&eacute;e.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="legend" id="status-legend"></div>
+  </div>
+</div>
+
+<script src="planning-biweekly.js"></script>
+

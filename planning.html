@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Planning mensuel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/faviconplanning.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="theme-green">
+    <div class="title">
+      <div class="square theme-green">PL</div>
+      <div class="text">
+        <div style="font-weight:bold;">Planning mensuel</div>
+        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
+      </div>
+    </div>
+    <img src="assets/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
+  </header>
+  <main>
+    <p class="page-intro">Planifie les pr&eacute;sences, cong&eacute;s et astreintes jour par jour, avec export/import JSON et codes couleur ST8.</p>
+    <div class="app-embed"
+         data-app-embed="planning"
+         data-app-mode="iframe"
+         data-app-title="Planning mensuel"
+         data-app-height="760"
+         data-app-loading="Chargement du planning mensuel..."
+         data-app-empty="Impossible de charger le planning mensuel."></div>
+  </main>
+  <div class="fab-container">
+    <button class="fab">=</button>
+    <ul class="fab-options">
+      <li><a href="index.html" class="square theme-dark">BM</a></li>
+      <li><a href="prepa.html" class="square theme-red">PC</a></li>
+      <li><a href="agents.html" class="square theme-blue">AG</a></li>
+      <li><a href="planning.html" class="square theme-green">PL</a></li>
+      <li><a href="elements.html" class="square theme-orange">EV</a></li>
+      <li><a href="bimensuel.html" class="square theme-slate">BI</a></li>
+      <li><a href="planification.html" class="square theme-purple">PH</a></li>
+      <li><a href="stats.html" class="square theme-brown">ST</a></li>
+      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
+      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark" aria-label="Basculer le mode sombre"><span class="theme-toggle-icon" aria-hidden="true">&#9728;&#9790;</span></a></li>
+    </ul>
+  </div>
+  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+  <script src="js/apps-data.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ST8 • STATS (Connecté au Planning)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="stats.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="card">
+      <h1>ST8 • Statistiques</h1>
+      <div class="controls">
+        <select id="yearSelect"></select>
+        <select id="monthSelect"></select>
+        <select id="groupSelect"></select>
+        <button id="refreshBtn">🔄 Actualiser</button>
+      </div>
+    </header>
+
+    <section class="card panel">
+      <h2>📈 Taux de présence — évolution mensuelle</h2>
+      <div class="legend">
+        <span class="chip"><span class="dot" style="background:#22c55e"></span>≥ 90% (bon)</span>
+        <span class="chip"><span class="dot" style="background:#eab308"></span>60–89% (correct)</span>
+        <span class="chip"><span class="dot" style="background:#f97316"></span>50–59% (vigilance)</span>
+        <span class="chip"><span class="dot" style="background:#ef4444"></span>< 50% (alerte)</span>
+      </div>
+      <div class="kpi" id="kpiBar">
+        <div class="item"><div class="muted">Moyenne annuelle</div><b id="kpiAvg">—</b></div>
+        <div class="item"><div class="muted">Meilleur mois</div><b id="kpiBest">—</b></div>
+        <div class="item"><div class="muted">Plus faible mois</div><b id="kpiWorst">—</b></div>
+      </div>
+      <canvas id="lineChart"></canvas>
+    </section>
+
+    <div class="grid" style="margin-top:16px">
+      <section class="card panel">
+        <h2>🧩 Répartition des statuts — <span id="titleMonth"></span></h2>
+        <canvas id="pieChart"></canvas>
+      </section>
+
+      <section class="card panel">
+        <h2>📝 Rapport</h2>
+        <div class="report" id="reportBox">Chargement…</div>
+        <div class="kpi" style="margin-top:12px">
+          <div class="item"><div class="muted">Présence</div><b id="rPres">—</b></div>
+          <div class="item"><div class="muted">Absences (hors astreinte)</div><b id="rAbs">—</b></div>
+          <div class="item"><div class="muted">Astreintes</div><b id="rAst">—</b></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card panel" style="margin-top:16px">
+      <h2>📋 Détail des catégories (mois courant)</h2>
+      <div id="tableBox" class="muted">—</div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+BE = Voiture + remorque jaune 1
+C = Poids lourds jaune 2
+CE = Poids lourds + remorque jaune 3
+R.482 = Engins de chantier vert 1
+R.486 = Nacelles vert 2
+R.489 = Chariots vert 3
+R.490 = Grues de chargement vert 4 
+📊 Légende des Statuts
+P = Présent gris
+AT = Accident travail rouge foncé
+C = Congé orange 
+AST-H = Astreinte Hivernale bleu glaciale 
+AST-S = Astreinte Sécurité violet royale 
+AM = Arrêt Maladie rouge clair 
+F = Formation marron
+RG = Réserve Gendarmerie rose 
+CE = Congé Exceptionnel orange foncé
+DC = Demi Congé moitié gris moitié orange 

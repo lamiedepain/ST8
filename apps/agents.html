@@ -1,0 +1,337 @@
+<!-- apps/agents.html -->
+<div class="agents-wrapper">
+  <style>
+    :root{
+      --primary:#2C6EBD;
+      --primary-600:#1f4c85;
+      --primary-100:#e6f2ff;
+      --surface:#ffffff;
+      --text:#1f2937;
+      --muted:#64748b;
+      --shadow:0 16px 42px rgba(44,110,189,0.18);
+      --shadow-soft:0 10px 28px rgba(44,110,189,0.14);
+      --radius:16px;
+    }
+    .agents-wrapper{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--primary-100),#fff 240px);
+      color:var(--text);
+      padding:28px 24px 36px;
+    }
+    .layout{
+      max-width:1260px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:22px;
+    }
+    .panel{
+      background:var(--surface);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .panel-header{
+      background:linear-gradient(135deg,var(--primary),var(--primary-600));
+      color:#fff;
+      padding:20px 24px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .panel-header h2{
+      margin:0;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:0.4px;
+    }
+    .panel-body{
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size:13px;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .field input,
+    .field select,
+    .field textarea{
+      border:1px solid #dbe5f2;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+      transition:border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus{
+      outline:none;
+      border-color:var(--primary-600);
+      box-shadow:0 0 0 3px rgba(44,110,189,0.2);
+    }
+    .options-grid{
+      display:grid;
+      gap:6px;
+      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+    }
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#f5f8ff;
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:13px;
+      border:1px solid transparent;
+    }
+    .checkbox input{
+      accent-color:var(--primary);
+    }
+    .option-group{margin-bottom:12px;}
+    .option-group:last-child{margin-bottom:0;}
+    .option-group__title{font-size:12px;font-weight:700;color:#1f3f68;margin:12px 0 4px;text-transform:uppercase;letter-spacing:0.4px;}
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      font-weight:600;
+      font-size:14px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:#fff;
+      box-shadow:var(--shadow-soft);
+      transition:transform 0.12s ease, filter 0.12s ease;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+    .btn-primary{background:var(--primary);}
+    .btn-secondary{background:#1f3b5c;}
+    .btn-danger{background:#dc2626;}
+    .btn-outline{
+      border:1px solid rgba(44,110,189,0.45);
+      border-radius:12px;
+      padding:9px 14px;
+      font-size:13px;
+      background:#eef4ff;
+      color:var(--primary-600);
+      font-weight:600;
+    }
+    .list-toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+    }
+    .search-box{
+      flex:1 1 260px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .search-box input{
+      flex:1;
+      border:1px solid #dbe5f2;
+      border-radius:12px;
+      padding:9px 12px;
+      font-size:14px;
+    }
+    .count-badge{
+      background:#eef4ff;
+      color:var(--primary-600);
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:13px;
+      font-weight:600;
+    }
+    .groups{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .group-card{
+      border:1px solid #e6edf9;
+      border-radius:14px;
+      background:#f9fbff;
+      overflow:hidden;
+    }
+    .group-head{
+      background:#eef4ff;
+      padding:12px 16px;
+      font-weight:700;
+      color:#1e3661;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .group-head button{
+      border:none;
+      background:transparent;
+      font-size:12px;
+      color:var(--primary-600);
+      cursor:pointer;
+    }
+    .agent-row{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:12px;
+      padding:12px 16px;
+      align-items:center;
+      border-top:1px solid #e6edf9;
+      cursor:pointer;
+      transition:background 0.12s ease;
+    }
+    .agent-row:first-child{border-top:none;}
+    .agent-row:hover{background:#eaf2ff;}
+    .agent-row.active{
+      background:#ddecff;
+      box-shadow:inset 3px 0 0 var(--primary);
+    }
+    .agent-id{
+      font-weight:700;
+      color:#1f3f68;
+      font-size:13px;
+    }
+    .agent-name{
+      font-size:15px;
+      font-weight:600;
+    }
+    .tag-list{
+      margin-top:4px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .tag{
+      background:#e7f3ff;
+      color:#1f3f68;
+      border-radius:999px;
+      padding:3px 8px;
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:700;
+      letter-spacing:0.4px;
+    }
+    .tag-permis-be{background:#facc15;color:#422006;}
+    .tag-permis-c{background:#f59e0b;color:#422006;}
+    .tag-permis-ce{background:#d97706;color:#431407;}
+    .tag-caces-engins{background:#22c55e;color:#022c22;}
+    .tag-caces-nacelles{background:#16a34a;color:#022c22;}
+    .tag-caces-chariots{background:#15803d;color:#f0fdf4;}
+    .tag-caces-grues{background:#14532d;color:#f0fdf4;}
+    .empty-state{
+      padding:28px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    @media (max-width:1024px){
+      .layout{grid-template-columns:1fr;}
+      .panel-form{order:2;}
+      .panel-list{order:1;}
+    }
+  </style>
+
+  <div class="layout">
+    <section class="panel panel-form">
+      <div class="panel-header">
+        <h2 id="form-title">Nouvel agent</h2>
+        <span id="form-status"></span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="agent-id">Matricule</label>
+          <input id="agent-id" placeholder="C002908">
+        </div>
+        <div class="field">
+          <label for="agent-name">Nom & prénom</label>
+          <input id="agent-name" placeholder="DUPONT Jean">
+        </div>
+        <div class="field">
+          <label for="agent-birth">Date de naissance</label>
+          <input id="agent-birth" type="date">
+        </div>
+        <div class="field">
+          <label for="agent-group">Groupe</label>
+          <input id="agent-group" list="agent-group-suggestions" placeholder="Saisir ou choisir un groupe">
+          <datalist id="agent-group-suggestions"></datalist>
+        </div>
+        <div class="field">
+          <label for="agent-grade">Grade</label>
+          <select id="agent-grade">
+            <option value="AT">AT</option>
+            <option value="ATTP2">ATTP2</option>
+            <option value="ATTP1">ATTP1</option>
+            <option value="AM">AM</option>
+            <option value="AMP">AMP</option>
+            <option value="TECH">TECH</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Permis</label>
+          <div id="permits-options" class="options-grid"></div>
+        </div>
+        <div class="field">
+          <label>CACES</label>
+          <div id="caces-options" class="options-grid"></div>
+        </div>
+        <div class="field">
+          <label>Compétences</label>
+          <div id="skills-options" class="options-grid"></div>
+        </div>
+        <div class="field">
+          <label for="agent-notes">Notes internes</label>
+          <textarea id="agent-notes" rows="3" placeholder="Ex : chef d’équipe, référent voirie…"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-save-agent">💾 Enregistrer</button>
+          <button class="btn btn-secondary" id="btn-cancel-edit">↩️ Annuler</button>
+          <button class="btn btn-danger" id="btn-delete-agent" hidden>🗑️ Supprimer</button>
+        </div>
+        <div class="actions">
+          <input type="file" id="file-import-agents" accept="application/json" style="display:none">
+          <button class="btn btn-outline" id="btn-import-agents">📥 Import JSON</button>
+          <button class="btn btn-outline" id="btn-export-agents">📤 Export JSON</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-list">
+      <div class="panel-header">
+        <h2>Liste des agents</h2>
+        <span class="count-badge" id="agents-count">0 agent</span>
+      </div>
+      <div class="panel-body">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <input id="agents-search" placeholder="Recherche matricule, nom, compétence…">
+            <button class="btn btn-outline" id="btn-reset-search">Réinitialiser</button>
+          </div>
+          <button class="btn btn-outline" id="toggle-groups">Vue par groupes</button>
+        </div>
+        <div id="group-filters" class="filters"></div>
+        <div id="agents-list" class="groups"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="agents.js"></script>
+
+
