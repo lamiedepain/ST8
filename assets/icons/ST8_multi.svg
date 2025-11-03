@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <style>
+      text { 
+        font-family: Arial, sans-serif; 
+        font-size: 36px; 
+        fill: white; 
+        font-weight: bold; 
+        text-anchor: middle; 
+        dominant-baseline: middle; 
+      }
+      .segment { stroke: black; stroke-width: 1; }
+    </style>
+  </defs>
+  <g transform="translate(100,100)">
+    <!-- Segments colorés avec contour noir fin -->
+    <path class="segment" d="M0,-90 L63.64,-63.64 L35.36,-35.36 L0,-50 Z" fill="#59B999"/>
+    <path class="segment" d="M63.64,-63.64 L90,0 L50,0 L35.36,-35.36 Z" fill="#DC3363"/>
+    <path class="segment" d="M90,0 L63.64,63.64 L35.36,35.36 L50,0 Z" fill="#2C6EBD"/>
+    <path class="segment" d="M63.64,63.64 L0,90 L0,50 L35.36,35.36 Z" fill="#9B51E0"/>
+    <path class="segment" d="M0,90 L-63.64,63.64 -35.36,35.36 0,50 Z" fill="#8D6E63"/>
+    <path class="segment" d="M-63.64,63.64 L-90,0 -50,0 -35.36,35.36 Z" fill="#334155"/>
+    <path class="segment" d="M-90,0 L-63.64,-63.64 -35.36,-35.36 -50,0 Z" fill="#F2994A"/>
+    <path class="segment" d="M-63.64,-63.64 L0,-90 0,-50 -35.36,-35.36 Z" fill="#F2C94C"/>
+
+    <!-- Petit octogone intérieur noir pour texte -->
+    <polygon points="0,-50 35.36,-35.36 50,0 35.36,35.36 0,50 -35.36,35.36 -50,0 -35.36,-35.36" fill="black"/>
+
+    <!-- Texte blanc ST8 centré -->
+    <text x="0" y="0">ST8</text>
+  </g>
+</svg>

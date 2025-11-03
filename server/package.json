@@ -1,0 +1,19 @@
+{
+  "name": "st8-server",
+  "version": "1.0.0",
+  "description": "Minimal server to persist agents_source.json for ST8 planner",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lamiedepain/ST8.git"
+  },
+  "license": "MIT"
+}

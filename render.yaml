@@ -1,0 +1,15 @@
+# Render service definition for ST8
+# See https://render.com/docs/deploy-configuration
+version: 0
+services:
+  - type: web
+    name: st8-web
+    env: node
+    # Repository to connect (use your GitHub repo slug). Render will ignore this field when
+    # you create the service from the Render dashboard and connect the repo interactively.
+    repo: https://github.com/lamiedepain/ST8
+    branch: main
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    autoDeploy: true

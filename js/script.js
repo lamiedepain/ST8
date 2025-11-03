@@ -4,10 +4,10 @@ function toggleDarkMode() {
   const isDark = !body.classList.contains('dark-mode');
   if (isDark) {
     body.classList.add('dark-mode');
-    logos.forEach(logo => logo.src = 'assets/logo_noir.png');
+    logos.forEach(logo => logo.src = '../assets/icons/logo_noir.png');
   } else {
     body.classList.remove('dark-mode');
-    logos.forEach(logo => logo.src = 'assets/logo_blanc.png');
+    logos.forEach(logo => logo.src = '../assets/icons/logo_blanc.png');
   }
   localStorage.setItem('dark-mode', isDark ? 'true' : 'false');
 }
@@ -16,7 +16,7 @@ function applyStoredTheme() {
   const shouldUseDarkMode = localStorage.getItem('dark-mode') === 'true';
   document.body.classList.toggle('dark-mode', shouldUseDarkMode);
   document.querySelectorAll('img.logo').forEach(logo => {
-    logo.src = shouldUseDarkMode ? 'assets/logo_noir.png' : 'assets/logo_blanc.png';
+    logo.src = shouldUseDarkMode ? '../assets/icons/logo_noir.png' : '../assets/icons/logo_blanc.png';
   });
 }
 
@@ -160,7 +160,7 @@ function loadAppModule(pageId) {
 
   const promise = new Promise(resolve => {
     const script = document.createElement('script');
-    script.src = `apps/${pageId}.js`;
+    script.src = `../js/${pageId}.js`;
     script.async = true;
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
@@ -226,7 +226,7 @@ function loadHtmlApp(container) {
   }
 
   const mode = (container.dataset.appMode || '').toLowerCase();
-  const src = container.dataset.appSrc || `apps/${pageId}.html`;
+  const src = container.dataset.appSrc || `../apps/${pageId}/${pageId}.html`;
   const loadingText = container.dataset.appLoading || "Chargement de l'application...";
   const errorText = container.dataset.appEmpty || "Impossible de charger l'application.";
   const preferIframe = mode === 'iframe';
@@ -282,14 +282,16 @@ function initMeteoCard() {
     return;
   }
 
-  const now = new Date();
-  if (!shouldDisplayMeteo(now)) {
-    card.classList.add('is-hidden');
-    return;
-  }
-
   card.classList.remove('is-hidden');
   card.textContent = 'Mise \u00e0 jour de la m\u00e9t\u00e9o en cours...';
+
+  const now = new Date();
+  if (!shouldDisplayMeteo(now)) {
+    // Hors des heures de bureau, on essaie d'afficher les données en cache sans les rafraîchir
+    const cachedData = getCachedMeteoData(now);
+    if (cachedData) renderMeteoCard(card, cachedData);
+    return;
+  }
 
   const dateKey = now.toISOString().slice(0, 10);
   const cache = safeParseJson(localStorage.getItem(METEO_STORAGE_KEY)) || {};
@@ -300,6 +302,7 @@ function initMeteoCard() {
     return;
   }
 
+  // Fetch fresh data and render
   fetchMeteoData()
     .then(data => {
       const pontInfo = findNextPontEvent(now);
@@ -312,6 +315,31 @@ function initMeteoCard() {
       console.error('M\u00e9t\u00e9o ST8', error);
       card.innerHTML = '<div>Impossible de r\u00e9cup\u00e9rer les donn\u00e9es m\u00e9t\u00e9o pour le moment.</div>';
     });
+
+  // Auto-refresh meteor every 30 minutes while the card is visible and during display hours
+  try {
+    setInterval(() => {
+      try {
+        const now2 = new Date();
+        if (!shouldDisplayMeteo(now2)) return;
+        // force refresh by bypassing cache
+        fetchMeteoData().then(data => {
+          const pontInfo2 = findNextPontEvent(now2);
+          const entry2 = buildMeteoEntry(now2.toISOString().slice(0, 10), data, pontInfo2, now2);
+          const cache2 = safeParseJson(localStorage.getItem(METEO_STORAGE_KEY)) || {};
+          cache2[now2.toISOString().slice(0, 10)] = entry2;
+          localStorage.setItem(METEO_STORAGE_KEY, JSON.stringify(cache2));
+          renderMeteoCard(card, entry2);
+        }).catch(() => { });
+      } catch (e) { /* ignore */ }
+    }, 30 * 60 * 1000);
+  } catch (e) { /* ignore timers failing in odd envs */ }
+}
+
+function getCachedMeteoData(now) {
+  const dateKey = now.toISOString().slice(0, 10);
+  const cache = safeParseJson(localStorage.getItem(METEO_STORAGE_KEY)) || {};
+  return cache[dateKey];
 }
 
 function shouldDisplayMeteo(date) {
@@ -416,11 +444,34 @@ function buildMeteoNote(now, temp, pluie, vent, pontTxt) {
   return `${base} • ${pontTxt}`.trim();
 }
 
+function getWeatherIcon(temp, pluie) {
+  if (!Number.isFinite(pluie) || !Number.isFinite(temp)) return '🌡️';
+  if (pluie > 60) return '🌧️'; // Pluie forte
+  if (pluie > 25) return '🌦️'; // Averses
+  if (temp < 10) return '☁️'; // Froid/couvert
+  if (temp > 25) return '☀️'; // Chaud
+  return '🌤️'; // Doux
+}
+
 function renderMeteoCard(card, entry) {
   const date = new Date(entry.updatedAt || Date.now());
   const temp = Number.isFinite(entry.temp) ? `${entry.temp} °C` : '—';
   const pluie = Number.isFinite(entry.pluie) ? `${entry.pluie} %` : '—';
   const vent = Number.isFinite(entry.vent) ? `${entry.vent} km/h` : '—';
+  const icon = getWeatherIcon(entry.temp, entry.pluie);
+
+  if (card.classList.contains('meteo-header-bar')) {
+    card.innerHTML = `
+      <span>${icon} <strong>${temp}</strong></span>
+      <span class="separator"></span>
+      <span>💧 <strong>${pluie}</strong></span>
+      <span class="separator"></span>
+      <span>💨 <strong>${vent}</strong></span>
+      <span class="separator"></span>
+      <span>🌉 <strong>${entry.pontTxt || '—'}</strong></span>
+    `;
+    return;
+  }
 
   card.dataset.meteoDate = entry.date || '';
   card.innerHTML = `
@@ -503,4 +554,3 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAppSections();
   });
 });
-

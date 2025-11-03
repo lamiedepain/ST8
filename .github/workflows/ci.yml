@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  server-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install server dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Start server and smoke-test API
+        shell: bash
+        run: |
+          # start server in background and save pid
+          node server/server.js > server.log 2>&1 &
+          echo $! > server.pid
+          # give server a moment to start
+          sleep 2
+          # try to fetch the agents endpoint
+          if curl --fail http://127.0.0.1:3000/api/agents -s -o /dev/null; then
+            echo 'API reachable'
+            kill $(cat server.pid) || true
+          else
+            echo 'API not reachable, printing server.log'
+            cat server.log
+            kill $(cat server.pid) || true
+            exit 1
+          fi

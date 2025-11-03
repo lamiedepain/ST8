@@ -26,7 +26,7 @@ if (!window.APP_CATALOG.index) {
     {
       title: 'Planning bihebdo',
       abbr: 'BI',
-      url: 'bimensuel.html',
+      url: 'bihebdo.html',
       theme: 'theme-slate',
       animationDelay: 0.6
     },

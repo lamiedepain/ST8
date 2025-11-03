@@ -1,0 +1,262 @@
+/* Minimal design system for the refonte (applied to all pages except index)
+   Keeps header/footer untouched. This file provides variables, utilities
+   and modern component styles that override older rules where helpful.
+*/
+:root {
+    /* palette */
+    --ds-primary: #2463d6;
+    --ds-primary-600: #1f4fb0;
+    --ds-bg: #f6f9ff;
+    --ds-surface: #ffffff;
+    --ds-text: #0f172a;
+    --ds-muted: #64748b;
+    /* compatibility variables used by existing pages */
+    --primary-color: var(--ds-primary);
+    --accent-color: #f2994a;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --border-color: rgba(15, 23, 42, 0.06);
+    --text-secondary: #374151;
+    --ds-radius: 12px;
+    --ds-gap: 12px;
+    --ds-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+/* Page layout helpers - scope to main to avoid touching header/footer */
+main {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.ds-panel,
+.panel {
+    background: var(--ds-surface);
+    border-radius: var(--ds-radius);
+    padding: 14px;
+    box-shadow: var(--ds-shadow);
+    border: 1px solid rgba(15, 23, 42, 0.03);
+}
+
+.toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.ds-btn,
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    background: var(--ds-primary);
+    color: white;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
+}
+
+.btn.secondary,
+.ds-btn.secondary {
+    background: transparent;
+    color: var(--ds-primary-600);
+    border: 1px solid rgba(36, 99, 214, 0.12);
+    box-shadow: none;
+}
+
+/* Cards */
+.card {
+    background: var(--ds-surface);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+/* Modern legend used across stats/planning */
+.ds-legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ds-legend .item {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.03);
+    font-weight: 600;
+    color: var(--ds-text);
+}
+
+.ds-legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+/* Planning table tweaks (modern, readable) but do not change header/footer */
+.planning-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 6px;
+}
+
+.planning-table th,
+.planning-table td {
+    background: var(--ds-surface);
+    border: 1px solid rgba(15, 23, 42, 0.04);
+    padding: 6px 8px;
+    font-size: 13px;
+    border-radius: 8px;
+}
+
+.planning-table th.agent {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(246, 249, 255, 0.6));
+}
+
+.planning-table td.day {
+    width: 36px;
+    min-width: 28px;
+    text-align: center;
+}
+
+/* Status badges: neutral outline for unknowns, colored for known statuses */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    color: #fff;
+}
+
+.status-P {
+    background: #16a34a;
+}
+
+.status-PREV {
+    background: #3b82f6;
+}
+
+.status-AT {
+    background: #B91C1C;
+}
+
+.status-C {
+    background: #C2410C;
+}
+
+.status-ASTH {
+    background: #1D4ED8;
+}
+
+.status-ASTS {
+    background: #6D28D9;
+}
+
+.status-AM {
+    background: #DC2626;
+}
+
+.status-F {
+    background: #92400E;
+}
+
+.status-RG {
+    background: #BE185D;
+}
+
+.status-CE {
+    background: #B45309;
+}
+
+.status-DC {
+    background: linear-gradient(90deg, #1F2937 50%, #C2410C 50%);
+}
+
+/* Responsive helpers */
+@media (max-width: 960px) {
+    main {
+        padding: 12px;
+    }
+
+    .planning-table th,
+    .planning-table td {
+        padding: 6px;
+        font-size: 12px;
+    }
+}
+
+/* Keep footer visible and untouched */
+footer {
+    /* no-op to avoid accidental inheritance */
+}
+
+/* Additional helpers for stats/planning */
+.service-pies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+#presence-service {
+    min-width: 160px;
+}
+
+.service-control-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+.card-title {
+    font-weight: 600;
+    margin-bottom: 6px
+}
+
+.count-info {
+    background: #f1f5ff;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #dbe5f2
+}
+
+.legend-right {
+    margin-left: auto
+}
+
+.selection-badge {
+    padding: 6px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+/* Modal helpers (keep markup but centralize display control) */
+#status-modal {
+    display: none;
+}
+
+.modal-visible {
+    display: block
+}
+
+#modal-backdrop {
+    display: none
+}

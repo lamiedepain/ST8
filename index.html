@@ -1,46 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Accueil ST8</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/faviconindex.svg" type="image/svg+xml">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ST8 PRO • Accueil</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/icons/ST8_multi.svg" type="image/svg+xml">
 </head>
+
 <body>
-  <header class="theme-dark">
-    <div class="title">
-      <div class="square theme-dark">BM</div>
-      <div class="text">
-        <div style="font-weight:bold;">Accueil ST8</div>
-        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
-      </div>
+    <header class="theme-dark" data-square="BM" data-title="ST8 PRO • Accueil">
+        <div data-include="header"></div>
+    </header>
+    <main>
+        <div class="home-intro">
+            <p class="page-intro">Bienvenue sur l'interface de gestion du service territorial. Choisissez un module pour
+                commencer.</p>
+            <!-- Grille des applications -->
+            <div class="app-grid" data-app-page="index" data-app-layout="home"
+                data-app-empty="Chargement des applications...">
+            </div>
+        </div>
+    </main>
+    <div class="fab-container">
+        <button class="fab">=</button>
+        <ul class="fab-options">
+            <li><a href="/" class="square theme-dark">BM</a></li>
+            <li><a href="/html/prepa.html" class="square theme-red">PC</a></li>
+            <li><a href="/html/agents.html" class="square theme-blue">AG</a></li>
+            <li><a href="/html/planning.html" class="square theme-green">PL</a></li>
+            <li><a href="/html/elements.html" class="square theme-orange">EV</a></li>
+            <li><a href="/html/bihebdo.html" class="square theme-slate">BI</a></li>
+            <li><a href="/html/planification.html" class="square theme-purple">PH</a></li>
+            <li><a href="/html/stats.html" class="square theme-brown">ST</a></li>
+            <li><a href="/html/easydict.html" class="square theme-yellow">ED</a></li>
+            <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+                    aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+                        aria-hidden="true">&#9728;&#9790;</span></a></li>
+        </ul>
     </div>
-    <img src="assets/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
-  </header>
-  <main>
-    <section class="home-intro">
-      <p class="page-intro">Retrouve l&rsquo;ensemble des outils ST8 : agents, planification, &eacute;l&eacute;ments variables, statistiques et dictionnaire interne.</p>
-      <div id="meteo-card" class="meteo-card is-hidden" aria-live="polite"></div>
-    </section>
-    <div class="menu-grid" data-app-page="index" data-app-layout="home"></div>
-  </main>
-  <div class="fab-container">
-    <button class="fab">=</button>
-    <ul class="fab-options">
-      <li><a href="index.html" class="square theme-dark">BM</a></li>
-      <li><a href="prepa.html" class="square theme-red">PC</a></li>
-      <li><a href="agents.html" class="square theme-blue">AG</a></li>
-      <li><a href="planning.html" class="square theme-green">PL</a></li>
-      <li><a href="elements.html" class="square theme-orange">EV</a></li>
-      <li><a href="bimensuel.html" class="square theme-slate">BI</a></li>
-      <li><a href="planification.html" class="square theme-purple">PH</a></li>
-      <li><a href="stats.html" class="square theme-brown">ST</a></li>
-      <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
-      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark" aria-label="Basculer le mode sombre"><span class="theme-toggle-icon" aria-hidden="true">&#9728;&#9790;</span></a></li>
-    </ul>
-  </div>
-  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
-  <script src="js/apps-data.js"></script>
-  <script src="js/script.js"></script>
+    <footer data-include="footer"></footer>
+    <script src="js/include-partials.js"></script>
+    <script src="js/apps-data.js"></script>
+    <script src="js/script.js"></script>
 </body>
+
 </html>
