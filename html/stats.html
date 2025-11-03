@@ -83,53 +83,6 @@
                         </div>
                         <canvas id="presenceChart" height="220"></canvas>
                     </div>
-
-                    <div class="chart-container">
-                        <h3>Statistiques par agent</h3>
-                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
-                            <input id="agent-search" type="search" placeholder="Rechercher (nom / matricule)"
-                                style="padding:6px 8px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);min-width:220px;">
-                            <button id="export-agents-csv" class="btn-small ds-btn">Exporter CSV</button>
-                        </div>
-
-                        <div class="agent-table-wrapper"
-                            style="overflow:auto;max-height:420px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);padding:8px;">
-                            <table id="agent-stats-table" style="width:100%;border-collapse:collapse;">
-                                <thead>
-                                    <tr>
-                                        <th
-                                            style="text-align:left;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Matricule</th>
-                                        <th
-                                            style="text-align:left;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Nom</th>
-                                        <th
-                                            style="text-align:left;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Service</th>
-                                        <th
-                                            style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Présent</th>
-                                        <th
-                                            style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Congés</th>
-                                        <th
-                                            style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Prévisionnelles
-                                        </th>
-                                        <th
-                                            style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Astreinte H
-                                        </th>
-                                        <th
-                                            style="text-align:right;padding:6px;border-bottom:1px solid var(--border-color)">
-                                            Astreinte S
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -196,13 +149,9 @@
                 const initialAgents = getFilteredAgents();
                 renderPresenceChart(initialAgents, grainSel.value, defaultYear, monthInput.value);
                 generateServicePies(initialAgents);
-                // tableau par agent
-                generateAgentTable(initialAgents);
-                // setup controls une seule fois
-                setupAgentControls(initialAgents);
 
                 // interactions
-                yearSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); });
+                yearSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
                 grainSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
                 monthInput.addEventListener('change', () => {
                     // keep year in sync with month
@@ -210,121 +159,17 @@
                     const fa = getFilteredAgents();
                     renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value);
                     generateServicePies(fa);
-                    generateAgentTable(fa);
                 });
-                prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); }));
-                nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); }));
+                prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
+                nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
 
                 // service selection handlers
-                serviceSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); });
-                serviceAll.addEventListener('click', (e) => { e.preventDefault(); selectAllServices(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); });
-                serviceClear.addEventListener('click', (e) => { e.preventDefault(); clearServiceSelection(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); generateAgentTable(fa); });
+                serviceSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                serviceAll.addEventListener('click', (e) => { e.preventDefault(); selectAllServices(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                serviceClear.addEventListener('click', (e) => { e.preventDefault(); clearServiceSelection(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
 
                 // generate one pie per service
                 generateServicePies(agents);
-                // ---------- Statistiques par agent ----------
-                // calcule les totaux par agent (présent, congés, prévisionnelles, astreintes)
-                function computeAgentStats(agent) {
-                    const pres = agent.presences || {};
-                    const counts = { P: 0, C: 0, PREV: 0, ASTH: 0, ASTS: 0, OTHER: 0 };
-                    Object.values(pres).forEach(raw => {
-                        const code = normalizeCode ? normalizeCode(raw) : (String(raw || '').toUpperCase());
-                        if (!code) { counts.OTHER++; return; }
-                        if (code === 'PREV') counts.PREV++;
-                        else if (code === 'C') counts.C++;
-                        else if (code === 'ASTH') counts.ASTH++;
-                        else if (code === 'ASTS') counts.ASTS++;
-                        else if (code === 'P') counts.P++;
-                        else counts.OTHER++;
-                    });
-                    counts.totalDays = Object.keys(pres).length;
-                    return counts;
-                }
-
-                function generateAgentTable(agentsList) {
-                    const tbl = document.getElementById('agent-stats-table');
-                    if (!tbl) return;
-                    const tbody = tbl.querySelector('tbody');
-                    tbody.innerHTML = '';
-
-                    const rows = (agentsList || []).map(a => {
-                        const s = computeAgentStats(a);
-                        return {
-                            matricule: a.matricule || '',
-                            nom: (a.nom || '') + (a.prenom ? (' ' + a.prenom) : ''),
-                            service: a.service || '—',
-                            present: s.P || 0,
-                            conges: s.C || 0,
-                            prev: s.PREV || 0,
-                            asth: s.ASTH || 0,
-                            asts: s.ASTS || 0,
-                            total: s.totalDays || 0
-                        };
-                    });
-
-                    // tri par service puis nom
-                    rows.sort((a, b) => (a.service || '').localeCompare(b.service || '') || a.nom.localeCompare(b.nom));
-
-                    rows.forEach(r => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `<td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.matricule}</td>
-                          <td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.nom}</td>
-                          <td style="padding:6px;border-bottom:1px solid var(--border-color)">${r.service}</td>
-                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.present}</td>
-                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.conges}</td>
-                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.prev}</td>
-                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.asth}</td>
-                          <td style="padding:6px;text-align:right;border-bottom:1px solid var(--border-color)">${r.asts}</td>`;
-                        tbody.appendChild(tr);
-                    });
-                }
-
-        function setupAgentControls(latestAgents) {
-          const search = document.getElementById('agent-search');
-          const exportBtn = document.getElementById('export-agents-csv');
-          if (search && !search.dataset._bound) {
-            search.addEventListener('input', () => {
-              const q = (search.value || '').trim().toLowerCase();
-              const tbl = document.getElementById('agent-stats-table');
-              if (!tbl) return;
-              const rows = tbl.querySelectorAll('tbody tr');
-              rows.forEach(tr => {
-                const text = tr.textContent.toLowerCase();
-                tr.style.display = text.indexOf(q) !== -1 ? '' : 'none';
-              });
-            });
-            search.dataset._bound = '1';
-          }
-          if (exportBtn && !exportBtn.dataset._bound) {
-            exportBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              const q = (search && search.value) ? (search.value || '').trim().toLowerCase() : '';
-              const base = (typeof getFilteredAgents === 'function') ? getFilteredAgents() : (latestAgents || statsData.agents || []);
-              const agentsToExport = q ? (base || []).filter(a => {
-                const full = ((a.matricule || '') + ' ' + (a.nom || '') + ' ' + (a.prenom || '') + ' ' + (a.service || '')).toLowerCase();
-                return full.indexOf(q) !== -1;
-              }) : (base || []);
-              exportAgentsCSV(agentsToExport);
-            });
-            exportBtn.dataset._bound = '1';
-          }
-        }                function exportAgentsCSV(agentsArr) {
-                    const rows = agentsArr.map(a => {
-                        const s = computeAgentStats(a);
-                        return [a.matricule || '', (a.nom || '') + (a.prenom ? (' ' + a.prenom) : ''), a.service || '', s.P || 0, s.C || 0, s.PREV || 0, s.ASTH || 0, s.ASTS || 0, s.totalDays || 0];
-                    });
-                    const header = ['Matricule', 'Nom', 'Service', 'Présent', 'Congés', 'Prévisionnelles', 'Astreinte H', 'Astreinte S', 'Jours enregistrés'];
-                    const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `stats_agents_${new Date().toISOString().slice(0, 10)}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                }
             }
 
             /* Removed individual aggregate charts - replaced by service camemberts */
