@@ -7,15 +7,8 @@
   <link rel="icon" href="assets/faviconplanification.svg" type="image/svg+xml">
 </head>
 <body>
-  <header class="theme-purple">
-    <div class="title">
-      <div class="square theme-purple">PH</div>
-      <div class="text">
-        <div style="font-weight:bold;">Planification hebdo</div>
-        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
-      </div>
-    </div>
-    <img src="assets/logo_blanc.png" class="logo" alt="Logo BM">
+  <header class="theme-purple" data-square="PH" data-title="Planification hebdo" data-sub="Service Territorial Bordeaux Maritime / Bastide N&deg; 8">
+    <div data-include="header"></div>
   </header>
   <main>
     <p class="page-intro">Planifie les &eacute;quipes semaine par semaine, avec synchronisation automatique depuis le planning mensuel.</p>
@@ -42,7 +35,8 @@
       <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark" aria-label="Basculer le mode sombre"><span class="theme-toggle-icon" aria-hidden="true">&#9728;&#9790;</span></a></li>
     </ul>
   </div>
-  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+  <footer data-include="footer"></footer>
+  <script src="js/include-partials.js"></script>
   <script src="js/apps-data.js"></script>
   <script src="js/script.js"></script>
 </body>

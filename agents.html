@@ -1,31 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <title>Gestion des agents</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/faviconagents.svg" type="image/svg+xml">
 </head>
+
 <body>
-  <header class="theme-blue">
-    <div class="title">
-      <div class="square theme-blue">AG</div>
-      <div class="text">
-        <div style="font-weight:bold;">Gestion des agents</div>
-        <div style="font-size:12px;">Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</div>
-      </div>
-    </div>
-    <img src="assets/logo_blanc.png" class="logo" alt="Logo Bordeaux Maritime">
+  <header class="theme-blue" data-square="AG" data-title="Gestion des agents"
+    data-sub="Service Territorial Bordeaux Maritime / Bastide N&deg; 8">
+    <div data-include="header"></div>
   </header>
   <main>
     <p class="page-intro">Cr&eacute;e, classe et exporte la base agents partag&eacute;e avec les autres modules ST8.</p>
-    <div class="app-embed"
-         data-app-embed="agents"
-         data-app-mode="iframe"
-         data-app-title="Base agents"
-         data-app-height="760"
-         data-app-loading="Chargement de la base agents..."
-         data-app-empty="Impossible de charger la base agents."></div>
+    <div class="app-embed" data-app-embed="agents" data-app-mode="iframe" data-app-title="Base agents"
+      data-app-height="760" data-app-loading="Chargement de la base agents..."
+      data-app-empty="Impossible de charger la base agents."></div>
   </main>
   <div class="fab-container">
     <button class="fab">=</button>
@@ -39,11 +31,15 @@
       <li><a href="planification.html" class="square theme-purple">PH</a></li>
       <li><a href="stats.html" class="square theme-brown">ST</a></li>
       <li><a href="easydict.html" class="square theme-yellow">ED</a></li>
-      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark" aria-label="Basculer le mode sombre"><span class="theme-toggle-icon" aria-hidden="true">&#9728;&#9790;</span></a></li>
+      <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+          aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+            aria-hidden="true">&#9728;&#9790;</span></a></li>
     </ul>
   </div>
-  <footer>Service Territorial Bordeaux Maritime / Bastide N&ordm; 8</footer>
+  <footer data-include="footer"></footer>
+  <script src="js/include-partials.js"></script>
   <script src="js/apps-data.js"></script>
   <script src="js/script.js"></script>
 </body>
+
 </html>
