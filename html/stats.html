@@ -41,23 +41,7 @@
 
                 <div class="stats-charts">
                     <!-- Les graphiques agrégés (service / permis / compétences) ont été remplacés
-               par des camemberts individuels par service pour un affichage direct. -->
-
-                    <div class="chart-container">
-                        <h3>Camemberts par service</h3>
-                        <div id="service-pies" class="service-pies"></div>
-                    </div>
-
-                    <div class="chart-container">
-                        <h3>Tendance de présence</h3>
-                        <div class="presence-controls ds-panel">
-                            <label for="presence-year">Année</label>
-                            <select id="presence-year"></select>
-
-                            <label for="presence-grain">Granularité</label>
-                            <select id="presence-grain">
-                                <option value="day">Jour</option>
-                                <option value="week">Hebdo</option>
+                    <div data-include="fab"></div>
                                 <option value="month" selected>Mensuel</option>
                                 <option value="year">Annuel</option>
                             </select>
