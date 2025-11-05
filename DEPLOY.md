@@ -49,5 +49,26 @@ Notes
 - The `server` folder contains `package.json` and `server.js`. Render must run Node in that folder or run `npm --prefix server` commands.
 - The `/health` endpoint returns JSON with current server time and ok=true.
 - The code uses relative client-side API paths (`/api/agents`) so the app works behind the same origin when Node is running.
+- **Current deployment**: https://st8-vspj.onrender.com/
+
+Deployment Checklist
+
+When deploying to Render for the first time:
+
+1. Push your changes to the `main` branch on GitHub
+2. In Render dashboard, create a new Web Service
+3. Connect to the GitHub repository `lamiedepain/ST8`
+4. Configure the service:
+   - Branch: `main`
+   - Build Command: `cd server && npm install`
+   - Start Command: `cd server && npm start`
+   - Health Check Path: `/health`
+   - Auto Deploy: ON
+5. Wait for the initial deployment to complete
+6. Test the endpoints as described in "Testing / smoke checks" section above
+
+For subsequent deployments:
+- Simply push to `main` branch - Render will auto-deploy (autoDeploy: true in render.yaml)
+- Or manually trigger a deploy from the Render dashboard
 
 If you want, I can also add a tiny systemd-like restart instruction or a GitHub Actions workflow to trigger deployments, but Render auto-deploy on push to `main` is usually sufficient.
