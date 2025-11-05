@@ -124,6 +124,11 @@ app.delete('/api/agents/:matricule', (req, res) => {
   try { writeData(data); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ error: e.message }); }
 });
 
+// Health endpoint for quick checks (Render health check can use this)
+app.get('/health', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
+});
+
 // Serve html files for friendly routes (e.g. /agents -> /html/agents.html)
 // Only apply to non-API GET requests. Static middleware will handle existing files first.
 app.get('*', (req, res, next) => {
@@ -150,11 +155,6 @@ app.get('*', (req, res, next) => {
 
   // Fallback to index.html so client-side routes continue to work
   return res.sendFile(path.join(rootHtml, 'index.html'));
-});
-
-// Health endpoint for quick checks (Render health check can use this)
-app.get('/health', (req, res) => {
-  res.json({ ok: true, time: new Date().toISOString() });
 });
 
 const port = process.env.PORT || 3000;
