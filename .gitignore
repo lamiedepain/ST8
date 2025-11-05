@@ -16,4 +16,4 @@ data/*.lock
 server/node_modules/
 server/*.log
 *.tgz
-.idea/
+.idea/*.pid
