@@ -5,9 +5,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Planning mensuel — ST8</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/system.css">
-  <link rel="icon" href="../assets/icons/ST8_orange.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/system.css">
+  <link rel="icon" href="/assets/icons/ST8_orange.svg" type="image/svg+xml">
   <style>
     :root {
       --agentw: 180px;
@@ -368,12 +368,12 @@
   <footer data-include="footer"></footer>
   <div data-include="fab"></div>
 
-  <script src="../js/include-partials.js"></script>
-  <script src="../js/apps-data.js"></script>
-  <script src="../js/script.js"></script>
-  <script src="../js/api-sync.js"></script>
-  <script src="../js/notify.js"></script>
-  <script src="../js/weekend-utils.js"></script>
+  <script src="/js/include-partials.js"></script>
+  <script src="/js/apps-data.js"></script>
+  <script src="/js/script.js"></script>
+  <script src="/js/api-sync.js"></script>
+  <script src="/js/notify.js"></script>
+  <script src="/js/weekend-utils.js"></script>
 
   <script>
     // Small self-contained planner logic — loads agents from ../data/agents_source.json
@@ -570,7 +570,7 @@
     }
     btnUndo.addEventListener('click', () => { undo(); });
 
-    // weekend label helper is provided by ../js/weekend-utils.js (ensureWeekendLabel)
+    // weekend label helper is provided by /js/weekend-utils.js (ensureWeekendLabel)
 
     // Helper to set the visible code inside a cell using a wrapper element so we can control z-index
     function setCellCode(td, code) {
