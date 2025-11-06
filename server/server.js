@@ -278,7 +278,7 @@ app.get('*', (req, res, next) => {
 
   // For HTML requests that don't match, return 404 instead of index.html
   // This prevents serving index.html for missing resources
-  return res.status(404).send('Not Found');
+  return res.status(404).type('text/plain').send('Page not found');
 });
 
 const port = process.env.PORT || 3000;
