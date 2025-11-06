@@ -2,29 +2,657 @@
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Statistiques annuelles</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/faviconstats.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <title>Statistiques annuelles</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/system.css">
+    <link rel="icon" href="../assets/icons/ST8_brown.svg" type="image/svg+xml">
+    <script src="../js/api-sync.js"></script>
+    <script src="../js/libs/chart.min.js"></script>
+    <script src="../js/libs/datetime.js"></script>
+    <script src="../js/libs/presence.js"></script>
 </head>
 
 <body>
-  <header class="theme-brown" data-square="ST" data-title="Statistiques annuelles"
-    data-sub="Service Territorial Bordeaux Maritime / Bastide N&deg; 8">
-    <div data-include="header"></div>
-  </header>
-  <main>
-    <p class="page-intro">Analyse le taux de pr&eacute;sence par groupe &agrave; partir du planning mensuel et des
-      donn&eacute;es agents.</p>
-    <div class="app-embed" data-app-embed="stats" data-app-mode="iframe" data-app-title="Statistiques annuelles"
-      data-app-height="720" data-app-loading="Chargement du module Statistiques..."
-      data-app-empty="Impossible de charger le module Statistiques."></div>
-  </main>
-  <div data-include="fab"></div>
-  <footer data-include="footer"></footer>
-  <script src="js/include-partials.js"></script>
-  <script src="js/apps-data.js"></script>
-  <script src="js/script.js"></script>
+    <header class="theme-brown" data-square="ST" data-title="Statistiques annuelles">
+        <div data-include="header"></div>
+    </header>
+    <main>
+        <p class="page-intro">Analyse le taux de pr&eacute;sence par groupe &agrave; partir du planning mensuel et des
+            donn&eacute;es agents.</p>
+
+        <!-- Interface des statistiques -->
+        <div id="stats-content">
+            <div class="stats-dashboard">
+                <div class="stats-overview">
+                    <div class="stat-card card">
+                        <h3>Effectif Total</h3>
+                        <div class="stat-number" id="total-agents">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Services</h3>
+                        <div class="stat-number" id="total-services">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Compétences</h3>
+                        <div class="stat-number" id="total-competences">-</div>
+                    </div>
+                </div>
+
+                <div class="stats-charts">
+                    <!-- Les graphiques agrégés (service / permis / compétences) ont été remplacés
+                    <div data-include="fab"></div>
+                                <option value="month" selected>Mensuel</option>
+                                <option value="year">Annuel</option>
+                            </select>
+
+                            <div class="month-controls">
+                                <button id="prev-month" title="Mois précédent" class="btn-small ds-btn">◀</button>
+                                <input id="presence-month" type="month" class="month-picker"
+                                    aria-label="Sélectionner le mois">
+                                <button id="next-month" title="Mois suivant" class="btn-small ds-btn">▶</button>
+                            </div>
+                            <div class="service-control-wrapper">
+                                <label for="presence-service">Groupes</label>
+                                <select id="presence-service" multiple size="4"></select>
+                                <div style="display:flex;flex-direction:column;gap:6px;margin-left:6px;">
+                                    <button id="service-all" class="btn-small ds-btn"
+                                        title="Sélectionner tous">Tous</button>
+                                    <button id="service-clear" class="btn-small ds-btn"
+                                        title="Effacer la sélection">Effacer</button>
+                                </div>
+                            </div>
+                            <div id="code-legend" class="ds-legend">
+                            </div>
+                        </div>
+                        <canvas id="presenceChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="../js/include-partials.js"></script>
+        <script>
+            let statsData = null;
+
+            // Charger les données depuis agents_source.json
+            async function loadStatsData() {
+                try {
+                    statsData = await ApiSync.fetchAgentsSource();
+                    generateStats();
+                } catch (error) {
+                    console.error('Erreur chargement statistiques:', error);
+                    document.getElementById('stats-content').innerHTML =
+                        '<p style="color: red;">Erreur de chargement des données</p>';
+                }
+            }
+
+            // Générer les statistiques
+            function generateStats() {
+                if (!statsData || !statsData.agents) return;
+
+                const agents = statsData.agents;
+
+                // Vue d'ensemble
+                document.getElementById('total-agents').textContent = agents.length;
+
+                const services = [...new Set(agents.map(a => a.service))];
+                document.getElementById('total-services').textContent = services.length;
+
+                const allCompetences = agents.flatMap(a => a.competences);
+                const uniqueCompetences = [...new Set(allCompetences)];
+                document.getElementById('total-competences').textContent = uniqueCompetences.length;
+
+                // Graphiques
+                // Remplacés par les camemberts par service
+
+                // Présences: préparer contrôles et rendre le graphique
+                const yearSel = populatePresenceControls(agents);
+                const grainSel = document.getElementById('presence-grain');
+                const monthInput = document.getElementById('presence-month');
+                const prevBtn = document.getElementById('prev-month');
+                const nextBtn = document.getElementById('next-month');
+                const serviceSel = document.getElementById('presence-service');
+                const serviceAll = document.getElementById('service-all');
+                const serviceClear = document.getElementById('service-clear');
+
+                // initialize month input to latest available month (or current)
+                initMonthControl(agents, monthInput, yearSel);
+
+                // populate services control
+                populateServiceControls(agents);
+
+                // compute filtered agents based on service selection
+                function getFilteredAgents() {
+                    const selected = getSelectedServices();
+                    if (!selected || !selected.length) return agents;
+                    return agents.filter(a => selected.includes(a.service || '—'));
+                }
+
+                const defaultYear = yearSel && yearSel.value ? yearSel.value : (new Date().getFullYear());
+                const initialAgents = getFilteredAgents();
+                renderPresenceChart(initialAgents, grainSel.value, defaultYear, monthInput.value);
+                generateServicePies(initialAgents);
+
+                // interactions
+                yearSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                grainSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                monthInput.addEventListener('change', () => {
+                    // keep year in sync with month
+                    if (monthInput.value && yearSel) yearSel.value = monthInput.value.slice(0, 4);
+                    const fa = getFilteredAgents();
+                    renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value);
+                    generateServicePies(fa);
+                });
+                prevBtn.addEventListener('click', () => shiftMonth(monthInput, -1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
+                nextBtn.addEventListener('click', () => shiftMonth(monthInput, 1, () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); }));
+
+                // service selection handlers
+                serviceSel.addEventListener('change', () => { const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                serviceAll.addEventListener('click', (e) => { e.preventDefault(); selectAllServices(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+                serviceClear.addEventListener('click', (e) => { e.preventDefault(); clearServiceSelection(); const fa = getFilteredAgents(); renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value); generateServicePies(fa); });
+
+                // generate one pie per service
+                generateServicePies(agents);
+            }
+
+            /* Removed individual aggregate charts - replaced by service camemberts */
+
+            // ---------- Charts globals ----------
+            // Chart instances (kept for backward compatibility if needed)
+            let _presenceChart = null;
+
+            // Collect counts per date and per status code
+            // Normalize status codes to canonical keys (no accents, short codes)
+            function normalizeCode(code) {
+                if (!code) return '';
+                let k = String(code).trim().toUpperCase();
+                // replace accented E
+                k = k.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+                // common synonyms
+                if (k === 'PREVISIONELLE' || k === 'PREVISIONNEL' || k === 'PREVISION' || k === 'PREV' || k === 'PR' || k === 'PREVION') return 'PREV';
+                // also accept variants with/without hyphen
+                if (k === 'ASTH' || k === 'AST-H') return 'ASTH';
+                if (k === 'ASTS' || k === 'AST-S') return 'ASTS';
+                return k;
+            }
+
+            // Human-friendly labels for codes
+            const CODE_LABELS = {
+                '': '(vide)',
+                'P': 'Présent',
+                'C': 'Congé',
+                'A': 'Absence',
+                'ASTH': 'Astreinte H',
+                'ASTS': 'Astreinte S',
+                'PREV': 'Prévisionnelle',
+                'JF': 'Jour férié',
+                'DC': 'DC',
+                'AT': 'Arrêt travail',
+                'AM': 'AM',
+            };
+
+            function displayLabel(code) { return CODE_LABELS[code] || code || '(vide)'; }
+
+            // Canonical color map used across charts
+            const CODE_COLOR_MAP = {
+                'P': '#16a34a',
+                'C': '#6b7280',
+                'A': '#f59e0b',
+                'ASTH': '#ef4444',
+                'ASTS': '#f97316',
+                'PREV': '#3b82f6',
+                'JF': '#B91C1C',
+                'DC': '#1f2937',
+                'AT': '#B91C1C',
+                'AM': '#DC2626'
+            };
+
+            function collectStatusCountsByDate(agents) {
+                const effectifTotal = agents.length || 0;
+                const map = {}; // date -> { codes: { CODE: count }, daysSlots: effectifTotal }
+                const codes = new Set();
+
+                agents.forEach(agent => {
+                    const pres = agent.presences || {};
+                    Object.keys(pres).forEach(d => {
+                        const raw = pres[d] || '';
+                        const code = normalizeCode(raw) || 'UNKNOWN';
+                        codes.add(code);
+                        map[d] = map[d] || { codes: {}, effectif: effectifTotal };
+                        map[d].codes[code] = (map[d].codes[code] || 0) + 1;
+                    });
+                });
+
+                return { map, codes: Array.from(codes).sort(), effectifTotal };
+            }
+
+            // Aggregate per period (week/month/year) producing buckets with summed counts and total slots
+            function aggregateStatusByPeriod(mapObj, step = 'month') {
+                const { map, effectifTotal } = mapObj;
+                const buckets = new Map();
+
+                Object.keys(map).forEach(dateStr => {
+                    const d = DateTimeUtils.toDate(dateStr);
+                    if (!d) return;
+                    let key;
+                    if (step === 'day') key = dateStr; // keep yyyy-mm-dd
+                    else if (step === 'month') key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    else if (step === 'year') key = `${d.getFullYear()}`;
+                    else {
+                        const tmp = PresenceUtils.getIsoWeek(d);
+                        key = `${tmp.year}-W${String(tmp.week).padStart(2, '0')}`;
+                    }
+
+                    const bucket = buckets.get(key) || { key, codes: {}, days: 0 };
+                    // add codes counts
+                    Object.entries(map[dateStr].codes).forEach(([code, cnt]) => {
+                        bucket.codes[code] = (bucket.codes[code] || 0) + cnt;
+                    });
+                    bucket.days += 1;
+                    bucket.effectifTotal = effectifTotal * bucket.days; // total possible slots in bucket
+                    buckets.set(key, bucket);
+                });
+
+                return Array.from(buckets.values()).sort((a, b) => a.key.localeCompare(b.key));
+            }
+
+            // Render stacked bar with one dataset per status code (percentage)
+            function renderPresenceChart(agents, grain = 'month', year = null, month = null) {
+                const collected = collectStatusCountsByDate(agents);
+                if (!Object.keys(collected.map || {}).length) {
+                    const ctx = document.getElementById('presenceChart').getContext('2d');
+                    if (_presenceChart) { _presenceChart.destroy(); _presenceChart = null; }
+                    ctx.clearRect(0, 0, 800, 300);
+                    return;
+                }
+
+                const step = grain === 'day' ? 'day' : (grain === 'month' ? 'month' : grain === 'year' ? 'year' : 'week');
+                const buckets = aggregateStatusByPeriod(collected, step);
+                // filter by year and/or month if provided
+                let filtered = year ? buckets.filter(b => b.key.startsWith(String(year))) : buckets;
+                if (month) {
+                    // month expected as YYYY-MM
+                    filtered = filtered.filter(b => b.key.startsWith(month));
+                }
+                // pretty labels depending on step
+                const labels = filtered.map(b => {
+                    if (step === 'day') return b.key; // dd/mm handled later
+                    if (step === 'month') {
+                        const parts = b.key.split('-');
+                        return parts.length === 2 ? `${parts[1]}/${parts[0]}` : b.key;
+                    }
+                    return b.key;
+                });
+
+                // get currently selected codes from legend (if any)
+                const selectedCodes = getSelectedCodes();
+
+                // If the selected grain is 'day', render daily stacked % chart for selected codes
+                const ctx = document.getElementById('presenceChart').getContext('2d');
+                if (_presenceChart) _presenceChart.destroy();
+                if (step === 'day') {
+                    // labels are yyyy-mm-dd; display as dd/MM for readability
+                    const dayLabels = filtered.map(b => {
+                        const parts = b.key.split('-');
+                        return parts.length === 3 ? `${parts[2]}/${parts[1]}` : b.key;
+                    });
+
+                    const codesToShow = selectedCodes.length ? selectedCodes : collected.codes;
+                    const datasets = codesToShow.map(code => {
+                        const data = filtered.map(b => {
+                            const cnt = b.codes && (b.codes[code] || 0) ? (b.codes[code] || 0) : 0;
+                            const total = b.effectifTotal || 1;
+                            return Math.round((cnt / total) * 10000) / 100;
+                        });
+                        const color = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+                        return { label: displayLabel(code), data, backgroundColor: color, borderColor: color, borderWidth: 1 };
+                    });
+
+                    _presenceChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: dayLabels, datasets },
+                        options: {
+                            responsive: true,
+                            scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+                            plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}%` } } }
+                        }
+                    });
+                    return;
+                }
+
+                // determine all codes from collected set (keep consistent order)
+                const codes = collected.codes;
+                const codesToShow = getSelectedCodes().length ? getSelectedCodes() : codes;
+
+                const datasets = codesToShow.map(code => {
+                    const data = filtered.map(b => {
+                        const cnt = b.codes[code] || 0;
+                        const total = b.effectifTotal || 1;
+                        return Math.round((cnt / total) * 10000) / 100; // percentage with 2 decimals
+                    });
+                    const color = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+                    return { label: displayLabel(code), data, backgroundColor: color, borderColor: color, borderWidth: 1 };
+                });
+
+                _presenceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { stacked: true },
+                            y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                        },
+                        plugins: { tooltip: { mode: 'index', intersect: false } }
+                    }
+                });
+            }
+
+            function populatePresenceControls(agents) {
+                const years = new Set();
+                agents.forEach(a => {
+                    const pres = a.presences || {};
+                    Object.keys(pres).forEach(d => years.add(d.slice(0, 4)));
+                });
+                const yearSel = document.getElementById('presence-year');
+                yearSel.innerHTML = Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
+                if (!yearSel.children.length) yearSel.innerHTML = `<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
+                return yearSel;
+            }
+
+            function populateServiceControls(agents) {
+                const services = [...new Set(agents.map(a => a.service || '—'))].sort();
+                const sel = document.getElementById('presence-service');
+                if (!sel) return;
+                sel.innerHTML = services.map(s => `<option value="${s}">${s}</option>`).join('');
+                // after services populated, build code legend (codes depend on agents presences)
+                renderCodeLegend(agents);
+            }
+
+            function getSelectedServices() {
+                const sel = document.getElementById('presence-service');
+                if (!sel) return [];
+                return Array.from(sel.selectedOptions).map(o => o.value);
+            }
+
+            // Render code legend with checkboxes to toggle codes on charts
+            function renderCodeLegend(agents) {
+                const container = document.getElementById('code-legend');
+                if (!container) return;
+                const collected = collectStatusCountsByDate(agents);
+                const codes = collected.codes;
+                container.innerHTML = '';
+                codes.forEach(code => {
+                    const id = 'legend-' + code;
+                    const label = document.createElement('label');
+                    label.style.display = 'inline-flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '6px';
+                    label.style.padding = '4px 6px';
+                    label.style.borderRadius = '6px';
+                    label.style.background = 'var(--bg-primary)';
+                    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = true; chk.value = code; chk.id = id; chk.dataset.code = code;
+                    chk.addEventListener('change', () => {
+                        const fa = (typeof getFilteredAgents === 'function') ? getFilteredAgents() : agents;
+                        const grainSel = document.getElementById('presence-grain');
+                        const yearSel = document.getElementById('presence-year');
+                        const monthInput = document.getElementById('presence-month');
+                        renderPresenceChart(fa, grainSel.value, yearSel.value, monthInput.value);
+                        generateServicePies(fa);
+                        // Mettre à jour le tableau agents également
+                        if (typeof generateAgentTable === 'function') generateAgentTable(fa);
+                    });
+                    const dot = document.createElement('span'); dot.style.width = '12px'; dot.style.height = '12px'; dot.style.display = 'inline-block'; dot.style.borderRadius = '50%'; dot.style.background = CODE_COLOR_MAP[code] || (`hsl(${(code.charCodeAt(0) || 65) % 360} 65% 50%)`);
+                    const text = document.createElement('span'); text.textContent = displayLabel(code);
+                    label.appendChild(chk); label.appendChild(dot); label.appendChild(text);
+                    container.appendChild(label);
+                });
+            }
+
+            function getSelectedCodes() {
+                const container = document.getElementById('code-legend');
+                if (!container) return [];
+                const checks = Array.from(container.querySelectorAll('input[type="checkbox"]'));
+                return checks.filter(c => c.checked).map(c => c.value);
+            }
+
+            function selectAllServices() {
+                const sel = document.getElementById('presence-service');
+                if (!sel) return;
+                Array.from(sel.options).forEach(o => o.selected = true);
+            }
+
+            function clearServiceSelection() {
+                const sel = document.getElementById('presence-service');
+                if (!sel) return;
+                Array.from(sel.options).forEach(o => o.selected = false);
+            }
+
+            // Initialize the month picker to the latest month found in data or current month
+            function initMonthControl(agents, monthInput, yearSel) {
+                if (!monthInput) return;
+                let maxDate = null;
+                agents.forEach(a => {
+                    const pres = a.presences || {};
+                    Object.keys(pres).forEach(d => {
+                        if (!maxDate || d > maxDate) maxDate = d;
+                    });
+                });
+                const now = new Date();
+                const val = maxDate ? maxDate.slice(0, 7) : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                monthInput.value = val;
+                if (yearSel) yearSel.value = val.slice(0, 4);
+            }
+
+            function shiftMonth(monthInput, delta, callback) {
+                if (!monthInput) return;
+                if (!monthInput.value) return;
+                const [y, m] = monthInput.value.split('-').map(Number);
+                const dt = new Date(y, m - 1 + delta, 1);
+                const nv = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                monthInput.value = nv;
+                const yearSel = document.getElementById('presence-year');
+                if (yearSel) yearSel.value = String(dt.getFullYear());
+                if (typeof callback === 'function') callback();
+            }
+
+            // Generate pie chart for a given service: distribution of statuses over all days
+            const _servicePieCharts = {};
+            function generateServicePie(agents, service, canvasId) {
+                const filtered = agents.filter(a => (a.service || '—') === service);
+                const counts = {}; let totalSlots = 0;
+                filtered.forEach(a => {
+                    const pres = a.presences || {};
+                    Object.values(pres).forEach(raw => {
+                        const k = normalizeCode ? normalizeCode(raw) : (String(raw || '').toUpperCase() || '—');
+                        counts[k] = (counts[k] || 0) + 1;
+                        totalSlots++;
+                    });
+                });
+
+                const codes = Object.keys(counts).sort();
+                const labels = codes.map(c => displayLabel(c));
+                const data = codes.map(c => counts[c]);
+                const colors = codes.map(c => {
+                    return CODE_COLOR_MAP[c] || (`hsl(${(c.charCodeAt(0) || 65) % 360} 65% 50%)`);
+                });
+
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (_servicePieCharts[canvasId]) { _servicePieCharts[canvasId].destroy(); delete _servicePieCharts[canvasId]; }
+                _servicePieCharts[canvasId] = new Chart(ctx, {
+                    type: 'pie',
+                    data: { labels, datasets: [{ data, backgroundColor: colors }] },
+                    options: { responsive: true }
+                });
+            }
+
+            // Create one pie per service and render them
+            function generateServicePies(agents) {
+                const services = [...new Set(agents.map(a => a.service || '—'))].sort();
+                const container = document.getElementById('service-pies');
+                container.innerHTML = '';
+                services.forEach((s, idx) => {
+                    const id = `service-pie-${idx}`;
+                    const wrapper = document.createElement('div');
+                    wrapper.style = 'background:var(--bg-secondary);padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);';
+                    wrapper.innerHTML = `<div style="font-weight:600;margin-bottom:6px">${s.replace('_', ' ')}</div><canvas id="${id}" height="160"></canvas>`;
+                    container.appendChild(wrapper);
+                    generateServicePie(agents, s, id);
+                });
+            }
+
+
+            // Charger les données au démarrage
+            loadStatsData();
+        </script>
+
+        <style>
+            .stats-dashboard {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .stats-overview {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+
+            .stat-card {
+                background: var(--bg-secondary);
+                padding: 1.5rem;
+                border-radius: 8px;
+                text-align: center;
+                border: 1px solid var(--border-color);
+            }
+
+            .stat-card h3 {
+                margin: 0 0 1rem 0;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+
+            .stats-charts {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 2rem;
+            }
+
+            .chart-container {
+                background: var(--bg-secondary);
+                padding: 1.5rem;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+            }
+
+            .chart-container h3 {
+                margin: 0 0 1rem 0;
+                color: var(--primary-color);
+            }
+
+            .bar-item {
+                margin-bottom: 1rem;
+            }
+
+            .bar-label {
+                font-size: 0.8rem;
+                margin-bottom: 0.3rem;
+                color: var(--text-primary);
+            }
+
+            .bar-container {
+                position: relative;
+                height: 25px;
+                background: var(--bg-primary);
+                border-radius: 4px;
+                overflow: hidden;
+            }
+
+            .bar {
+                height: 100%;
+                background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding-right: 0.5rem;
+                transition: width 0.3s ease;
+            }
+
+            .bar-value {
+                color: white;
+                font-size: 0.7rem;
+                font-weight: bold;
+            }
+
+            /* Presence controls styling */
+            .presence-controls label {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: var(--text-primary);
+                margin-right: 4px;
+            }
+
+            .presence-controls select,
+            .presence-controls .month-picker {
+                padding: 6px 8px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+            }
+
+            .btn-small {
+                padding: 6px 8px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-secondary);
+                cursor: pointer;
+            }
+
+            .month-picker {
+                height: 34px;
+            }
+
+            /* service selector appearance */
+            #presence-service {
+                padding: 6px 8px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+            }
+        </style>
+    </main>
+    <div class="fab-container">
+        <button class="fab">=</button>
+        <ul class="fab-options">
+            <li><a href="/" class="square theme-dark">BM</a></li>
+            <li><a href="/html/prepa.html" class="square theme-red">PC</a></li>
+            <li><a href="/html/agents.html" class="square theme-blue">AG</a></li>
+            <li><a href="/html/planning.html" class="square theme-green">PL</a></li>
+            <li><a href="/html/elements.html" class="square theme-orange">EV</a></li>
+            <li><a href="/html/bihebdo.html" class="square theme-slate">BI</a></li>
+            <li><a href="/html/planification.html" class="square theme-purple">PH</a></li>
+            <li><a href="/html/stats.html" class="square theme-brown">ST</a></li>
+            <li><a href="/html/easydict.html" class="square theme-yellow">ED</a></li>
+            <li><a href="javascript:void(0)" onclick="toggleDarkMode()" class="square theme-dark"
+                    aria-label="Basculer le mode sombre"><span class="theme-toggle-icon"
+                        aria-hidden="true">&#9728;&#9790;</span></a></li>
+        </ul>
+    </div>
+    <footer data-include="footer"></footer>
+    <script src="../js/apps-data.js"></script>
+    <script src="../js/script.js"></script>
 </body>
 
 </html>

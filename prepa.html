@@ -2,29 +2,160 @@
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Pr&eacute;pa chantier</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/faviconprepa.svg" type="image/svg+xml">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prépa chantier — ST8</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/system.css">
+  <link rel="icon" href="../assets/icons/faviconplanification.svg" type="image/svg+xml">
+  <style>
+    body {
+      background: #f6f9ff;
+      color: #0f172a;
+      font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    header.theme-red {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #e6edf9;
+      border-radius: 10px;
+      padding: 12px
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px
+    }
+
+    .checklist-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid #eef4ff;
+      border-radius: 8px;
+      background: #fff
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px
+    }
+  </style>
 </head>
 
-<body>
-  <header class="theme-red" data-square="PC" data-title="Pr&eacute;pa chantier"
-    data-sub="Service Territorial Bordeaux Maritime / Bastide N&deg; 8">
+<body class="theme-red">
+  <header class="theme-red" data-square="PC" data-title="Prépa chantier">
     <div data-include="header"></div>
   </header>
-  <main>
-    <p class="page-intro">D&eacute;crit chaque chantier : lieu, &eacute;quipe, mat&eacute;riel et consignes, avec export
-      et impression int&eacute;gr&eacute;s.</p>
-    <div class="app-embed" data-app-embed="prepa" data-app-mode="iframe" data-app-title="Pr&eacute;pa chantier"
-      data-app-height="760" data-app-loading="Chargement de l'application Pr&eacute;pa chantier..."
-      data-app-empty="Impossible de charger la Pr&eacute;pa chantier."></div>
+
+  <main style="padding:16px">
+    <section class="panel">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="font-weight:800">Préparation chantier</div>
+        <div style="margin-left:auto">
+          <a href="planning.html" class="btn" style="text-decoration:none">Planning</a>
+          <a href="agents.html" class="btn" style="text-decoration:none;margin-left:8px">Agents</a>
+        </div>
+      </div>
+
+      <p>Utilisez cette page pour préparer un chantier : checklist avant départ, documents à prévoir et exports.</p>
+
+      <label style="display:block;margin-top:8px">Nom du chantier <input id="chantiers-name"
+          placeholder="Nom du chantier"
+          style="margin-left:8px;padding:6px;border-radius:6px;border:1px solid #dbe5f2"></label>
+
+      <div class="checklist" id="checklist">
+        <!-- items inserted here -->
+      </div>
+
+      <div class="actions">
+        <button id="add-item" class="btn">Ajouter une tâche</button>
+        <button id="export-json" class="btn">Exporter JSON</button>
+        <button id="clear-list" class="btn">Effacer</button>
+      </div>
+
+      <div style="margin-top:12px;color:#64748b;font-size:13px">Les tâches sont sauvegardées localement (localStorage).
+      </div>
+    </section>
   </main>
+
   <div data-include="fab"></div>
+
   <footer data-include="footer"></footer>
-  <script src="js/include-partials.js"></script>
-  <script src="js/apps-data.js"></script>
-  <script src="js/script.js"></script>
+
+  <script src="../js/include-partials.js"></script>
+
+  <script>
+    // Simple checklist with localStorage persistence
+    const LIST_KEY = 'st8.prepa.checklist';
+    const NAME_KEY = 'st8.prepa.name';
+    const checklistEl = document.getElementById('checklist');
+    const nameEl = document.getElementById('chantiers-name');
+
+    function loadList() {
+      try {
+        const raw = localStorage.getItem(LIST_KEY);
+        const name = localStorage.getItem(NAME_KEY) || '';
+        nameEl.value = name;
+        const items = raw ? JSON.parse(raw) : [
+          { text: 'Signaler les risques (PPE, consignes)', done: false },
+          { text: 'Vérifier présence outillage', done: false },
+          { text: 'Valider planning des agents', done: false }
+        ];
+        render(items);
+      } catch (e) { console.error(e); render([]); }
+    }
+
+    function saveList(items) { localStorage.setItem(LIST_KEY, JSON.stringify(items)); localStorage.setItem(NAME_KEY, nameEl.value || ''); }
+
+    function render(items) {
+      checklistEl.innerHTML = '';
+      items.forEach((it, i) => {
+        const div = document.createElement('div'); div.className = 'checklist-item';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!it.done; cb.addEventListener('change', () => { items[i].done = cb.checked; saveList(items); render(items); });
+        const txt = document.createElement('div'); txt.textContent = it.text; txt.style.flex = '1'; txt.style.textDecoration = it.done ? 'line-through' : '';
+        const del = document.createElement('button'); del.className = 'btn'; del.textContent = 'Supprimer'; del.addEventListener('click', () => { items.splice(i, 1); saveList(items); render(items); });
+        div.appendChild(cb); div.appendChild(txt); div.appendChild(del); checklistEl.appendChild(div);
+      });
+      // persist
+      saveList(items);
+    }
+
+    document.getElementById('add-item').addEventListener('click', () => {
+      const text = prompt('Tâche (ex: Vérifier consignes)');
+      if (!text) return;
+      const raw = localStorage.getItem(LIST_KEY);
+      const items = raw ? JSON.parse(raw) : [];
+      items.push({ text, done: false });
+      saveList(items); render(items);
+    });
+
+    document.getElementById('export-json').addEventListener('click', () => {
+      const raw = localStorage.getItem(LIST_KEY) || '[]';
+      const name = nameEl.value || 'prepa';
+      const blob = new Blob([JSON.stringify({ name, items: JSON.parse(raw) }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${name || 'prepa'}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    document.getElementById('clear-list').addEventListener('click', () => { if (!confirm('Effacer toute la checklist ?')) return; localStorage.removeItem(LIST_KEY); render([]); });
+
+    nameEl.addEventListener('input', () => { localStorage.setItem(NAME_KEY, nameEl.value || ''); });
+
+    // initial load
+    loadList();
+  </script>
+
 </body>
 
 </html>
