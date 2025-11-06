@@ -160,3 +160,14 @@ app.get('*', (req, res, next) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, '0.0.0.0', () => console.log('ST8 server running on', port));
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
