@@ -10,6 +10,10 @@ const app = express();
 app.use(express.static(path.join(__dirname, '..')));
 
 const rootHtml = path.join(__dirname, '..');
+
+// MongoDB connection states
+const MONGOOSE_CONNECTED = 1;
+
 // Connect to MongoDB
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/st8';
 mongoose.connect(mongoURI)
@@ -106,7 +110,7 @@ function writeData(obj) {
 app.get('/api/agents', async (req, res) => {
   try {
     // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== MONGOOSE_CONNECTED) {
       // Fallback to file-based storage
       const data = readData();
       if (data) {
@@ -173,7 +177,7 @@ app.post('/api/agents', async (req, res) => {
     };
     
     // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== MONGOOSE_CONNECTED) {
       // Fallback to file-based storage
       writeData(updateData);
       return res.json({ ok: true });
@@ -207,7 +211,7 @@ app.delete('/api/agents/:matricule', async (req, res) => {
     const mat = req.params.matricule;
     
     // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== MONGOOSE_CONNECTED) {
       // Fallback to file-based storage
       const data = readData();
       if (!data) return res.status(404).json({ error: 'no data' });
