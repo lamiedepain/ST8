@@ -1,0 +1,20 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <style>
+      text { font-family: Arial, sans-serif; font-size: 36px; fill: white; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+      .segment { stroke: black; stroke-width: 1; fill: #9B51E0; }
+    </style>
+  </defs>
+  <g transform="translate(100,100)">
+    <polygon class="segment" points="0,-90 63.64,-63.64 35.36,-35.36 0,-50"/>
+    <polygon class="segment" points="63.64,-63.64 90,0 50,0 35.36,-35.36"/>
+    <polygon class="segment" points="90,0 63.64,63.64 35.36,35.36 50,0"/>
+    <polygon class="segment" points="63.64,63.64 0,90 0,50 35.36,35.36"/>
+    <polygon class="segment" points="0,90 -63.64,63.64 -35.36,35.36 0,50"/>
+    <polygon class="segment" points="-63.64,63.64 -90,0 -50,0 -35.36,35.36"/>
+    <polygon class="segment" points="-90,0 -63.64,-63.64 -35.36,-35.36 -50,0"/>
+    <polygon class="segment" points="-63.64,-63.64 0,-90 0,-50 -35.36,-35.36"/>
+    <polygon points="0,-50 35.36,-35.36 50,0 35.36,35.36 0,50 -35.36,35.36 -50,0 -35.36,-35.36" fill="black"/>
+    <text x="0" y="0">ST8</text>
+  </g>
+</svg>

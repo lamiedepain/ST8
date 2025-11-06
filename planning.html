@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Planning mensuel — ST8</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/system.css">
+  <link rel="icon" href="../assets/icons/faviconplanning.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --agentw: 180px;
+      --dayw: 28px;
+      --dayfs: 12px
+    }
+
+    body {
+      font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #f6f9ff;
+      color: #0f172a
+    }
+
+    header.theme-green {
+      /* Use theme variable (solid color) to match global headers — no gradient */
+      background: var(--color);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    header .title {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    header .square {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #ffffff10;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.06)
+    }
+
+    /* Let global .square rules (in css/style.css) control the square color/appearance */
+
+    header .title h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.2px
+    }
+
+    header .meta {
+      font-size: 13px;
+      opacity: 0.9
+    }
+
+    main {
+      padding: 16px
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .toolbar select,
+    .toolbar input {
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid #dbe5f2
+    }
+
+    .toolbar .btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      /* use theme color for primary toolbar buttons */
+      background: var(--color);
+      color: #fff;
+      border: 0;
+      cursor: pointer
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #e6edf9;
+      border-radius: 10px;
+      padding: 10px
+    }
+
+    .planning-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed
+    }
+
+    .planning-table thead th {
+      position: sticky;
+      top: 0;
+      background: #f0f7ff;
+      z-index: 2
+    }
+
+    .planning-table th,
+    .planning-table td {
+      border: 1px solid #eef4ff;
+      padding: 4px;
+      font-size: var(--dayfs);
+      text-align: center
+    }
+
+    .planning-table th.agent {
+      position: sticky;
+      left: 0;
+      background: #f7fbff;
+      width: var(--agentw);
+      text-align: left;
+      padding: 6px
+    }
+
+    .planning-table td.day {
+      width: var(--dayw);
+      min-width: var(--dayw);
+      height: 28px
+    }
+
+    .planning-table td.weekend {
+      background: #f8fafc;
+      color: #64748b
+    }
+
+    .planning-table tr.group-row td {
+      background: #eef6f2;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 12px;
+      border-top: 2px solid #e6f4ee
+    }
+
+    .planning-table td.jf {
+      background: #fff1f2;
+      color: #be123c
+    }
+
+    .status-P {
+      background: #16a34a;
+      color: #fff
+    }
+
+    .status-AT {
+      background: #B91C1C;
+      color: #fff
+    }
+
+    .status-C {
+      background: #C2410C;
+      color: #fff
+    }
+
+    .status-ASTH {
+      background: #1D4ED8;
+      color: #fff
+    }
+
+    .status-ASTS {
+      background: #6D28D9;
+      color: #fff
+    }
+
+    .status-PREV {
+      background: #3b82f6;
+      color: #fff
+    }
+
+    .status-AM {
+      background: #DC2626;
+      color: #fff
+    }
+
+    .status-F {
+      background: #92400E;
+      color: #fff
+    }
+
+    .status-RG {
+      background: #BE185D;
+      color: #fff
+    }
+
+    .status-CE {
+      background: #B45309;
+      color: #fff
+    }
+
+    .status-DC {
+      background: linear-gradient(90deg, #1F2937 50%, #C2410C 50%);
+      color: #fff
+    }
+
+    .status-JF {
+      background: #B91C1C;
+      color: #fff
+    }
+
+    .legend {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .legend .item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: #f1f5ff;
+      border-radius: 999px;
+      border: 1px solid #dbe5f2
+    }
+
+    .legend .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%
+    }
+
+    .controls-right {
+      margin-left: auto;
+      display: flex;
+      gap: 8px
+    }
+
+    .planning-table td.selected {
+      outline: 3px solid rgba(20, 99, 194, 0.9);
+      outline-offset: -2px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    /* modal backdrop and animation */
+    #modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.45);
+      z-index: 9990;
+      display: none
+    }
+
+    .modal-visible {
+      display: block
+    }
+
+    @keyframes modalPop {
+      0% {
+        transform: translate(-50%, -52%) scale(.98);
+        opacity: 0
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.02);
+        opacity: 1
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1
+      }
+    }
+
+    #status-modal.modal-visible {
+      animation: modalPop .18s ease-out
+    }
+  </style>
+</head>
+
+<body class="theme-green">
+  <header class="theme-green" data-square="PL" data-title="Planning mensuel">
+    <div data-include="header"></div>
+  </header>
+
+  <main>
+    <div id="debug-banner"
+      style="position:fixed;right:14px;bottom:14px;background:#0b1220;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 6px 16px rgba(2,6,23,0.3);z-index:99999;font-size:13px;max-width:320px">
+      Initialisation...</div>
+    <div class="toolbar">
+      <label>Année <select id="year-select"></select></label>
+      <label>Mois <select id="month-select"></select></label>
+      <label>Groupe <select id="group-select">
+          <option value="">Tous</option>
+        </select></label>
+      <input id="search-agents" placeholder="Recherche nom/matricule">
+      <div class="controls-right">
+        <button id="btn-load" class="btn ds-btn">Charger</button>
+        <button id="btn-save" class="btn ds-btn">Exporter JSON</button>
+        <button id="btn-force-save" class="btn ds-btn">💾 Forcer sauvegarde</button>
+        <button id="btn-copy" class="btn ds-btn">Copier JSON</button>
+        <button id="btn-all-present" class="btn ds-btn">Tous présents</button>
+        <button id="btn-undo" class="btn ds-btn" disabled>Annuler</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
+          <div id="selection-badge" class="selection-badge">
+            Sélection: <span id="selection-count">0</span></div>
+          <button id="btn-modify-selection" class="btn ds-btn">Modifier sélection</button>
+          <button id="btn-clear-selection" class="btn ds-btn">Effacer sélection</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="font-weight:800">Planning</div>
+        <div id="count-info" class="count-info">0 agents
+        </div>
+        <div class="legend ds-legend legend-right">
+          <div class="item"><span class="dot" style="background:#16a34a"></span>P</div>
+          <div class="item"><span class="dot" style="background:#B91C1C"></span>AT</div>
+          <div class="item"><span class="dot" style="background:#C2410C"></span>C</div>
+          <div class="item"><span class="dot" style="background:#1D4ED8"></span>AST-H</div>
+          <div class="item"><span class="dot" style="background:#6D28D9"></span>AST-S</div>
+          <div class="item"><span class="dot" style="background:#DC2626"></span>AM</div>
+          <div class="item"><span class="dot" style="background:#3b82f6"></span>Prévisionnelle</div>
+          <div class="item"><span class="dot" style="background:#92400E"></span>F</div>
+          <div class="item"><span class="dot" style="background:#BE185D"></span>RG</div>
+          <div class="item"><span class="dot" style="background:#B45309"></span>CE</div>
+          <div class="item"><span class="dot"
+              style="background:linear-gradient(90deg,#1F2937 50%, #C2410C 50%)"></span>DC</div>
+        </div>
+      </div>
+
+      <div id="grid-container">
+        <!-- table generated here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Status modal -->
+  <div id="status-modal" class="hidden" role="dialog" aria-modal="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:800">Choisir un statut</div>
+      <button id="modal-close" style="background:transparent;border:0;cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div id="modal-palette" style="display:flex;flex-wrap:wrap;gap:8px">
+      <!-- status buttons inserted here -->
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+      <button id="modal-clear" class="btn ds-btn">Effacer</button>
+      <button id="modal-apply" class="btn ds-btn">Appliquer</button>
+    </div>
+  </div>
+
+  <div id="modal-backdrop" class="hidden"></div>
+
+
+  <footer data-include="footer"></footer>
+  <div data-include="fab"></div>
+
+  <script src="../js/include-partials.js"></script>
+  <script src="../js/apps-data.js"></script>
+  <script src="../js/script.js"></script>
+  <script src="../js/api-sync.js"></script>
+  <script src="../js/notify.js"></script>
+  <script src="../js/weekend-utils.js"></script>
+
+  <script>
+    // Small self-contained planner logic — loads agents from ../data/agents_source.json
+    // Added 'PREV' status (Prévisionnelle) to planning codes
+    const STATUSES = ['', 'P', 'PREV', 'AT', 'C', 'AST-H', 'AST-S', 'AM', 'F', 'RG', 'CE', 'DC', 'JF'];
+    const STATUS_COLORS = { 'P': '#16a34a', 'PREV': '#3b82f6', 'AT': '#B91C1C', 'C': '#C2410C', 'AST-H': '#1D4ED8', 'AST-S': '#6D28D9', 'AM': '#DC2626', 'F': '#92400E', 'RG': '#BE185D', 'CE': '#B45309', 'DC': 'linear-gradient(90deg,#1F2937 50%, #C2410C 50%)', 'JF': '#B91C1C' };
+    let planningData = null;
+
+    // UI refs
+    const yearSelect = document.getElementById('year-select');
+    const monthSelect = document.getElementById('month-select');
+    const groupSelect = document.getElementById('group-select');
+    const searchInput = document.getElementById('search-agents');
+    const gridContainer = document.getElementById('grid-container');
+    const countInfo = document.getElementById('count-info');
+    const btnLoad = document.getElementById('btn-load');
+    const btnSave = document.getElementById('btn-save');
+    const btnCopy = document.getElementById('btn-copy');
+    const selectionCountEl = document.getElementById('selection-count');
+    const btnClearSelection = document.getElementById('btn-clear-selection');
+
+    function initSelectors() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+        const o = document.createElement('option'); o.value = y; o.textContent = y; if (y === currentYear) o.selected = true; yearSelect.appendChild(o);
+      }
+      const months = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'];
+      months.forEach((m, i) => { const o = document.createElement('option'); o.value = i + 1; o.textContent = m; if (i === now.getMonth()) o.selected = true; monthSelect.appendChild(o); });
+    }
+
+    // Normalization helper (align with stats normalization)
+    function normalizeCode(code) {
+      if (!code) return '';
+      let k = String(code).trim().toUpperCase();
+      k = k.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+      if (k === 'PREVISIONELLE' || k === 'PREVISIONNEL' || k === 'PREVISION' || k === 'PREV' || k === 'PR') return 'PREV';
+      if (k === 'ASTH' || k === 'AST-H') return 'AST-H';
+      if (k === 'ASTS' || k === 'AST-S') return 'AST-S';
+      return k;
+    }
+
+    function buildTable(year, month) {
+      const agents = planningData?.agents || [];
+      // normalize codes in planningData to canonical codes (PREV etc.) to keep model consistent
+      agents.forEach(a => {
+        a.presences = a.presences || {};
+        Object.keys(a.presences).forEach(d => {
+          const raw = a.presences[d];
+          const k = normalizeCode ? normalizeCode(raw) : raw;
+          a.presences[d] = k;
+        });
+      });
+      const days = new Date(year, month, 0).getDate();
+      // filter agents by group/search
+      let flat = agents.map(a => ({ ...a }));
+      const group = groupSelect.value;
+      if (group) flat = flat.filter(a => (a.service || a.group || '') === group);
+      const q = (searchInput.value || '').toLowerCase();
+      if (q) flat = flat.filter(a => (a.nom + ' ' + (a.prenom || '') + ' ' + (a.matricule || '')).toLowerCase().includes(q));
+      countInfo.textContent = `${flat.length} agents`;
+
+      // header
+      const table = document.createElement('table'); table.className = 'planning-table';
+      const thead = document.createElement('thead'); const headRow = document.createElement('tr');
+      const thAgent = document.createElement('th'); thAgent.className = 'agent'; thAgent.textContent = 'Agent'; headRow.appendChild(thAgent);
+      for (let d = 1; d <= days; d++) { const th = document.createElement('th'); th.className = 'day'; const date = new Date(year, month - 1, d); const wd = date.getDay(); th.innerHTML = `<div style="font-weight:700">${d}</div><div style="font-size:11px;color:#64748b">${['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][wd]}</div>`; headRow.appendChild(th); }
+      thead.appendChild(headRow); table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      // group agents by service/group for visual separation
+      const groupsMap = new Map();
+      flat.forEach(a => {
+        const key = a.service || a.group || 'Sans groupe';
+        if (!groupsMap.has(key)) groupsMap.set(key, []);
+        groupsMap.get(key).push(a);
+      });
+      for (const [groupName, agentsInGroup] of groupsMap) {
+        // insert group header row
+        const gr = document.createElement('tr');
+        gr.className = 'group-row';
+        const gtd = document.createElement('td');
+        gtd.colSpan = String(days + 1);
+        gtd.textContent = String(groupName);
+        gr.appendChild(gtd);
+        tbody.appendChild(gr);
+        agentsInGroup.forEach(agent => {
+          const tr = document.createElement('tr');
+          const tdName = document.createElement('td');
+          tdName.className = 'agent';
+          tdName.innerHTML = `<div style="font-weight:700">${agent.nom} ${agent.prenom || ''}</div><div style="font-size:12px;opacity:0.7">${agent.matricule || ''} ${agent.grade ? '- ' + agent.grade : ''}</div>`;
+          tr.appendChild(tdName);
+          // ensure presences object exist
+          agent.presences = agent.presences || {};
+          for (let d = 1; d <= days; d++) {
+            const key = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            let code = (agent.presences && agent.presences[key]) ? String(agent.presences[key]) : '';
+            const td = document.createElement('td'); td.className = 'day'; td.dataset.agent = agent.matricule || ''; td.dataset.date = key; applyCellState(td, code);
+
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        });
+      }
+
+      table.appendChild(tbody);
+      gridContainer.innerHTML = ''; gridContainer.appendChild(table);
+    }
+
+    async function loadPlanningData() {
+      try {
+        planningData = await ApiSync.fetchAgentsSource();
+        // populate groups
+        groupSelect.innerHTML = '<option value="">Tous</option>';
+        const groups = [...new Set((planningData.agents || []).map(a => a.service || a.group || '').filter(Boolean))];
+        groups.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = g; groupSelect.appendChild(o); });
+        // initial render
+        const year = parseInt(yearSelect.value, 10); const month = parseInt(monthSelect.value, 10);
+        buildTable(year, month);
+        const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Données chargées'; db.style.background = '#0f9d58'; }
+      } catch (e) { gridContainer.innerHTML = '<div style="padding:16px;color:#b91c1c">Erreur chargement JSON: ' + (e.message || e) + '</div>'; }
+    }
+
+    // show clearer error with server hint
+    window.addEventListener('error', (ev) => { const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Erreur JS: ' + (ev.message || ev.error || ''); db.style.background = '#b91c1c'; } console.error(ev); });
+    window.addEventListener('unhandledrejection', (ev) => { const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Promise rejection: ' + (ev.reason || ''); db.style.background = '#b91c1c'; } console.error(ev); });
+
+    // Helpful note if fetch fails (likely running file://)
+    const originalLoad = loadPlanningData;
+    loadPlanningData = async function () {
+      try { await originalLoad(); } catch (e) { const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Erreur chargement: si vous ouvrez le fichier localement, lancez: python -m http.server 8000'; db.style.background = '#b91c1c'; } throw e; }
+    };
+
+    function exportJSON() {
+      if (!planningData) return alert('Aucune donnée à exporter');
+      const blob = new Blob([JSON.stringify(planningData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'agents_source_modified.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    async function copyJSON() {
+      if (!planningData) return alert('Aucune donnée');
+      try { await navigator.clipboard.writeText(JSON.stringify(planningData, null, 2)); alert('JSON copié dans le presse-papier'); } catch (e) { alert('Impossible de copier: ' + e.message); }
+    }
+
+    // wire events
+    initSelectors();
+    btnLoad.addEventListener('click', () => { loadPlanningData(); });
+    btnSave.addEventListener('click', exportJSON);
+    // wire force save button
+    const btnForceSave = document.getElementById('btn-force-save');
+    if (btnForceSave) btnForceSave.addEventListener('click', async () => { await forceSavePlanning(); });
+    btnCopy.addEventListener('click', copyJSON);
+    yearSelect.addEventListener('change', () => { const y = parseInt(yearSelect.value, 10); const m = parseInt(monthSelect.value, 10); if (planningData) buildTable(y, m); });
+    monthSelect.addEventListener('change', () => { const y = parseInt(yearSelect.value, 10); const m = parseInt(monthSelect.value, 10); if (planningData) buildTable(y, m); });
+    groupSelect.addEventListener('change', () => { const y = parseInt(yearSelect.value, 10); const m = parseInt(monthSelect.value, 10); const g = groupSelect.value || 'Tous'; const hg = document.getElementById('header-group'); if (hg) hg.textContent = g; if (planningData) buildTable(y, m); });
+    searchInput.addEventListener('input', () => { const y = parseInt(yearSelect.value, 10); const m = parseInt(monthSelect.value, 10); if (planningData) buildTable(y, m); });
+
+    // auto-load on open
+    document.addEventListener('DOMContentLoaded', () => { loadPlanningData(); });
+
+    // Modal & palette logic
+    const statusModal = document.getElementById('status-modal');
+    const modalPalette = document.getElementById('modal-palette');
+    const modalClose = document.getElementById('modal-close');
+    const modalApply = document.getElementById('modal-apply');
+    const modalClear = document.getElementById('modal-clear');
+    let modalTarget = null; // {agentMatricule, date, tdElement}
+    const modalBackdrop = document.getElementById('modal-backdrop');
+
+    // selection state
+    const selectedCells = new Set();
+    function updateSelectionCount() { selectionCountEl.textContent = String(selectedCells.size); }
+    function clearSelection() { selectedCells.forEach(td => { td.classList.remove('selected'); }); selectedCells.clear(); updateSelectionCount(); }
+    const btnModifySelection = document.getElementById('btn-modify-selection');
+    const btnAllPresent = document.getElementById('btn-all-present');
+    const btnUndo = document.getElementById('btn-undo');
+
+    // History (undo) stack
+    const history = [];
+    function pushHistory(change) { history.push(change); btnUndo.disabled = false; }
+    function undo() {
+      if (history.length === 0) return; const change = history.pop();
+      if (change.type === 'set') {
+        change.entries.forEach(e => {
+          const td = gridContainer.querySelector(`td[data-agent="${e.matricule}"][data-date="${e.date}"]`);
+          if (td) {
+            applyCellState(td, e.prev || '');
+          }
+          const root = planningData.agents.find(a => (a.matricule || '') === e.matricule);
+          if (root) { root.presences = root.presences || {}; if (e.prev) root.presences[e.date] = e.prev; else delete root.presences[e.date]; }
+        });
+      }
+      if (history.length === 0) btnUndo.disabled = true;
+    }
+    btnUndo.addEventListener('click', () => { undo(); });
+
+    // weekend label helper is provided by ../js/weekend-utils.js (ensureWeekendLabel)
+
+    // Helper to set the visible code inside a cell using a wrapper element so we can control z-index
+    function setCellCode(td, code) {
+      if (!td) return;
+      // remove existing code wrapper if any
+      const prev = td.querySelector('.cell-code');
+      if (prev) prev.remove();
+      if (code && code !== '') {
+        const div = document.createElement('div');
+        div.className = 'cell-code';
+        div.textContent = code;
+        // ensure the code wrapper is above the weekend label visually
+        div.style.position = 'relative';
+        div.style.zIndex = '2';
+        td.insertBefore(div, td.firstChild);
+      }
+      // Debug info to trace ordering/flag issues when WE overlays status
+      if (window.console && window.console.debug) {
+        console.debug('setCellCode', { date: td.dataset && td.dataset.date, agent: td.dataset && td.dataset.agent, code, classes: td.className, isWeekend: td.dataset && td.dataset.weekend });
+      }
+    }
+
+    // Helper to read the code from a cell reliably (prefer .cell-code wrapper)
+    function getCellCode(td) {
+      if (!td) return '';
+      const el = td.querySelector && td.querySelector('.cell-code');
+      const txt = el ? (el.textContent || '') : (td.textContent || '');
+      return String(txt).trim();
+    }
+
+    // Centralized: apply a code to a cell, handle weekend flag, classes, colors and data model
+    function applyCellState(td, code) {
+      if (!td) return;
+      // ensure we preserve day/agent attributes
+      td.classList.remove(...Array.from(td.classList).filter(c => c.startsWith('status-')));
+      // compute weekend from date if available
+      const date = td.dataset && td.dataset.date;
+      if (date) {
+        const parts = date.split('-'); const y = parseInt(parts[0], 10); const m = parseInt(parts[1], 10); const d = parseInt(parts[2], 10);
+        const wd = new Date(y, m - 1, d).getDay();
+        if (wd === 0 || wd === 6) { td.classList.add('weekend'); td.dataset.weekend = '1'; } else { td.classList.remove('weekend'); delete td.dataset.weekend; }
+      }
+
+      // set visible code
+      setCellCode(td, code || '');
+
+      // apply status class and color logic
+      if (code) {
+        const cls = 'status-' + String(code).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        td.classList.add(cls);
+        const isWeekend = td.dataset && td.dataset.weekend === '1';
+        const isAstreinte = (code === 'AST-H' || code === 'AST-S');
+        if (STATUS_COLORS[code] && (!isWeekend || isAstreinte)) { td.style.background = STATUS_COLORS[code]; td.style.color = '#fff'; } else { td.style.background = ''; td.style.color = ''; }
+      } else {
+        td.style.background = ''; td.style.color = '';
+      }
+
+      // persist to planningData if possible
+      const mat = td.dataset && td.dataset.agent;
+      if (planningData && Array.isArray(planningData.agents) && mat) {
+        const root = planningData.agents.find(a => (a.matricule || '') === mat);
+        if (root) { root.presences = root.presences || {}; if (code) root.presences[td.dataset.date] = code; else delete root.presences[td.dataset.date]; }
+      }
+
+      // ensure weekend label is applied last
+      ensureWeekendLabel(td);
+    }
+
+    // Drag-select state
+    let isDragging = false; let dragStart = null; let selRectEl = null;
+    function createSelectionRect() { selRectEl = document.createElement('div'); selRectEl.style.position = 'absolute'; selRectEl.style.border = '2px dashed rgba(14,165,233,0.6)'; selRectEl.style.background = 'rgba(14,165,233,0.06)'; selRectEl.style.zIndex = 9998; document.body.appendChild(selRectEl); }
+    function removeSelectionRect() { if (selRectEl) { selRectEl.remove(); selRectEl = null; } }
+
+    function rectIntersects(a, b) { return !(b.left > a.right || b.right < a.left || b.top > a.bottom || b.bottom < a.top); }
+
+    // start drag on mousedown in grid area
+    gridContainer.addEventListener('mousedown', (ev) => {
+      // only left button
+      if (ev.button !== 0) return;
+      isDragging = true; dragStart = { x: ev.pageX, y: ev.pageY }; createSelectionRect();
+      ev.preventDefault();
+    });
+    document.addEventListener('mousemove', (ev) => {
+      if (!isDragging || !selRectEl) return;
+      const x1 = Math.min(dragStart.x, ev.pageX); const y1 = Math.min(dragStart.y, ev.pageY);
+      const x2 = Math.max(dragStart.x, ev.pageX); const y2 = Math.max(dragStart.y, ev.pageY);
+      selRectEl.style.left = x1 + 'px'; selRectEl.style.top = y1 + 'px'; selRectEl.style.width = (x2 - x1) + 'px'; selRectEl.style.height = (y2 - y1) + 'px';
+      // highlight cells intersecting rectangle
+      gridContainer.querySelectorAll('td.day').forEach(td => {
+        const r = td.getBoundingClientRect(); const rect = { left: r.left + window.scrollX, right: r.right + window.scrollX, top: r.top + window.scrollY, bottom: r.bottom + window.scrollY };
+        const sel = { left: x1, right: x2, top: y1, bottom: y2 };
+        if (rectIntersects(rect, sel)) {
+          if (!selectedCells.has(td)) { selectedCells.add(td); td.classList.add('selected'); }
+        } else {
+          if (selectedCells.has(td)) { selectedCells.delete(td); td.classList.remove('selected'); }
+        }
+      });
+      updateSelectionCount();
+    });
+    document.addEventListener('mouseup', (ev) => {
+      if (!isDragging) return; isDragging = false; dragStart = null; removeSelectionRect();
+    });
+
+    // open modal for selection via button
+    btnModifySelection.addEventListener('click', () => {
+      if (selectedCells.size === 0) return alert('Aucune cellule sélectionnée');
+      const tds = Array.from(selectedCells);
+      modalTarget = { tds };
+      // preselect common code if present (use getCellCode to prefer .cell-code wrapper)
+      const codes = new Set(tds.map(t => getCellCode(t) || '')); const cur = codes.size === 1 ? Array.from(codes)[0] : '';
+      modalPalette.querySelectorAll('button').forEach(b => { if (b.dataset.code === cur) { b.style.outline = '3px solid rgba(14,165,233,0.18)'; b.dataset.selected = '1'; } else { b.style.outline = ''; b.dataset.selected = '0'; } });
+      statusModal.classList.remove('hidden');
+    });
+
+    function buildPalette() {
+      modalPalette.innerHTML = '';
+      STATUSES.forEach(code => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.gap = '8px';
+        btn.dataset.code = code;
+        const dot = document.createElement('span'); dot.style.width = '14px'; dot.style.height = '14px'; dot.style.borderRadius = '50%'; dot.style.display = 'inline-block';
+        if (code && STATUS_COLORS[code]) dot.style.background = STATUS_COLORS[code]; else dot.style.background = '#ffffff';
+        btn.appendChild(dot);
+        const label = document.createElement('span'); label.textContent = code || '(vide)'; btn.appendChild(label);
+        btn.addEventListener('click', () => {
+          // quick apply: toggle visual then apply immediately
+          modalPalette.querySelectorAll('button').forEach(b => b.style.outline = '');
+          btn.style.outline = '3px solid rgba(14,165,233,0.18)';
+          btn.dataset.selected = '1';
+          modalPalette.querySelectorAll('button').forEach(b => { if (b !== btn) b.dataset.selected = '0'; });
+          // apply immediately to modalTarget (single or multiple)
+          const code = btn.dataset.code || '';
+          const targets = modalTarget ? (modalTarget.tds || [modalTarget.td]) : [];
+          if (targets.length > 0) {
+            const entries = [];
+            targets.forEach(td => {
+              const agentMat = td.dataset.agent; const date = td.dataset.date;
+              const prev = getCellCode(td) || '';
+              // central apply
+              applyCellState(td, code);
+              if (selectedCells.has(td)) { selectedCells.delete(td); td.classList.remove('selected'); }
+              entries.push({ matricule: agentMat, date, prev, next: code });
+            });
+            if (entries.length > 0) pushHistory({ type: 'set', entries, timestamp: Date.now() });
+            updateSelectionCount();
+            closeModal();
+          }
+        });
+        modalPalette.appendChild(btn);
+      });
+    }
+
+    function openModalFor(td) {
+      modalTarget = { agentMatricule: td.dataset.agent, date: td.dataset.date, td };
+      // preselect current code
+      const cur = getCellCode(td) || '';
+      modalPalette.querySelectorAll('button').forEach(b => { if (b.dataset.code === cur) { b.style.outline = '3px solid rgba(14,165,233,0.18)'; b.dataset.selected = '1'; } else { b.style.outline = ''; b.dataset.selected = '0'; } });
+      modalBackdrop.classList.add('modal-visible'); modalBackdrop.classList.remove('hidden');
+      statusModal.classList.remove('hidden'); statusModal.classList.add('modal-visible');
+    }
+
+    function closeModal() { statusModal.classList.add('hidden'); statusModal.classList.remove('modal-visible'); modalBackdrop.classList.remove('modal-visible'); modalBackdrop.classList.add('hidden'); modalTarget = null; }
+
+    modalClose.addEventListener('click', closeModal);
+    modalClear.addEventListener('click', () => {
+      if (!modalTarget) return;
+      const targets = modalTarget.tds || [modalTarget.td];
+      const entries = [];
+      targets.forEach(td => {
+        const agentMat = td.dataset.agent; const date = td.dataset.date; const prev = getCellCode(td) || '';
+        entries.push({ matricule: agentMat, date, prev, next: '' });
+        applyCellState(td, '');
+        if (selectedCells.has(td)) { selectedCells.delete(td); td.classList.remove('selected'); }
+      });
+      if (entries.length > 0) pushHistory({ type: 'set', entries, timestamp: Date.now() });
+      updateSelectionCount();
+      closeModal();
+      if (typeof ApiSync !== 'undefined') syncAgentsToServer();
+    });
+    modalApply.addEventListener('click', () => {
+      if (!modalTarget) return;
+      const sel = modalPalette.querySelector('button[data-selected="1"]');
+      const code = sel ? sel.dataset.code : '';
+      const targets = modalTarget.tds || [modalTarget.td];
+      const applied = [];
+      targets.forEach(td => {
+        const agentMat = td.dataset.agent; const date = td.dataset.date;
+        const prev = getCellCode(td) || '';
+        applyCellState(td, code);
+        // clear selection after apply
+        if (selectedCells.has(td)) { selectedCells.delete(td); td.classList.remove('selected'); }
+        applied.push({ matricule: agentMat, date, prev, next: code });
+      });
+      if (applied.length > 0) pushHistory({ type: 'set', entries: applied, timestamp: Date.now() });
+      updateSelectionCount();
+      closeModal();
+      if (typeof ApiSync !== 'undefined') syncAgentsToServer();
+    });
+
+    // Augment buildTable to attach modal opener and shift-click quick cycle
+    const originalBuildTable = buildTable;
+    buildTable = function (year, month) {
+      originalBuildTable(year, month);
+      // attach click handlers to td.day cells
+      gridContainer.querySelectorAll('td.day').forEach(td => {
+        // ensure we don't double-bind
+        td.addEventListener('click', (ev) => {
+          // Shift+click quick cycle
+          if (ev.shiftKey) {
+            // cycle statuses normally even on weekends; only color background for AST-H/AST-S on weekends
+            const agentMat = td.dataset.agent; const date = td.dataset.date; const root = planningData.agents.find(a => (a.matricule || '') === agentMat);
+            const code = getCellCode(td) || '';
+            const idx = STATUSES.indexOf(code);
+            const next = STATUSES[(idx + 1) % STATUSES.length];
+            const prev = code;
+            // apply centralized state change
+            applyCellState(td, next);
+            pushHistory({ type: 'set', entries: [{ matricule: agentMat, date, prev, next }], timestamp: Date.now() });
+            if (typeof ApiSync !== 'undefined') syncAgentsToServer();
+            return;
+          }
+          // Ctrl/Cmd click toggles selection
+          if (ev.ctrlKey || ev.metaKey) {
+            if (selectedCells.has(td)) { selectedCells.delete(td); td.classList.remove('selected'); } else { selectedCells.add(td); td.classList.add('selected'); }
+            updateSelectionCount();
+            return; // do not open modal
+          }
+          // normal click -> open modal for this td; if there is an existing selection, only open selection-modal if the clicked td is part of the selection
+          if (selectedCells.size > 0) {
+            if (selectedCells.has(td)) {
+              const tds = Array.from(selectedCells);
+              modalTarget = { tds };
+              const codes = new Set(tds.map(t => getCellCode(t) || ''));
+              const cur = codes.size === 1 ? Array.from(codes)[0] : '';
+              modalPalette.querySelectorAll('button').forEach(b => { if (b.dataset.code === cur) { b.style.outline = '3px solid rgba(14,165,233,0.18)'; b.dataset.selected = '1'; } else { b.style.outline = ''; b.dataset.selected = '0'; } });
+              statusModal.classList.remove('hidden');
+              return;
+            } else {
+              // clicked outside current selection: clear selection and open modal for single cell
+              clearSelection();
+              openModalFor(td);
+              return;
+            }
+          }
+          // default: open modal for this td
+          openModalFor(td);
+        });
+      });
+    };
+
+    // clicking outside grid or modal clears selection for ergonomics
+    document.addEventListener('click', (ev) => {
+      if (isDragging) return;
+      const target = ev.target;
+      if (!gridContainer.contains(target) && !statusModal.contains(target) && target !== btnModifySelection) {
+        clearSelection();
+      }
+    });
+
+    // build palette initially
+    buildPalette();
+    btnClearSelection.addEventListener('click', () => { clearSelection(); });
+    btnAllPresent.addEventListener('click', () => {
+      const year = parseInt(yearSelect.value, 10); const month = parseInt(monthSelect.value, 10); const days = new Date(year, month, 0).getDate();
+      const entries = [];
+      gridContainer.querySelectorAll('tbody tr').forEach(tr => {
+        const firstDay = tr.querySelector('td.day'); if (!firstDay) return;
+        const mat = firstDay.dataset.agent;
+        for (let d = 1; d <= days; d++) {
+          const key = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const td = tr.querySelector(`td[data-date="${key}"]`);
+          if (!td) continue;
+          const prev = getCellCode(td) || '';
+          // skip weekends for non-astreinte 'P'
+          if (td.dataset.weekend === '1') continue;
+          if (prev !== 'P') {
+            entries.push({ matricule: mat, date: key, prev, next: 'P' });
+            applyCellState(td, 'P');
+          }
+        }
+      });
+      if (entries.length > 0) pushHistory({ type: 'set', entries, timestamp: Date.now() });
+      if (typeof ApiSync !== 'undefined') syncAgentsToServer();
+    });
+
+    // Forcer l'envoi du planning au serveur
+    async function forceSavePlanning() {
+      try {
+        const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Envoi forcé planning...'; db.style.background = '#0ea5a0'; }
+        const ok = await ApiSync.postAgents(planningData.agents);
+        if (db) { db.textContent = ok ? 'Envoi forcé réussi' : 'Envoi forcé échoué'; db.style.background = ok ? '#0f9d58' : '#f59e0b'; }
+        if (typeof ST8Notify !== 'undefined') {
+          if (ok) ST8Notify.showToast('Envoi forcé : planning synchronisé', 'success'); else ST8Notify.showToast('Envoi forcé échoué — serveur indisponible', 'error');
+        }
+      } catch (e) {
+        console.error('forceSavePlanning failed', e);
+        if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Erreur lors de l\'envoi forcé planning', 'error');
+      }
+    }
+
+    async function syncAgentsToServer() {
+      try {
+        const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Synchronisation en cours...'; db.style.background = '#0ea5a0'; }
+        // The server expects POST body { agents: [...] }, but ApiSync.postAgents only takes the agents array
+        const ok = await ApiSync.postAgents(planningData.agents);
+        if (db) { db.textContent = ok ? 'Synchronisé au serveur' : 'Serveur indisponible, sauvegarde locale seulement'; db.style.background = ok ? '#0f9d58' : '#f59e0b'; }
+        if (typeof ST8Notify !== 'undefined') {
+          if (ok) ST8Notify.showToast('Planning synchronisé sur le serveur', 'success'); else ST8Notify.showToast('Serveur indisponible — planning sauvegardé localement', 'warn');
+        }
+      } catch (e) { const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Erreur synchronisation: ' + (e.message || e); db.style.background = '#b91c1c'; } }
+    }
+  </script>
+</body>
+
+</html>

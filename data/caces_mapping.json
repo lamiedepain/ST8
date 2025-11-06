@@ -1,0 +1,80 @@
+{
+    "version": "1.0",
+    "generated": "2025-10-23",
+    "source": "Synthèse locale + INRS / Wikipédia",
+    "note": "Catégories simplifiées: Engin, Nacelle, Grue, Chariot, Autre. Descriptions synthétiques.",
+    "mappings": {
+        "R482_A": {
+            "category": "Engin",
+            "label": "R482 A — Engins compacts",
+            "description": "Petits engins de chantier (mini-pelles, micro-chargeuses) – conduite d'engins compacts.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_B1": {
+            "category": "Engin",
+            "label": "R482 B1",
+            "description": "Engins de terrassement et travaux routiers (classe B1) – engins d'extraction / manutention.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_B2": {
+            "category": "Engin",
+            "label": "R482 B2",
+            "description": "Engins de chantier (classe B2) – machines de plus grande capacité.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_C1": {
+            "category": "Engin",
+            "label": "R482 C1",
+            "description": "Engins de chargement (classe C1) – chargeuses, engins de manutention sur chantier.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_C2": {
+            "category": "Engin",
+            "label": "R482 C2",
+            "description": "Engins de chargement (classe C2) – chargeuses / pelles de plus forte capacité.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_C3": {
+            "category": "Engin",
+            "label": "R482 C3",
+            "description": "Autres engins de chargement (C3) – variantes spécialisées.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_D": {
+            "category": "Engin",
+            "label": "R482 D — Engins de compactage",
+            "description": "Engins de compactage (rouleaux, compacteurs) utilisés en voirie.",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_E": {
+            "category": "Engin",
+            "label": "R482 E",
+            "description": "Machines spécialisées (ex : finisseurs, équipements de pose).",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_F": {
+            "category": "Engin",
+            "label": "R482 F",
+            "description": "Catégorie R482 F – autres engins de chantier (selon référentiel local).",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R482_G": {
+            "category": "Engin",
+            "label": "R482 G — Conduite hors production",
+            "description": "Conduite d'engins hors production / usage occasionnel (véhicules et machines).",
+            "source": "data/agents_source.json + synthèse INRS/Wikipedia"
+        },
+        "R486_A": {
+            "category": "Nacelle",
+            "label": "R486 A — PEMP élévation verticale",
+            "description": "PEMP (plate-forme élévatrice mobile de personnel) à déplacement vertical — nacelle.",
+            "source": "INRS / synthèse référentiels PEMP"
+        },
+        "R486_B": {
+            "category": "Nacelle",
+            "label": "R486 B — PEMP multidirectionnelle",
+            "description": "PEMP à déplacement multidirectionnel (bras articulés / ciseaux selon cas).",
+            "source": "INRS / synthèse référentiels PEMP"
+        }
+    }
+}

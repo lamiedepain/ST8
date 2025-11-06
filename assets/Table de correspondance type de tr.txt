@@ -1,0 +1,13 @@
+// Table de correspondance type de travaux → compétences requises
+const COMPETENCES_PAR_TRAVAUX = {
+  "Pavage": ["Paveur", "Manœuvre polyvalent", "Chef d’équipe"],
+  "Terrassement": ["Terrassier", "Enginiste / Pelleteur", "Chauffeur PL", "Manœuvre polyvalent"],
+  "Assainissement": ["Enginiste / Pelleteur", "Maçon VRD", "Chauffeur PL", "Manœuvre polyvalent"],
+  "Enrobé": ["Enrobeur / Finisseur", "Chauffeur PL", "Manœuvre polyvalent"],
+  "Signalisation": ["Signalisation", "Manœuvre polyvalent"],
+  "Aménagement urbain": ["Mobilier urbain", "Maçon VRD", "Manœuvre polyvalent"],
+  "Béton / Bordures": ["Maçon VRD", "Chauffeur PL", "Manœuvre polyvalent"],
+  "Transport": ["Chauffeur PL", "Manœuvre polyvalent"],
+  "Nettoyage": ["Chauffeur PL", "Balayeur"],
+  "Divers": ["Chef d’équipe", "Manœuvre polyvalent"]
+};
