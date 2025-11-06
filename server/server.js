@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
+const rootHtml = path.join(__dirname, '..');
 // Serve static files from the project root so pages under /html are available
 app.use(express.static(path.join(__dirname, '..')));
 
