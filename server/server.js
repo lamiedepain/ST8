@@ -6,6 +6,9 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
+// Serve static files from the project root so pages under /html are available
+app.use(express.static(path.join(__dirname, '..')));
+
 const rootHtml = path.join(__dirname, '..');
 // Connect to MongoDB
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/st8';
@@ -20,12 +23,6 @@ const agentsSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Agents = mongoose.model('Agents', agentsSchema);
-
-// Serve static files from the project root so pages under /html are available
-// app.use(express.static(path.join(__dirname, '..')));
-
-app.use(cors());
-app.use(bodyParser.json({ limit: '5mb' }));
 
 // Map requests for '/name.html' to '/html/name.html' when appropriate
 app.use((req, res, next) => {
@@ -74,6 +71,8 @@ app.get('/', (req, res) => {
   // Fallback to the html/ index if root index is not present
   return res.sendFile(path.join(__dirname, '..', 'html', 'index.html'));
 });
+app.use(cors());
+app.use(bodyParser.json({ limit: '5mb' }));
 
 const DATA_PATH = path.join(__dirname, '..', 'data', 'agents_source.json');
 
@@ -90,6 +89,14 @@ function normalizeCode(code) {
   if (k === 'ASTH' || k === 'AST-H') return 'ASTH';
   if (k === 'ASTS' || k === 'AST-S') return 'ASTS';
   return k;
+}
+
+function writeData(obj) {
+  const tmp = DATA_PATH + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+  const bak = DATA_PATH + '.' + Date.now() + '.bak';
+  try { fs.copyFileSync(DATA_PATH, bak); } catch (e) { }
+  fs.renameSync(tmp, DATA_PATH);
 }
 
 app.get('/api/agents', async (req, res) => {
@@ -199,11 +206,13 @@ app.listen(port, '0.0.0.0', () => console.log('ST8 server running on', port));
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
+  // Handle uncaught exceptions and unhandled rejections
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
+  });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+  });
