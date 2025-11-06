@@ -12,9 +12,13 @@ app.use(express.static(path.join(__dirname, '..')));
 const rootHtml = path.join(__dirname, '..');
 // Connect to MongoDB
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/st8';
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => {
+    console.error('MongoDB connection error:', err.message);
+    console.log('Server will continue running without database connection.');
+    console.log('File-based fallback will be used for data storage.');
+  });
 
 // Schema for agents data
 const agentsSchema = new mongoose.Schema({
@@ -101,6 +105,24 @@ function writeData(obj) {
 
 app.get('/api/agents', async (req, res) => {
   try {
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      // Fallback to file-based storage
+      const data = readData();
+      if (data) {
+        // Normalize presence codes
+        if (Array.isArray(data.agents)) {
+          data.agents.forEach(a => {
+            if (a.presences) {
+              Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+            }
+          });
+        }
+        return res.json(data);
+      }
+      return res.json({ agents: [], metadata: {} });
+    }
+    
     let doc = await Agents.findOne();
     if (!doc) {
       // Load from file if not in DB
@@ -123,6 +145,13 @@ app.get('/api/agents', async (req, res) => {
     res.json(doc.toObject());
   } catch (e) {
     console.error('GET /api/agents error:', e);
+    // Fallback to file on error
+    try {
+      const data = readData();
+      if (data) return res.json(data);
+    } catch (fileErr) {
+      console.error('File fallback error:', fileErr);
+    }
     res.status(500).json({ error: e.message });
   }
 });
@@ -142,10 +171,33 @@ app.post('/api/agents', async (req, res) => {
       agents: incoming,
       metadata: { ...body.metadata, last_modified: new Date().toISOString() }
     };
+    
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      // Fallback to file-based storage
+      writeData(updateData);
+      return res.json({ ok: true });
+    }
+    
     await Agents.findOneAndUpdate({}, updateData, { upsert: true, new: true });
+    // Also write to file as backup
+    writeData(updateData);
     res.json({ ok: true });
   } catch (e) {
     console.error('POST /api/agents error:', e);
+    // Try file fallback on error
+    try {
+      const body = req.body;
+      if (body && body.agents) {
+        writeData({
+          agents: body.agents,
+          metadata: { ...body.metadata, last_modified: new Date().toISOString() }
+        });
+        return res.json({ ok: true });
+      }
+    } catch (fileErr) {
+      console.error('File fallback error:', fileErr);
+    }
     res.status(500).json({ error: e.message });
   }
 });
@@ -153,6 +205,21 @@ app.post('/api/agents', async (req, res) => {
 app.delete('/api/agents/:matricule', async (req, res) => {
   try {
     const mat = req.params.matricule;
+    
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      // Fallback to file-based storage
+      const data = readData();
+      if (!data) return res.status(404).json({ error: 'no data' });
+      const before = (data.agents || []).length;
+      data.agents = (data.agents || []).filter(a => (a.matricule || '') !== mat);
+      if (data.agents.length === before) return res.status(404).json({ error: 'not found' });
+      data.metadata = data.metadata || {};
+      data.metadata.last_modified = new Date().toISOString();
+      writeData(data);
+      return res.json({ ok: true });
+    }
+    
     const doc = await Agents.findOne();
     if (!doc) return res.status(404).json({ error: 'no data' });
     const before = doc.agents.length;
@@ -161,6 +228,8 @@ app.delete('/api/agents/:matricule', async (req, res) => {
     doc.metadata = doc.metadata || {};
     doc.metadata.last_modified = new Date().toISOString();
     await doc.save();
+    // Also write to file as backup
+    writeData({ agents: doc.agents, metadata: doc.metadata });
     res.json({ ok: true });
   } catch (e) {
     console.error('DELETE /api/agents error:', e);
@@ -178,10 +247,16 @@ app.get('/health', (req, res) => {
 app.get('*', (req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path && req.path.startsWith('/api')) return next();
+  
+  // Skip static assets (js, css, images, etc.) - let them 404 naturally
+  const ext = path.extname(req.path);
+  if (ext && ext !== '.html') return next();
 
   const rootHtml = path.join(__dirname, '..', 'html');
   // If requesting '/', return the landing page
   if (req.path === '/' || req.path === '') {
+    const rootIndex = path.join(__dirname, '..', 'index.html');
+    if (fs.existsSync(rootIndex)) return res.sendFile(rootIndex);
     return res.sendFile(path.join(rootHtml, 'index.html'));
   }
 
@@ -197,8 +272,9 @@ app.get('*', (req, res, next) => {
     return res.sendFile(direct);
   }
 
-  // Fallback to index.html so client-side routes continue to work
-  return res.sendFile(path.join(rootHtml, 'index.html'));
+  // For HTML requests that don't match, return 404 instead of index.html
+  // This prevents serving index.html for missing resources
+  return res.status(404).send('Not Found');
 });
 
 const port = process.env.PORT || 3000;
@@ -206,13 +282,11 @@ app.listen(port, '0.0.0.0', () => console.log('ST8 server running on', port));
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (err) => {
-  // Handle uncaught exceptions and unhandled rejections
-  process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-    process.exit(1);
-  });
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
 
-  process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
-  });
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
