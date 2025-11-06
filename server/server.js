@@ -7,7 +7,7 @@ const cors = require('cors');
 const app = express();
 const rootHtml = path.join(__dirname, '..');
 // Serve static files from the project root so pages under /html are available
-app.use(express.static(path.join(__dirname, '..')));
+// app.use(express.static(path.join(__dirname, '..')));
 
 // Map requests for '/name.html' to '/html/name.html' when appropriate
 app.use((req, res, next) => {
