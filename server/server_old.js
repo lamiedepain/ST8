@@ -21,12 +21,6 @@ const agentsSchema = new mongoose.Schema({
 
 const Agents = mongoose.model('Agents', agentsSchema);
 
-// Serve static files from the project root so pages under /html are available
-// app.use(express.static(path.join(__dirname, '..')));
-
-app.use(cors());
-app.use(bodyParser.json({ limit: '5mb' }));
-
 // Map requests for '/name.html' to '/html/name.html' when appropriate
 app.use((req, res, next) => {
   try {
@@ -74,6 +68,8 @@ app.get('/', (req, res) => {
   // Fallback to the html/ index if root index is not present
   return res.sendFile(path.join(__dirname, '..', 'html', 'index.html'));
 });
+app.use(cors());
+app.use(bodyParser.json({ limit: '5mb' }));
 
 const DATA_PATH = path.join(__dirname, '..', 'data', 'agents_source.json');
 
@@ -90,6 +86,14 @@ function normalizeCode(code) {
   if (k === 'ASTH' || k === 'AST-H') return 'ASTH';
   if (k === 'ASTS' || k === 'AST-S') return 'ASTS';
   return k;
+}
+
+function writeData(obj) {
+  const tmp = DATA_PATH + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+  const bak = DATA_PATH + '.' + Date.now() + '.bak';
+  try { fs.copyFileSync(DATA_PATH, bak); } catch (e) { }
+  fs.renameSync(tmp, DATA_PATH);
 }
 
 app.get('/api/agents', async (req, res) => {
@@ -141,69 +145,67 @@ app.post('/api/agents', async (req, res) => {
     console.error('POST /api/agents error:', e);
     res.status(500).json({ error: e.message });
   }
-});
+  app.delete('/api/agents/:matricule', async (req, res) => {
+    try {
+      const mat = req.params.matricule;
+      const doc = await Agents.findOne();
+      if (!doc) return res.status(404).json({ error: 'no data' });
+      const before = doc.agents.length;
+      doc.agents = doc.agents.filter(a => (a.matricule || '') !== mat);
+      if (doc.agents.length === before) return res.status(404).json({ error: 'not found' });
+      doc.metadata = doc.metadata || {};
+      doc.metadata.last_modified = new Date().toISOString();
+      await doc.save();
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('DELETE /api/agents error:', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
 
-app.delete('/api/agents/:matricule', async (req, res) => {
-  try {
-    const mat = req.params.matricule;
-    const doc = await Agents.findOne();
-    if (!doc) return res.status(404).json({ error: 'no data' });
-    const before = doc.agents.length;
-    doc.agents = doc.agents.filter(a => (a.matricule || '') !== mat);
-    if (doc.agents.length === before) return res.status(404).json({ error: 'not found' });
-    doc.metadata = doc.metadata || {};
-    doc.metadata.last_modified = new Date().toISOString();
-    await doc.save();
-    res.json({ ok: true });
-  } catch (e) {
-    console.error('DELETE /api/agents error:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
+  // Health endpoint for quick checks (Render health check can use this)
+  app.get('/health', (req, res) => {
+    res.json({ ok: true, time: new Date().toISOString() });
+  });
 
-// Health endpoint for quick checks (Render health check can use this)
-app.get('/health', (req, res) => {
-  res.json({ ok: true, time: new Date().toISOString() });
-});
+  // Serve html files for friendly routes (e.g. /agents -> /html/agents.html)
+  // Only apply to non-API GET requests. Static middleware will handle existing files first.
+  app.get('*', (req, res, next) => {
+    if (req.method !== 'GET') return next();
+    if (req.path && req.path.startsWith('/api')) return next();
 
-// Serve html files for friendly routes (e.g. /agents -> /html/agents.html)
-// Only apply to non-API GET requests. Static middleware will handle existing files first.
-app.get('*', (req, res, next) => {
-  if (req.method !== 'GET') return next();
-  if (req.path && req.path.startsWith('/api')) return next();
+    const rootHtml = path.join(__dirname, '..', 'html');
+    // If requesting '/', return the landing page
+    if (req.path === '/' || req.path === '') {
+      return res.sendFile(path.join(rootHtml, 'index.html'));
+    }
 
-  const rootHtml = path.join(__dirname, '..', 'html');
-  // If requesting '/', return the landing page
-  if (req.path === '/' || req.path === '') {
+    // Try mapping /foo -> /html/foo.html
+    const candidate = path.join(rootHtml, req.path + '.html');
+    if (fs.existsSync(candidate)) {
+      return res.sendFile(candidate);
+    }
+
+    // Try direct file under html (if user requested /html/xxx)
+    const direct = path.join(__dirname, '..', req.path);
+    if (fs.existsSync(direct)) {
+      return res.sendFile(direct);
+    }
+
+    // Fallback to index.html so client-side routes continue to work
     return res.sendFile(path.join(rootHtml, 'index.html'));
-  }
+  });
 
-  // Try mapping /foo -> /html/foo.html
-  const candidate = path.join(rootHtml, req.path + '.html');
-  if (fs.existsSync(candidate)) {
-    return res.sendFile(candidate);
-  }
+  const port = process.env.PORT || 3000;
+  app.listen(port, '0.0.0.0', () => console.log('ST8 server running on', port));
 
-  // Try direct file under html (if user requested /html/xxx)
-  const direct = path.join(__dirname, '..', req.path);
-  if (fs.existsSync(direct)) {
-    return res.sendFile(direct);
-  }
+  // Handle uncaught exceptions and unhandled rejections
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
+  });
 
-  // Fallback to index.html so client-side routes continue to work
-  return res.sendFile(path.join(rootHtml, 'index.html'));
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, '0.0.0.0', () => console.log('ST8 server running on', port));
-
-// Handle uncaught exceptions and unhandled rejections
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+  });
