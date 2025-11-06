@@ -111,7 +111,12 @@ app.post('/api/agents', (req, res) => {
   data.agents = incoming;
   data.metadata = data.metadata || {};
   data.metadata.last_modified = new Date().toISOString();
-  try { writeData(data); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ error: e.message }); }
+  try { 
+    // writeData(data); // Disabled on Render due to read-only file system
+    return res.json({ ok: true }); 
+  } catch (e) { 
+    return res.status(500).json({ error: e.message }); 
+  }
 });
 
 app.delete('/api/agents/:matricule', (req, res) => {
@@ -122,7 +127,12 @@ app.delete('/api/agents/:matricule', (req, res) => {
   if (data.agents.length === before) return res.status(404).json({ error: 'not found' });
   data.metadata = data.metadata || {};
   data.metadata.last_modified = new Date().toISOString();
-  try { writeData(data); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ error: e.message }); }
+  try { 
+    // writeData(data); // Disabled on Render due to read-only file system
+    return res.json({ ok: true }); 
+  } catch (e) { 
+    return res.status(500).json({ error: e.message }); 
+  }
 });
 
 // Health endpoint for quick checks (Render health check can use this)
