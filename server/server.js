@@ -102,26 +102,41 @@ function writeData(obj) {
 
 app.get('/api/agents', async (req, res) => {
   try {
-    let doc = await Agents.findOne();
-    if (!doc) {
-      // Load from file if not in DB
-      const data = readData();
-      if (data) {
-        doc = new Agents(data);
-        await doc.save();
-      } else {
-        return res.json({ agents: [], metadata: {} });
-      }
-    }
-    // Normalize presence codes
-    if (Array.isArray(doc.agents)) {
-      doc.agents.forEach(a => {
-        if (a.presences) {
-          Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+    if (process.env.MONGO_URI) {
+      // Use MongoDB
+      let doc = await Agents.findOne();
+      if (!doc) {
+        // Load from file if not in DB
+        const data = readData();
+        if (data) {
+          doc = new Agents(data);
+          await doc.save();
+        } else {
+          return res.json({ agents: [], metadata: {} });
         }
-      });
+      }
+      // Normalize presence codes
+      if (Array.isArray(doc.agents)) {
+        doc.agents.forEach(a => {
+          if (a.presences) {
+            Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+          }
+        });
+      }
+      res.json(doc.toObject());
+    } else {
+      // Use file storage only
+      const data = readData();
+      if (data && Array.isArray(data.agents)) {
+        // Normalize presence codes
+        data.agents.forEach(a => {
+          if (a.presences) {
+            Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+          }
+        });
+      }
+      res.json(data || { agents: [], metadata: {} });
     }
-    res.json(doc.toObject());
   } catch (e) {
     console.error('GET /api/agents error:', e);
     res.status(500).json({ error: e.message });
@@ -139,12 +154,24 @@ app.post('/api/agents', async (req, res) => {
         Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
       }
     });
-    const updateData = {
-      agents: incoming,
-      metadata: { ...body.metadata, last_modified: new Date().toISOString() }
-    };
-    await Agents.findOneAndUpdate({}, updateData, { upsert: true, new: true });
-    res.json({ ok: true });
+
+    if (process.env.MONGO_URI) {
+      // Use MongoDB
+      const updateData = {
+        agents: incoming,
+        metadata: { ...body.metadata, last_modified: new Date().toISOString() }
+      };
+      await Agents.findOneAndUpdate({}, updateData, { upsert: true, new: true });
+      res.json({ ok: true });
+    } else {
+      // Use file storage only
+      const updateData = {
+        agents: incoming,
+        metadata: { ...body.metadata, last_modified: new Date().toISOString() }
+      };
+      writeData(updateData);
+      res.json({ ok: true });
+    }
   } catch (e) {
     console.error('POST /api/agents error:', e);
     res.status(500).json({ error: e.message });
@@ -154,15 +181,30 @@ app.post('/api/agents', async (req, res) => {
 app.delete('/api/agents/:matricule', async (req, res) => {
   try {
     const mat = req.params.matricule;
-    const doc = await Agents.findOne();
-    if (!doc) return res.status(404).json({ error: 'no data' });
-    const before = doc.agents.length;
-    doc.agents = doc.agents.filter(a => (a.matricule || '') !== mat);
-    if (doc.agents.length === before) return res.status(404).json({ error: 'not found' });
-    doc.metadata = doc.metadata || {};
-    doc.metadata.last_modified = new Date().toISOString();
-    await doc.save();
-    res.json({ ok: true });
+
+    if (process.env.MONGO_URI) {
+      // Use MongoDB
+      const doc = await Agents.findOne();
+      if (!doc) return res.status(404).json({ error: 'no data' });
+      const before = doc.agents.length;
+      doc.agents = doc.agents.filter(a => (a.matricule || '') !== mat);
+      if (doc.agents.length === before) return res.status(404).json({ error: 'not found' });
+      doc.metadata = doc.metadata || {};
+      doc.metadata.last_modified = new Date().toISOString();
+      await doc.save();
+      res.json({ ok: true });
+    } else {
+      // Use file storage only
+      const data = readData();
+      if (!data || !data.agents) return res.status(404).json({ error: 'no data' });
+      const before = data.agents.length;
+      data.agents = data.agents.filter(a => (a.matricule || '') !== mat);
+      if (data.agents.length === before) return res.status(404).json({ error: 'not found' });
+      data.metadata = data.metadata || {};
+      data.metadata.last_modified = new Date().toISOString();
+      writeData(data);
+      res.json({ ok: true });
+    }
   } catch (e) {
     console.error('DELETE /api/agents error:', e);
     res.status(500).json({ error: e.message });
@@ -180,14 +222,15 @@ app.get('*', (req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path && req.path.startsWith('/api')) return next();
 
-  const rootHtml = path.join(__dirname, '..', 'html');
+  const rootHtml = path.join(__dirname, '..');
+  console.log('Handling request for:', req.path, 'rootHtml:', rootHtml);
   // If requesting '/', return the landing page
   if (req.path === '/' || req.path === '') {
     return res.sendFile(path.join(rootHtml, 'index.html'));
   }
 
   // Try mapping /foo -> /html/foo.html
-  const candidate = path.join(rootHtml, req.path + '.html');
+  const candidate = path.join(rootHtml, 'html', req.path + '.html');
   if (fs.existsSync(candidate)) {
     return res.sendFile(candidate);
   }
@@ -199,6 +242,7 @@ app.get('*', (req, res, next) => {
   }
 
   // Fallback to index.html so client-side routes continue to work
+  console.log('Fallback to index.html:', path.join(rootHtml, 'index.html'));
   return res.sendFile(path.join(rootHtml, 'index.html'));
 });
 
