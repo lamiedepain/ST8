@@ -10,11 +10,14 @@ const app = express();
 app.use(express.static(path.join(__dirname, '..')));
 
 const rootHtml = path.join(__dirname, '..');
-// Connect to MongoDB
-const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/st8';
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Connect to MongoDB only if MONGO_URI is set
+if (process.env.MONGO_URI) {
+  mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+} else {
+  console.log('No MONGO_URI set, using file storage');
+}
 
 // Schema for agents data
 const agentsSchema = new mongoose.Schema({
