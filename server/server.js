@@ -70,9 +70,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   // Prefer root-level index.html if present (we may have moved the homepage to repo root)
   const rootIndex = path.join(__dirname, '..', 'index.html');
-  if (fs.existsSync(rootIndex)) return res.sendFile(rootIndex);
-  // Fallback to the html/ index if root index is not present
-  return res.sendFile(path.join(__dirname, '..', 'html', 'index.html'));
+  return res.sendFile(rootIndex);
 });
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
