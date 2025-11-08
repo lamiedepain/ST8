@@ -75,7 +75,7 @@ app.get('/', (req, res) => {
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
 
-const DATA_PATH = path.join(__dirname, '..', 'data', 'agents_source.json');
+const DATA_PATH = path.join(__dirname, 'data', 'agents_source.json');
 
 function readData() {
   try {
