@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/agents.css">
   <link rel="stylesheet" href="/css/system.css">
+  <link rel="stylesheet" href="/css/weather.css">
   <link rel="icon" href="/assets/icons/ST8_blue.svg" type="image/svg+xml">
 </head>
 
@@ -15,6 +16,9 @@
     <div data-include="header"></div>
   </header>
   <main>
+    <!-- Weather Widget -->
+    <div id="weather-container-agents" style="margin-bottom: 20px;"></div>
+    
     <div class="main-toolbar">
       <div class="toolbar-left">
         <select id="service-filter" class="service-selector" onchange="filterAgents()">
@@ -816,6 +820,18 @@
         const opt = document.createElement('option'); opt.value = value; opt.textContent = value; sel.appendChild(opt);
       }
     }
+  </script>
+  <script src="/js/weather.js"></script>
+  <script>
+    // Initialize weather widget
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.weather) {
+        await window.weather.init('weather-container-agents', { 
+          compact: true, 
+          forecast: false
+        });
+      }
+    });
   </script>
 </body>
 

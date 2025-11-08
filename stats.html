@@ -6,11 +6,14 @@
     <title>Statistiques annuelles</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/system.css">
+    <link rel="stylesheet" href="/css/weather.css">
     <link rel="icon" href="/assets/icons/ST8_brown.svg" type="image/svg+xml">
     <script src="/js/api-sync.js"></script>
     <script src="/js/libs/chart.min.js"></script>
     <script src="/js/libs/datetime.js"></script>
     <script src="/js/libs/presence.js"></script>
+    <script src="/js/weather.js"></script>
+    <script src="/js/stats-enhanced.js"></script>
 </head>
 
 <body>
@@ -18,8 +21,10 @@
         <div data-include="header"></div>
     </header>
     <main>
-        <p class="page-intro">Analyse le taux de pr&eacute;sence par groupe &agrave; partir du planning mensuel et des
-            donn&eacute;es agents.</p>
+        <p class="page-intro">Analyse le taux de présence par groupe à partir du planning mensuel et des données agents avec statistiques graphiques professionnelles.</p>
+
+        <!-- Weather Widget -->
+        <div id="weather-container" class="weather-container"></div>
 
         <!-- Interface des statistiques -->
         <div id="stats-content">
@@ -36,6 +41,30 @@
                     <div class="stat-card">
                         <h3>Compétences</h3>
                         <div class="stat-number" id="total-competences">-</div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Statistics Charts -->
+                <div class="enhanced-charts">
+                    <div class="chart-card">
+                        <h3>📊 Répartition par Service</h3>
+                        <canvas id="chartServiceDistribution" height="300"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>📈 Taux de Prévisionnel par Service</h3>
+                        <canvas id="chartPrevByService" height="300"></canvas>
+                    </div>
+                    <div class="chart-card chart-card-wide">
+                        <h3>📉 Évolution des Présences (6 mois)</h3>
+                        <canvas id="chartPresenceTrends" height="250"></canvas>
+                    </div>
+                    <div class="chart-card chart-card-wide">
+                        <h3>💰 Top 10 Coûts par Agent</h3>
+                        <canvas id="chartCostByAgent" height="350"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🔄 Répartition des Statuts</h3>
+                        <canvas id="chartStatusDistribution" height="300"></canvas>
                     </div>
                 </div>
 
@@ -75,11 +104,27 @@
         <script>
             let statsData = null;
 
+            // Initialize weather widget
+            window.addEventListener('DOMContentLoaded', async () => {
+                if (window.weather) {
+                    await window.weather.init('weather-container', { 
+                        compact: false, 
+                        forecast: true,
+                        forecastDays: 5
+                    });
+                }
+            });
+
             // Charger les données depuis agents_source.json
             async function loadStatsData() {
                 try {
                     statsData = await ApiSync.fetchAgentsSource();
                     generateStats();
+                    
+                    // Initialize enhanced stats module
+                    if (window.stats) {
+                        await window.stats.initAllCharts();
+                    }
                 } catch (error) {
                     console.error('Erreur chargement statistiques:', error);
                     document.getElementById('stats-content').innerHTML =
@@ -630,6 +675,59 @@
                 border: 1px solid var(--border-color);
                 background: var(--bg-primary);
                 color: var(--text-primary);
+            }
+
+            /* Enhanced Charts Styling */
+            .enhanced-charts {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 24px;
+                margin-top: 32px;
+            }
+
+            .chart-card {
+                background: white;
+                border-radius: 16px;
+                padding: 24px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                transition: all 0.3s ease;
+            }
+
+            .chart-card:hover {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                transform: translateY(-2px);
+            }
+
+            .chart-card h3 {
+                margin: 0 0 20px 0;
+                font-size: 18px;
+                color: #1e293b;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .chart-card-wide {
+                grid-column: span 2;
+            }
+
+            @media (max-width: 1200px) {
+                .enhanced-charts {
+                    grid-template-columns: 1fr;
+                }
+                .chart-card-wide {
+                    grid-column: span 1;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .enhanced-charts {
+                    gap: 16px;
+                }
+                .chart-card {
+                    padding: 16px;
+                }
             }
         </style>
     </main>

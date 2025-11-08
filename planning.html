@@ -7,7 +7,9 @@
   <title>Planning mensuel — ST8</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/system.css">
+  <link rel="stylesheet" href="/css/weather.css">
   <link rel="icon" href="/assets/icons/ST8_orange.svg" type="image/svg+xml">
+  <script src="/js/weather.js"></script>
   <style>
     :root {
       --agentw: 180px;
@@ -294,6 +296,9 @@
   </header>
 
   <main>
+    <!-- Weather Widget -->
+    <div id="weather-container-planning" style="margin-bottom: 20px;"></div>
+    
     <div id="debug-banner"
       style="position:fixed;right:14px;bottom:14px;background:#0b1220;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 6px 16px rgba(2,6,23,0.3);z-index:99999;font-size:13px;max-width:320px">
       Initialisation...</div>
@@ -885,6 +890,16 @@
         }
       } catch (e) { const db = document.getElementById('debug-banner'); if (db) { db.textContent = 'Erreur synchronisation: ' + (e.message || e); db.style.background = '#b91c1c'; } }
     }
+
+    // Initialize weather widget
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.weather) {
+        await window.weather.init('weather-container-planning', { 
+          compact: true, 
+          forecast: false
+        });
+      }
+    });
   </script>
 </body>
 

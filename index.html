@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <title>ST8 PRO • Accueil</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/weather.css">
   <link rel="icon" href="/assets/icons/ST8_multi.svg" type="image/svg+xml">
 </head>
 
@@ -16,6 +17,10 @@
     <div class="home-intro">
       <p class="page-intro">Bienvenue sur l'interface de gestion du service territorial. Choisissez un module pour
         commencer.</p>
+      
+      <!-- Weather Widget -->
+      <div id="weather-container" class="weather-container"></div>
+      
       <!-- Grille des applications -->
       <div class="app-grid" data-app-page="index" data-app-layout="home"
         data-app-empty="Chargement des applications...">
@@ -25,7 +30,20 @@
   <footer data-include="footer"></footer>
   <script src="/js/include-partials.js?v=2"></script>
   <script src="/js/apps-data.js?v=2"></script>
+  <script src="/js/weather.js?v=2"></script>
   <script src="/js/script.js?v=2"></script>
+  <script>
+    // Initialize weather widget on homepage
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.weather) {
+        await window.weather.init('weather-container', { 
+          compact: false, 
+          forecast: true,
+          forecastDays: 5
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>
