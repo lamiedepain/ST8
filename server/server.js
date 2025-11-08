@@ -78,7 +78,18 @@ app.use(bodyParser.json({ limit: '5mb' }));
 const DATA_PATH = path.join(__dirname, '..', 'data', 'agents_source.json');
 
 function readData() {
-  try { return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8')); } catch (e) { return null; }
+  try {
+    console.log('Reading data from:', DATA_PATH);
+    const content = fs.readFileSync(DATA_PATH, 'utf8');
+    console.log('File content length:', content.length);
+    const data = JSON.parse(content);
+    console.log('Parsed data keys:', Object.keys(data));
+    return data;
+  } catch (e) {
+    console.error('readData error:', e.message);
+    console.error('File exists check:', fs.existsSync(DATA_PATH));
+    return null;
+  }
 }
 
 // normalize status codes server-side to canonical forms (similar to client)
@@ -102,16 +113,21 @@ function writeData(obj) {
 
 app.get('/api/agents', async (req, res) => {
   try {
+    console.log('GET /api/agents - MONGO_URI defined:', !!process.env.MONGO_URI);
+
     if (process.env.MONGO_URI) {
       // Use MongoDB
+      console.log('Using MongoDB for agents data');
       let doc = await Agents.findOne();
       if (!doc) {
         // Load from file if not in DB
         const data = readData();
         if (data) {
+          console.log('Loading data from file to MongoDB');
           doc = new Agents(data);
           await doc.save();
         } else {
+          console.log('No data file found, returning empty');
           return res.json({ agents: [], metadata: {} });
         }
       }
@@ -126,8 +142,15 @@ app.get('/api/agents', async (req, res) => {
       res.json(doc.toObject());
     } else {
       // Use file storage only
+      console.log('Using file storage for agents data');
+      console.log('DATA_PATH:', DATA_PATH);
+      console.log('File exists:', fs.existsSync(DATA_PATH));
+
       const data = readData();
+      console.log('Data loaded:', !!data);
+
       if (data && Array.isArray(data.agents)) {
+        console.log('Processing', data.agents.length, 'agents');
         // Normalize presence codes
         data.agents.forEach(a => {
           if (a.presences) {
@@ -139,7 +162,7 @@ app.get('/api/agents', async (req, res) => {
     }
   } catch (e) {
     console.error('GET /api/agents error:', e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message, stack: e.stack });
   }
 });
 
