@@ -10,11 +10,20 @@ const app = express();
 app.use(express.static(path.join(__dirname, '..')));
 
 const rootHtml = path.join(__dirname, '..');
+// Track MongoDB connection status
+let mongoConnected = false;
+
 // Connect to MongoDB only if MONGO_URI is set
 if (process.env.MONGO_URI) {
   mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .then(() => {
+      console.log('Connected to MongoDB');
+      mongoConnected = true;
+    })
+    .catch(err => {
+      console.error('MongoDB connection error:', err);
+      mongoConnected = false;
+    });
 } else {
   console.log('No MONGO_URI set, using file storage');
 }
@@ -135,9 +144,9 @@ function writeData(obj) {
 
 app.get('/api/agents', async (req, res) => {
   try {
-    console.log('GET /api/agents - MONGO_URI defined:', !!process.env.MONGO_URI);
+    console.log('GET /api/agents - MONGO_URI defined:', !!process.env.MONGO_URI, 'connected:', mongoConnected);
 
-    if (process.env.MONGO_URI) {
+    if (process.env.MONGO_URI && mongoConnected) {
       // Use MongoDB
       console.log('Using MongoDB for agents data');
       let doc = await Agents.findOne();
@@ -164,7 +173,7 @@ app.get('/api/agents', async (req, res) => {
       res.json(doc.toObject());
     } else {
       // Use file storage only
-      console.log('Using file storage for agents data');
+      console.log('Using file storage for agents data (MongoDB not available)');
       console.log('DATA_PATH:', DATA_PATH);
       console.log('File exists:', fs.existsSync(DATA_PATH));
 
@@ -184,6 +193,23 @@ app.get('/api/agents', async (req, res) => {
     }
   } catch (e) {
     console.error('GET /api/agents error:', e);
+    // If MongoDB operation failed, try file storage as fallback
+    if (process.env.MONGO_URI && mongoConnected) {
+      console.log('MongoDB operation failed, falling back to file storage');
+      try {
+        const data = readData();
+        if (data && Array.isArray(data.agents)) {
+          data.agents.forEach(a => {
+            if (a.presences) {
+              Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+            }
+          });
+        }
+        return res.json(data || { agents: [], metadata: {} });
+      } catch (fallbackError) {
+        console.error('File fallback also failed:', fallbackError);
+      }
+    }
     res.status(500).json({ error: e.message, stack: e.stack });
   }
 });
@@ -210,7 +236,7 @@ app.post('/api/agents', async (req, res) => {
       }
     });
 
-    if (process.env.MONGO_URI) {
+    if (process.env.MONGO_URI && mongoConnected) {
       console.log('Using MongoDB for save');
       // Use MongoDB
       const updateData = {
@@ -221,7 +247,7 @@ app.post('/api/agents', async (req, res) => {
       console.log('MongoDB save successful');
       res.json({ ok: true });
     } else {
-      console.log('Using file storage for save');
+      console.log('Using file storage for save (MongoDB not available)');
       console.log('DATA_PATH for write:', DATA_PATH);
       // Use file storage only
       const updateData = {
@@ -235,6 +261,27 @@ app.post('/api/agents', async (req, res) => {
     }
   } catch (e) {
     console.error('POST /api/agents error:', e);
+    // If MongoDB operation failed, try file storage as fallback
+    if (process.env.MONGO_URI && mongoConnected) {
+      console.log('MongoDB operation failed, falling back to file storage');
+      try {
+        const updateData = {
+          agents: req.body.agents || [],
+          metadata: { ...req.body.metadata, last_modified: new Date().toISOString() }
+        };
+        // Normalize again in case we didn't get here
+        updateData.agents.forEach(a => {
+          if (a.presences) {
+            Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
+          }
+        });
+        writeData(updateData);
+        console.log('File fallback save successful');
+        return res.json({ ok: true });
+      } catch (fallbackError) {
+        console.error('File fallback also failed:', fallbackError);
+      }
+    }
     res.status(500).json({ error: e.message, stack: e.stack });
   }
 });
@@ -242,8 +289,9 @@ app.post('/api/agents', async (req, res) => {
 app.delete('/api/agents/:matricule', async (req, res) => {
   try {
     const mat = req.params.matricule;
+    console.log('DELETE /api/agents/' + mat + ' - MONGO_URI defined:', !!process.env.MONGO_URI, 'connected:', mongoConnected);
 
-    if (process.env.MONGO_URI) {
+    if (process.env.MONGO_URI && mongoConnected) {
       // Use MongoDB
       const doc = await Agents.findOne();
       if (!doc) return res.status(404).json({ error: 'no data' });
@@ -256,6 +304,7 @@ app.delete('/api/agents/:matricule', async (req, res) => {
       res.json({ ok: true });
     } else {
       // Use file storage only
+      console.log('Using file storage for delete (MongoDB not available)');
       const data = readData();
       if (!data || !data.agents) return res.status(404).json({ error: 'no data' });
       const before = data.agents.length;
@@ -268,6 +317,23 @@ app.delete('/api/agents/:matricule', async (req, res) => {
     }
   } catch (e) {
     console.error('DELETE /api/agents error:', e);
+    // If MongoDB operation failed, try file storage as fallback
+    if (process.env.MONGO_URI && mongoConnected) {
+      console.log('MongoDB operation failed, falling back to file storage for delete');
+      try {
+        const data = readData();
+        if (!data || !data.agents) return res.status(404).json({ error: 'no data' });
+        const before = data.agents.length;
+        data.agents = data.agents.filter(a => (a.matricule || '') !== req.params.matricule);
+        if (data.agents.length === before) return res.status(404).json({ error: 'not found' });
+        data.metadata = data.metadata || {};
+        data.metadata.last_modified = new Date().toISOString();
+        writeData(data);
+        return res.json({ ok: true });
+      } catch (fallbackError) {
+        console.error('File fallback also failed:', fallbackError);
+      }
+    }
     res.status(500).json({ error: e.message });
   }
 });
