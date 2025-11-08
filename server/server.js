@@ -84,7 +84,20 @@ app.get('/', (req, res) => {
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
 
-const DATA_PATH = path.join(__dirname, 'data', 'agents_source.json');
+const DATA_PATH = process.env.RENDER ? '/tmp/agents_source.json' : path.join(__dirname, 'data', 'agents_source.json');
+
+// Copy data file to /tmp on Render startup
+if (process.env.RENDER) {
+  const sourcePath = path.join(__dirname, 'data', 'agents_source.json');
+  try {
+    if (fs.existsSync(sourcePath)) {
+      fs.copyFileSync(sourcePath, DATA_PATH);
+      console.log('Data file copied to /tmp for Render');
+    }
+  } catch (e) {
+    console.error('Failed to copy data file to /tmp:', e.message);
+  }
+}
 
 function readData() {
   try {
