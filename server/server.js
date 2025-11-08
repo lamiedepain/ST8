@@ -104,11 +104,33 @@ function normalizeCode(code) {
 }
 
 function writeData(obj) {
+  console.log('writeData called with object keys:', Object.keys(obj || {}));
   const tmp = DATA_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
   const bak = DATA_PATH + '.' + Date.now() + '.bak';
-  try { fs.copyFileSync(DATA_PATH, bak); } catch (e) { }
-  fs.renameSync(tmp, DATA_PATH);
+
+  try {
+    console.log('Writing to temp file:', tmp);
+    fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+    console.log('Temp file written successfully');
+
+    try {
+      console.log('Creating backup file:', bak);
+      fs.copyFileSync(DATA_PATH, bak);
+      console.log('Backup created');
+    } catch (backupErr) {
+      console.log('Backup failed (probably first write):', backupErr.message);
+    }
+
+    console.log('Renaming temp to final file');
+    fs.renameSync(tmp, DATA_PATH);
+    console.log('File write completed successfully');
+  } catch (e) {
+    console.error('writeData error:', e.message);
+    console.error('DATA_PATH:', DATA_PATH);
+    console.error('Directory exists:', fs.existsSync(path.dirname(DATA_PATH)));
+    console.error('Directory writable:', fs.accessSync ? 'checking...' : 'unknown');
+    throw e;
+  }
 }
 
 app.get('/api/agents', async (req, res) => {
@@ -168,10 +190,20 @@ app.get('/api/agents', async (req, res) => {
 
 app.post('/api/agents', async (req, res) => {
   try {
+    console.log('POST /api/agents - Received request');
     const body = req.body;
-    if (!body || !body.agents) return res.status(400).json({ error: 'missing agents' });
+    console.log('Request body keys:', Object.keys(body || {}));
+    console.log('Has agents:', !!(body && body.agents));
+
+    if (!body || !body.agents) {
+      console.log('Missing agents in request body');
+      return res.status(400).json({ error: 'missing agents' });
+    }
+
     // Normalize incoming agents' presences
     const incoming = body.agents || [];
+    console.log('Processing', incoming.length, 'agents');
+
     incoming.forEach(a => {
       if (a.presences) {
         Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
@@ -179,25 +211,31 @@ app.post('/api/agents', async (req, res) => {
     });
 
     if (process.env.MONGO_URI) {
+      console.log('Using MongoDB for save');
       // Use MongoDB
       const updateData = {
         agents: incoming,
         metadata: { ...body.metadata, last_modified: new Date().toISOString() }
       };
       await Agents.findOneAndUpdate({}, updateData, { upsert: true, new: true });
+      console.log('MongoDB save successful');
       res.json({ ok: true });
     } else {
+      console.log('Using file storage for save');
+      console.log('DATA_PATH for write:', DATA_PATH);
       // Use file storage only
       const updateData = {
         agents: incoming,
         metadata: { ...body.metadata, last_modified: new Date().toISOString() }
       };
+      console.log('Calling writeData with', incoming.length, 'agents');
       writeData(updateData);
+      console.log('File write completed successfully');
       res.json({ ok: true });
     }
   } catch (e) {
     console.error('POST /api/agents error:', e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message, stack: e.stack });
   }
 });
 
