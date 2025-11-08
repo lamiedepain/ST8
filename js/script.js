@@ -554,3 +554,50 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAppSections();
   });
 });
+
+// Navigation Menu Functionality
+function initNavigation() {
+  const navToggle = document.getElementById('nav-toggle');
+  const navMenu = document.getElementById('nav-menu');
+
+  if (navToggle && navMenu) {
+    // Toggle mobile menu
+    navToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+        navMenu.classList.remove('open');
+      }
+    });
+
+    // Close menu on window resize (if switching to desktop)
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        navMenu.classList.remove('open');
+      }
+    });
+  }
+
+  // Mark active page
+  markActivePage();
+}
+
+function markActivePage() {
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  navLinks.forEach(link => {
+    const linkPath = link.getAttribute('href');
+    if (linkPath === currentPath || (currentPath === '/' && linkPath === '/')) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+}
+
+// Initialize navigation when DOM is loaded
+document.addEventListener('DOMContentLoaded', initNavigation);
