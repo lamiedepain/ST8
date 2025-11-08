@@ -86,31 +86,74 @@ app.use(bodyParser.json({ limit: '5mb' }));
 
 const DATA_PATH = process.env.RENDER ? '/tmp/agents_source.json' : path.join(__dirname, 'data', 'agents_source.json');
 
-// Copy data file to /tmp on Render startup
+// Copy data file to /tmp on Render startup and ensure it exists
 if (process.env.RENDER) {
   const sourcePath = path.join(__dirname, 'data', 'agents_source.json');
   try {
+    // Ensure /tmp directory exists
+    if (!fs.existsSync('/tmp')) {
+      fs.mkdirSync('/tmp', { recursive: true });
+    }
+
     if (fs.existsSync(sourcePath)) {
       fs.copyFileSync(sourcePath, DATA_PATH);
       console.log('Data file copied to /tmp for Render');
+    } else {
+      // Create empty data file if source doesn't exist
+      const emptyData = { agents: [], metadata: {} };
+      fs.writeFileSync(DATA_PATH, JSON.stringify(emptyData, null, 2));
+      console.log('Empty data file created in /tmp for Render');
     }
   } catch (e) {
-    console.error('Failed to copy data file to /tmp:', e.message);
+    console.error('Failed to setup data file in /tmp:', e.message);
+    // Try to create empty file anyway
+    try {
+      const emptyData = { agents: [], metadata: {} };
+      fs.writeFileSync(DATA_PATH, JSON.stringify(emptyData, null, 2));
+      console.log('Fallback: empty data file created in /tmp');
+    } catch (fallbackError) {
+      console.error('Critical: cannot create data file in /tmp:', fallbackError.message);
+    }
   }
 }
 
 function readData() {
   try {
     console.log('Reading data from:', DATA_PATH);
+
+    // Ensure file exists, create empty one if not
+    if (!fs.existsSync(DATA_PATH)) {
+      console.log('Data file does not exist, creating empty file');
+      const emptyData = { agents: [], metadata: {} };
+      fs.writeFileSync(DATA_PATH, JSON.stringify(emptyData, null, 2));
+      return emptyData;
+    }
+
     const content = fs.readFileSync(DATA_PATH, 'utf8');
     console.log('File content length:', content.length);
+
+    if (!content || content.trim() === '') {
+      console.log('File is empty, returning empty data');
+      return { agents: [], metadata: {} };
+    }
+
     const data = JSON.parse(content);
     console.log('Parsed data keys:', Object.keys(data));
+
+    // Ensure data has required structure
+    if (!data || typeof data !== 'object') {
+      console.log('Invalid data structure, returning empty data');
+      return { agents: [], metadata: {} };
+    }
+
     return data;
   } catch (e) {
     console.error('readData error:', e.message);
     console.error('File exists check:', fs.existsSync(DATA_PATH));
-    return null;
+
+    // Return empty data instead of null to prevent crashes
+    console.log('Returning empty data due to error');
+    return { agents: [], metadata: {} };
   }
 }
 
@@ -192,17 +235,30 @@ app.get('/api/agents', async (req, res) => {
 
       const data = readData();
       console.log('Data loaded:', !!data);
+      console.log('Data type:', typeof data);
+      console.log('Data keys:', data ? Object.keys(data) : 'null');
 
-      if (data && Array.isArray(data.agents)) {
-        console.log('Processing', data.agents.length, 'agents');
+      // Ensure we have valid data structure
+      const safeData = data && typeof data === 'object' ? data : { agents: [], metadata: {} };
+
+      if (safeData.agents && Array.isArray(safeData.agents)) {
+        console.log('Processing', safeData.agents.length, 'agents');
         // Normalize presence codes
-        data.agents.forEach(a => {
+        safeData.agents.forEach(a => {
           if (a.presences) {
             Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
           }
         });
+      } else {
+        console.log('No agents array found, initializing empty');
+        safeData.agents = [];
       }
-      res.json(data || { agents: [], metadata: {} });
+
+      if (!safeData.metadata) {
+        safeData.metadata = {};
+      }
+
+      res.json(safeData);
     }
   } catch (e) {
     console.error('GET /api/agents error:', e);
@@ -211,19 +267,31 @@ app.get('/api/agents', async (req, res) => {
       console.log('MongoDB operation failed, falling back to file storage');
       try {
         const data = readData();
-        if (data && Array.isArray(data.agents)) {
-          data.agents.forEach(a => {
+        const safeData = data && typeof data === 'object' ? data : { agents: [], metadata: {} };
+
+        if (safeData.agents && Array.isArray(safeData.agents)) {
+          safeData.agents.forEach(a => {
             if (a.presences) {
               Object.keys(a.presences).forEach(d => { a.presences[d] = normalizeCode(a.presences[d]); });
             }
           });
+        } else {
+          safeData.agents = [];
         }
-        return res.json(data || { agents: [], metadata: {} });
+
+        if (!safeData.metadata) {
+          safeData.metadata = {};
+        }
+
+        return res.json(safeData);
       } catch (fallbackError) {
         console.error('File fallback also failed:', fallbackError);
       }
     }
-    res.status(500).json({ error: e.message, stack: e.stack });
+
+    // Final fallback - return empty data
+    console.log('All storage methods failed, returning empty data');
+    res.json({ agents: [], metadata: {} });
   }
 });
 
