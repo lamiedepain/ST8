@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <title>Planning bimensuel</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/weather.css">
   <link rel="icon" href="assets/faviconbimensuel.svg" type="image/svg+xml">
 </head>
 
@@ -14,6 +15,9 @@
     <div data-include="header"></div>
   </header>
   <main>
+    <!-- Weather Widget -->
+    <div id="weather-container-bimensuel" style="margin-bottom: 20px;"></div>
+    
     <p class="page-intro">Visualise quatorze jours cons&eacute;cutifs et imprime en A3 portrait ou paysage.</p>
     <div class="app-embed" data-app-embed="planning-biweekly" data-app-mode="iframe" data-app-title="Planning bimensuel"
       data-app-height="760" data-app-loading="Chargement du planning bimensuel..."
@@ -24,6 +28,18 @@
   <script src="js/include-partials.js"></script>
   <script src="js/apps-data.js"></script>
   <script src="js/script.js"></script>
+  <script src="js/weather.js"></script>
+  <script>
+    // Initialize weather widget
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.weather) {
+        await window.weather.init('weather-container-bimensuel', { 
+          compact: true, 
+          forecast: false
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

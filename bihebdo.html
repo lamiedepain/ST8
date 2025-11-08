@@ -6,6 +6,7 @@
   <title>Planning bi-hebdomadaire</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/system.css">
+  <link rel="stylesheet" href="../css/weather.css">
   <link rel="icon" href="../assets/icons/ST8_slate.svg" type="image/svg+xml">
   <style>
     /* Pastilles permis / caces - styles unifiés */
@@ -165,6 +166,9 @@
     <div data-include="header"></div>
   </header>
   <main>
+    <!-- Weather Widget -->
+    <div id="weather-container-bihebdo" style="margin-bottom: 20px;"></div>
+    
     <p class="page-intro">Visualise quatorze ou sept jours cons&eacute;cutifs et imprime en A3 portrait ou paysage.</p>
 
     <!-- Contenu direct du planning bi-hebdomadaire -->
@@ -523,7 +527,18 @@
         else { if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Envoi forcé échoué — serveur indisponible', 'error'); }
       } catch (e) { console.error(e); if (typeof ST8Notify !== 'undefined') ST8Notify.showToast('Erreur lors de l\'envoi forcé', 'error'); }
     }
+
+    // Initialize weather widget
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.weather) {
+        await window.weather.init('weather-container-bihebdo', { 
+          compact: true, 
+          forecast: false
+        });
+      }
+    });
   </script>
+  <script src="../js/weather.js"></script>
 </body>
 
 </html>
