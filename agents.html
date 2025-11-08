@@ -634,17 +634,15 @@
 
     // Gestion des accordéons
     function toggleAccordion(header) {
+      const section = header.parentElement;
       const content = header.nextElementSibling;
       const icon = header.querySelector('.accordion-icon');
 
-      header.classList.toggle('active');
-      content.classList.toggle('active');
+      section.classList.toggle('active');
 
-      if (content.classList.contains('active')) {
-        content.style.maxHeight = content.scrollHeight + 'px';
+      if (section.classList.contains('active')) {
         icon.textContent = '▼';
       } else {
-        content.style.maxHeight = '0px';
         icon.textContent = '▶';
       }
     }
