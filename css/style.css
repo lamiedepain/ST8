@@ -843,9 +843,10 @@ footer {
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 2px;
+  gap: 1px;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-item {
@@ -855,13 +856,13 @@ footer {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 8px;
   color: white;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 4px;
   transition: all 0.2s ease;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   position: relative;
@@ -877,12 +878,24 @@ footer {
 }
 
 .nav-icon {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
 }
 
 .nav-text {
-  display: inline;
+  display: none;
+}
+
+/* Show text on larger screens */
+@media (min-width: 768px) {
+  .nav-link {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .nav-text {
+    display: inline;
+  }
 }
 
 /* Active page indicator */
