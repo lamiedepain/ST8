@@ -1,0 +1,272 @@
+/* Structure Analysis Page Styles */
+
+.structure-analysis {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.structure-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.structure-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  margin: 0 0 12px 0;
+}
+
+body.dark-mode .structure-title {
+  color: #eee;
+}
+
+.structure-subtitle {
+  font-size: 1rem;
+  color: var(--muted, #6b7280);
+  margin: 0;
+  line-height: 1.6;
+}
+
+body.dark-mode .structure-subtitle {
+  color: #9ca3af;
+}
+
+/* Sections */
+.structure-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.structure-section {
+  background: var(--bg-surface, #ffffff);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+body.dark-mode .structure-section {
+  background: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.structure-section:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Section Header */
+.section-header-button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+}
+
+.section-header-button:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .section-header-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color, #2C6EBD);
+}
+
+.section-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+body.dark-mode .section-title {
+  color: #eee;
+}
+
+.item-count {
+  background: var(--color, #2C6EBD);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.chevron-icon {
+  display: flex;
+  align-items: center;
+  color: var(--muted, #6b7280);
+  transition: transform 0.2s ease;
+}
+
+.chevron-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Section Content */
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.section-content.expanded {
+  max-height: none !important;
+}
+
+.section-items {
+  padding: 0 24px 20px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.dark-mode .section-items {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Structure Items */
+.structure-item {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .structure-item {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.structure-item:last-child {
+  border-bottom: none;
+}
+
+.item-label {
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  font-size: 0.9375rem;
+}
+
+body.dark-mode .item-label {
+  color: #e5e7eb;
+}
+
+.item-value {
+  color: var(--muted, #6b7280);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+body.dark-mode .item-value {
+  color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .structure-analysis {
+    padding: 16px;
+  }
+
+  .structure-title {
+    font-size: 1.5rem;
+  }
+
+  .structure-subtitle {
+    font-size: 0.9375rem;
+  }
+
+  .section-header {
+    padding: 16px;
+  }
+
+  .section-items {
+    padding: 0 16px 16px 16px;
+  }
+
+  .structure-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .item-label {
+    font-size: 0.875rem;
+  }
+
+  .item-value {
+    font-size: 0.875rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+  }
+}
+
+/* Accessibility */
+.section-header-button:focus-visible {
+  outline: 2px solid var(--color, #2C6EBD);
+  outline-offset: -2px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.structure-section {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Print styles */
+@media print {
+  .structure-section {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .section-content {
+    max-height: none !important;
+    display: block !important;
+  }
+
+  .chevron-icon {
+    display: none;
+  }
+}
