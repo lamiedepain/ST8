@@ -24,6 +24,17 @@ if (process.env.MONGO_URI) {
       console.error('MongoDB connection error:', err);
       mongoConnected = false;
     });
+
+  // Add event listeners for runtime connection issues
+  mongoose.connection.on('disconnected', () => {
+    console.error('MongoDB disconnected');
+    mongoConnected = false;
+  });
+
+  mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error event:', err);
+    mongoConnected = false;
+  });
 } else {
   console.log('No MONGO_URI set, using file storage');
 }
@@ -54,7 +65,7 @@ app.use((req, res, next) => {
 });
 // Quick redirect middleware for friendly routes when a matching HTML exists
 // This helps when the host serves static files or the URL is requested directly
-// (e.g. GET /agents -> redirect to /html/agents.html)
+// (e.g. GET /agents -> redirect to /agents.html or /html/agents.html depending on repo layout)
 app.use((req, res, next) => {
   try {
     if (req.method !== 'GET') return next();
@@ -64,9 +75,13 @@ app.use((req, res, next) => {
 
     const rel = req.path.replace(/^\/+/, ''); // remove leading slash
     if (!rel) return next();
-    const candidate = path.join(__dirname, '..', 'html', rel + '.html');
-    if (fs.existsSync(candidate)) {
-      // Redirect to the canonical /html/... page so static hosts will serve it
+    const candidateHtmlDir = path.join(__dirname, '..', 'html', rel + '.html');
+    const candidateRoot = path.join(__dirname, '..', rel + '.html');
+    if (fs.existsSync(candidateRoot)) {
+      return res.redirect(302, '/' + rel + '.html');
+    }
+    if (fs.existsSync(candidateHtmlDir)) {
+      // Redirect to the canonical /html/... page if this repo uses /html folder
       return res.redirect(302, '/html/' + rel + '.html');
     }
   } catch (e) {
@@ -437,10 +452,16 @@ app.get('*', (req, res, next) => {
     return res.sendFile(path.join(rootHtml, 'index.html'));
   }
 
-  // Try mapping /foo -> /html/foo.html
-  const candidate = path.join(rootHtml, 'html', req.path + '.html');
-  if (fs.existsSync(candidate)) {
-    return res.sendFile(candidate);
+  // Try mapping /foo -> /foo.html (root-level)
+  const candidateRoot = path.join(rootHtml, req.path + '.html');
+  if (fs.existsSync(candidateRoot)) {
+    return res.sendFile(candidateRoot);
+  }
+
+  // Try mapping /foo -> /html/foo.html (legacy folder layout)
+  const candidateHtml = path.join(rootHtml, 'html', req.path + '.html');
+  if (fs.existsSync(candidateHtml)) {
+    return res.sendFile(candidateHtml);
   }
 
   // Try direct file under html (if user requested /html/xxx)
