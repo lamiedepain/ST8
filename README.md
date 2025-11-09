@@ -55,6 +55,21 @@ Le serveur démarre sur le port 3000 par défaut (configurable via `PORT` enviro
 - `DELETE /api/agents/:matricule` - Supprimer un agent
 - `GET /health` - Vérifier le statut du serveur
 
+## Gestion des sauvegardes
+
+Le serveur crée automatiquement des fichiers de sauvegarde lors de chaque modification des données dans `server/data/`. Un script de gestion des sauvegardes est disponible :
+
+```bash
+# Lister les sauvegardes disponibles
+./backup.sh list
+
+# Restaurer depuis une sauvegarde
+./backup.sh restore server/data/agents_source.json.TIMESTAMP.bak
+
+# Nettoyer les anciennes sauvegardes (garde les 10 dernières)
+./backup.sh clean
+```
+
 ## Fonctionnalités
 
 - Gestion des agents et leurs compétences
