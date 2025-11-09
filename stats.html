@@ -11,13 +11,18 @@
     <script src="/js/libs/chart.min.js"></script>
     <script src="/js/libs/datetime.js"></script>
     <script src="/js/libs/presence.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ST8 PRO - Statistiques annuelles">
+  <meta name="theme-color" content="#8D6E63">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body>
-    <header class="theme-brown" data-square="ST" data-title="Statistiques annuelles">
+    <header class="theme-brown" data-square="ST" data-title="Statistiques annuelles" role="banner">
         <div data-include="header"></div>
     </header>
-    <main>
+    <main role="main">
         <p class="page-intro">Analyse le taux de pr&eacute;sence par groupe &agrave; partir du planning mensuel et des
             donn&eacute;es agents.</p>
 
@@ -650,7 +655,7 @@
                         aria-hidden="true">&#9728;&#9790;</span></a></li>
         </ul>
     </div>
-    <footer data-include="footer"></footer>
+    <footer data-include="footer" role="contentinfo"></footer>
     <script src="/js/apps-data.js"></script>
     <script src="/js/script.js"></script>
 </body>

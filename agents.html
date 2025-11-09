@@ -8,13 +8,18 @@
   <link rel="stylesheet" href="/css/agents.css">
   <link rel="stylesheet" href="/css/system.css">
   <link rel="icon" href="/assets/icons/ST8_blue.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ST8 PRO - Gestion des agents">
+  <meta name="theme-color" content="#2C6EBD">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body class="theme-blue">
-  <header class="theme-blue" data-square="AG" data-title="Gestion des agents">
+  <header class="theme-blue" data-square="AG" data-title="Gestion des agents" role="banner">
     <div data-include="header"></div>
   </header>
-  <main>
+  <main role="main">
     <div class="main-toolbar">
       <div class="toolbar-left">
         <select id="service-filter" class="service-selector" onchange="filterAgents()">
@@ -161,7 +166,7 @@
     </div>
   </main>
   <div data-include="fab"></div>
-  <footer data-include="footer"></footer>
+  <footer data-include="footer" role="contentinfo"></footer>
   <script src="/js/include-partials.js?v=2"></script>
   <script src="/js/apps-data.js?v=2"></script>
   <script src="/js/script.js?v=2"></script>

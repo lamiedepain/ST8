@@ -286,14 +286,18 @@
       animation: modalPop .18s ease-out
     }
   </style>
+  <meta name="description" content="ST8 PRO - Planning mensuel">
+  <meta name="theme-color" content="#59B999">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body class="theme-green">
-  <header class="theme-green" data-square="PL" data-title="Planning mensuel">
+  <header class="theme-green" data-square="PL" data-title="Planning mensuel" role="banner">
     <div data-include="header"></div>
   </header>
 
-  <main>
+  <main role="main">
     <div id="debug-banner"
       style="position:fixed;right:14px;bottom:14px;background:#0b1220;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 6px 16px rgba(2,6,23,0.3);z-index:99999;font-size:13px;max-width:320px">
       Initialisation...</div>
@@ -365,7 +369,7 @@
   <div id="modal-backdrop" class="hidden"></div>
 
 
-  <footer data-include="footer"></footer>
+  <footer data-include="footer" role="contentinfo"></footer>
   <div data-include="fab"></div>
 
   <script src="/js/include-partials.js?v=2"></script>

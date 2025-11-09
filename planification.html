@@ -80,14 +80,18 @@
             color: #92400e;
         }
     </style>
+  <meta name="description" content="ST8 PRO - Planification hebdomadaire">
+  <meta name="theme-color" content="#9B51E0">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body class="theme-purple">
-    <header class="theme-purple" data-square="PH" data-title="Planification">
+    <header class="theme-purple" data-square="PH" data-title="Planification" role="banner">
         <div data-include="header"></div>
     </header>
 
-    <main>
+    <main role="main">
         <section class="panel">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
                 <div style="font-weight:800">Planification</div>
@@ -117,7 +121,7 @@
         </section>
     </main>
 
-    <footer data-include="footer"></footer>
+    <footer data-include="footer" role="contentinfo"></footer>
 
     <script src="/js/include-partials.js"></script>
 

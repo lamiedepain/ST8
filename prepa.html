@@ -52,14 +52,18 @@
       gap: 8px
     }
   </style>
+  <meta name="description" content="ST8 PRO - Préparation chantier">
+  <meta name="theme-color" content="#DC3363">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body class="theme-red">
-  <header class="theme-red" data-square="PC" data-title="Prépa chantier">
+  <header class="theme-red" data-square="PC" data-title="Prépa chantier" role="banner">
     <div data-include="header"></div>
   </header>
 
-  <main style="padding:16px">
+  <main style="padding:16px" role="main">
     <section class="panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
         <div style="font-weight:800">Préparation chantier</div>
@@ -92,7 +96,7 @@
 
   <div data-include="fab"></div>
 
-  <footer data-include="footer"></footer>
+  <footer data-include="footer" role="contentinfo"></footer>
 
   <script src="/js/include-partials.js"></script>
 

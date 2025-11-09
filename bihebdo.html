@@ -158,13 +158,18 @@
       color: var(--muted)
     }
   </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ST8 PRO - Planning bihebdomadaire">
+  <meta name="theme-color" content="#334155">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body class="theme-slate">
-  <header class="theme-slate" data-square="BI" data-title="Planning bi-hebdomadaire">
+  <header class="theme-slate" data-square="BI" data-title="Planning bi-hebdomadaire" role="banner">
     <div data-include="header"></div>
   </header>
-  <main>
+  <main role="main">
     <p class="page-intro">Visualise quatorze ou sept jours cons&eacute;cutifs et imprime en A3 portrait ou paysage.</p>
 
     <!-- Contenu direct du planning bi-hebdomadaire -->
@@ -173,7 +178,7 @@
     </div>
   </main>
   <div data-include="fab"></div>
-  <footer data-include="footer"></footer>
+  <footer data-include="footer" role="contentinfo"></footer>
   <script src="../js/include-partials.js"></script>
   <script src="../js/apps-data.js"></script>
   <script src="../js/script.js"></script>
