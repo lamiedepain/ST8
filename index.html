@@ -3,29 +3,34 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ST8 PRO - Interface de gestion du service territorial Bordeaux Maritime / Bastide N° 8">
+  <meta name="theme-color" content="#2D2D2D">
   <title>ST8 PRO • Accueil</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="/assets/icons/ST8_multi.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/ST8_multi.svg">
 </head>
 
 <body>
-  <header class="theme-dark" data-square="BM" data-title="ST8 PRO • Accueil">
+  <header class="theme-dark" data-square="BM" data-title="ST8 PRO • Accueil" role="banner">
     <div data-include="header"></div>
   </header>
-  <main>
+  <main role="main">
     <div class="home-intro">
       <p class="page-intro">Bienvenue sur l'interface de gestion du service territorial. Choisissez un module pour
         commencer.</p>
       <!-- Grille des applications -->
       <div class="app-grid" data-app-page="index" data-app-layout="home"
-        data-app-empty="Chargement des applications...">
+        data-app-empty="Chargement des applications..." role="navigation" aria-label="Modules de l'application">
       </div>
     </div>
   </main>
-  <footer data-include="footer"></footer>
-  <script src="/js/include-partials.js?v=2"></script>
-  <script src="/js/apps-data.js?v=2"></script>
-  <script src="/js/script.js?v=2"></script>
+  <footer data-include="footer" role="contentinfo"></footer>
+  <script src="/js/include-partials.js?v=3"></script>
+  <script src="/js/apps-data.js?v=3"></script>
+  <script src="/js/script.js?v=3"></script>
 </body>
 
 </html>

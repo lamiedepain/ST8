@@ -563,13 +563,15 @@ function initNavigation() {
   if (navToggle && navMenu) {
     // Toggle mobile menu
     navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('open');
+      const isOpen = navMenu.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', isOpen);
     });
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
       if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
         navMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
       }
     });
 
@@ -577,6 +579,16 @@ function initNavigation() {
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) {
         navMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close menu when escape key is pressed
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && navMenu.classList.contains('open')) {
+        navMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.focus();
       }
     });
   }
@@ -593,11 +605,31 @@ function markActivePage() {
     const linkPath = link.getAttribute('href');
     if (linkPath === currentPath || (currentPath === '/' && linkPath === '/')) {
       link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
     } else {
       link.classList.remove('active');
+      link.removeAttribute('aria-current');
     }
   });
 }
 
+// Service Worker Registration
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('ST8 PRO: Service Worker registered', registration.scope);
+        })
+        .catch((error) => {
+          console.log('ST8 PRO: Service Worker registration failed', error);
+        });
+    });
+  }
+}
+
 // Initialize navigation when DOM is loaded
-document.addEventListener('DOMContentLoaded', initNavigation);
+document.addEventListener('DOMContentLoaded', () => {
+  initNavigation();
+  registerServiceWorker();
+});

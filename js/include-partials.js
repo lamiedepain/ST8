@@ -10,11 +10,17 @@
         if (!url.includes('/') && !url.endsWith('.html')) {
             url = '/includes/' + name + '.html';
         }
+        
+        // Add loading state
+        el.setAttribute('data-loading', 'true');
+        
         try {
             const res = await fetch(url, { cache: 'no-cache' });
             if (!res.ok) throw new Error('Failed to load ' + url + ' (' + res.status + ')');
             const text = await res.text();
             el.innerHTML = text;
+            el.removeAttribute('data-loading');
+            
             // post-process: if include is inside a header, propagate dataset attrs
             const header = el.closest('header');
             if (header) {
@@ -35,7 +41,9 @@
                 }
             }
         } catch (e) {
-            console.error(e);
+            console.error('Error loading include:', e);
+            el.removeAttribute('data-loading');
+            el.setAttribute('data-error', 'true');
             // keep element visible with an error marker
             el.innerHTML = '<!-- include failed: ' + name + ' -->';
         }

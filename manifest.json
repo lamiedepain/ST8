@@ -1,0 +1,21 @@
+{
+  "name": "ST8 PRO - Service Territorial",
+  "short_name": "ST8 PRO",
+  "description": "Interface de gestion du service territorial Bordeaux Maritime / Bastide N° 8",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2D2D2D",
+  "theme_color": "#2D2D2D",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/assets/icons/ST8_multi.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "fr-FR",
+  "dir": "ltr"
+}

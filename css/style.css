@@ -10,51 +10,74 @@
   /* main text color */
   --muted: #6b7280;
   /* muted / secondary text */
+  --focus-ring: 0 0 0 3px rgba(89, 185, 153, 0.5);
+  /* focus indicator */
 }
 
 .theme-green {
   --color: #59B999;
   --color-dark: #3e8d74;
+  --focus-ring: 0 0 0 3px rgba(89, 185, 153, 0.5);
 }
 
 .theme-red {
   --color: #DC3363;
   --color-dark: #a9254a;
+  --focus-ring: 0 0 0 3px rgba(220, 51, 99, 0.5);
 }
 
 .theme-blue {
   --color: #2C6EBD;
   --color-dark: #1f4c85;
+  --focus-ring: 0 0 0 3px rgba(44, 110, 189, 0.5);
 }
 
 .theme-purple {
   --color: #9B51E0;
   --color-dark: #6e36a3;
+  --focus-ring: 0 0 0 3px rgba(155, 81, 224, 0.5);
 }
 
 .theme-brown {
   --color: #8D6E63;
   --color-dark: #5D4037;
+  --focus-ring: 0 0 0 3px rgba(141, 110, 99, 0.5);
 }
 
 .theme-slate {
   --color: #334155;
   --color-dark: #1e293b;
+  --focus-ring: 0 0 0 3px rgba(51, 65, 85, 0.5);
 }
 
 .theme-orange {
   --color: #F2994A;
   --color-dark: #c77737;
+  --focus-ring: 0 0 0 3px rgba(242, 153, 74, 0.5);
 }
 
 .theme-yellow {
   --color: #F2C94C;
   --color-dark: #c9a63b;
+  --focus-ring: 0 0 0 3px rgba(242, 201, 76, 0.5);
 }
 
 .theme-dark {
   --color: #2D2D2D;
   --color-dark: #1a1a1a;
+  --focus-ring: 0 0 0 3px rgba(45, 45, 45, 0.5);
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color, #59B999);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
 }
 
 body {
@@ -69,6 +92,16 @@ body {
 body.dark-mode {
   background: #121212;
   color: #eee;
+}
+
+/* Loading states */
+[data-loading="true"] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+[data-error="true"] {
+  opacity: 0.8;
 }
 
 header {
@@ -804,10 +837,15 @@ footer {
   border-radius: 4px;
   color: white;
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .nav-toggle:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-toggle:focus-visible {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .hamburger {
@@ -819,6 +857,10 @@ footer {
   transition: background-color 0.2s;
 }
 
+.nav-menu.open ~ .nav-toggle .hamburger {
+  background-color: transparent;
+}
+
 .hamburger::before,
 .hamburger::after {
   content: '';
@@ -827,15 +869,25 @@ footer {
   height: 2px;
   background: white;
   position: absolute;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .hamburger::before {
   top: -6px;
 }
 
+.nav-menu.open ~ .nav-toggle .hamburger::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
 .hamburger::after {
   top: 6px;
+}
+
+.nav-menu.open ~ .nav-toggle .hamburger::after {
+  top: 0;
+  transform: rotate(-45deg);
 }
 
 .nav-menu {
