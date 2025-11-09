@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+server/node_modules/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.DS_Store
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MongoDB data
+data/*.bak.*
+
+# Backup files
+*_old.*
+*.old
