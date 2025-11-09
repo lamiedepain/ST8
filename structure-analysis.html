@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ST8 • Analyse de Structure</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="/assets/icons/ST8_multi.svg" type="image/svg+xml">
+  <style>
+    .structure-analysis {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .structure-header {
+      margin-bottom: 30px;
+    }
+
+    .structure-header h1 {
+      margin: 0 0 10px 0;
+      color: var(--primary-color, #333);
+    }
+
+    .structure-header p {
+      margin: 0;
+      color: var(--text-muted, #666);
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .section:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .section-icon {
+      font-size: 1.5em;
+    }
+
+    .toggle-icon {
+      font-size: 1.2em;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-icon.expanded {
+      transform: rotate(180deg);
+    }
+
+    .section-content {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    .section-content.collapsed {
+      display: none;
+    }
+
+    .subsection {
+      margin-bottom: 15px;
+    }
+
+    .subsection h4 {
+      margin: 0 0 8px 0;
+      color: #555;
+      font-size: 1.1em;
+    }
+
+    .item-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .item-list li {
+      padding: 8px 12px;
+      margin: 4px 0;
+      background: #f8f9fa;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .item-list li:hover {
+      background: #e9ecef;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .item-description {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .badge {
+      background: #007bff;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+
+    .card h5 {
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+
+    .card p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      min-width: 150px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .tech-badge {
+      background: #e7f3ff;
+      color: #0066cc;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 500;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="theme-dark" data-square="SA" data-title="ST8 • Analyse de Structure">
+    <div data-include="header"></div>
+  </header>
+  <main>
+    <div id="root">
+      <div class="structure-analysis">
+        <div class="structure-header">
+          <h1>Analyse de la Structure du Projet ST8</h1>
+          <p>Documentation complète de l'architecture et des composants du système</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value">9</div>
+            <div class="stat-label">Pages HTML</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">7</div>
+            <div class="stat-label">Scripts JS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">4</div>
+            <div class="stat-label">Fichiers CSS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">6</div>
+            <div class="stat-label">Bibliothèques</div>
+          </div>
+        </div>
+
+        <!-- Architecture Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('architecture')">
+            <div class="section-title">
+              <span class="section-icon">🏗️</span>
+              <span>Architecture</span>
+            </div>
+            <span class="toggle-icon expanded" id="toggle-architecture">▼</span>
+          </div>
+          <div class="section-content" id="content-architecture">
+            <div class="subsection">
+              <h4>Structure du Projet</h4>
+              <div class="grid-2">
+                <div class="card">
+                  <h5>Frontend</h5>
+                  <p>Application web vanilla JavaScript avec HTML/CSS modulaire</p>
+                </div>
+                <div class="card">
+                  <h5>Backend</h5>
+                  <p>Serveur Express.js avec MongoDB pour la persistance des données</p>
+                </div>
+                <div class="card">
+                  <h5>Partials</h5>
+                  <p>Système de composants réutilisables (header, footer) via include-partials.js</p>
+                </div>
+                <div class="card">
+                  <h5>API REST</h5>
+                  <p>Endpoints pour la gestion des agents et synchronisation de données</p>
+                </div>
+              </div>
+            </div>
+            <div class="subsection">
+              <h4>Organisation des Fichiers</h4>
+              <ul class="item-list">
+                <li><span class="item-name">/css</span><span class="item-description">Feuilles de style</span></li>
+                <li><span class="item-name">/js</span><span class="item-description">Scripts JavaScript</span></li>
+                <li><span class="item-name">/includes</span><span class="item-description">Composants HTML partiels</span></li>
+                <li><span class="item-name">/server</span><span class="item-description">Backend Node.js</span></li>
+                <li><span class="item-name">/data</span><span class="item-description">Données JSON</span></li>
+                <li><span class="item-name">/assets</span><span class="item-description">Ressources (icônes, images)</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pages Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('pages')">
+            <div class="section-title">
+              <span class="section-icon">📄</span>
+              <span>Pages de l'Application</span>
+            </div>
+            <span class="toggle-icon expanded" id="toggle-pages">▼</span>
+          </div>
+          <div class="section-content" id="content-pages">
+            <ul class="item-list">
+              <li>
+                <span class="item-name">index.html</span>
+                <span class="item-description">Page d'accueil avec grille d'applications</span>
+              </li>
+              <li>
+                <span class="item-name">agents.html</span>
+                <span class="item-description">Gestion des agents (CRUD complet)</span>
+              </li>
+              <li>
+                <span class="item-name">planning.html</span>
+                <span class="item-description">Planning mensuel</span>
+              </li>
+              <li>
+                <span class="item-name">bihebdo.html</span>
+                <span class="item-description">Planning bihebdomadaire</span>
+              </li>
+              <li>
+                <span class="item-name">planification.html</span>
+                <span class="item-description">Planification hebdomadaire</span>
+              </li>
+              <li>
+                <span class="item-name">prepa.html</span>
+                <span class="item-description">Préparation de chantier</span>
+              </li>
+              <li>
+                <span class="item-name">elements.html</span>
+                <span class="item-description">Éléments variables</span>
+              </li>
+              <li>
+                <span class="item-name">stats.html</span>
+                <span class="item-description">Statistiques annuelles</span>
+              </li>
+              <li>
+                <span class="item-name">easydict.html</span>
+                <span class="item-description">Dictionnaire facile</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Data Model Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('dataModel')">
+            <div class="section-title">
+              <span class="section-icon">💾</span>
+              <span>Modèle de Données</span>
+            </div>
+            <span class="toggle-icon" id="toggle-dataModel">▼</span>
+          </div>
+          <div class="section-content collapsed" id="content-dataModel">
+            <div class="subsection">
+              <h4>Agents (agents_source.json)</h4>
+              <div class="card">
+                <h5>Structure des Données Agents</h5>
+                <p>Contient les informations complètes sur les agents du service territorial</p>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                  <li>Informations personnelles (nom, prénom, matricule)</li>
+                  <li>Affectation de service</li>
+                  <li>Certifications et CACES</li>
+                  <li>Disponibilités et planning</li>
+                </ul>
+              </div>
+            </div>
+            <div class="subsection">
+              <h4>CACES Mapping (caces_mapping.json)</h4>
+              <div class="card">
+                <h5>Mapping des Certifications</h5>
+                <p>Correspondance entre les types de CACES et leurs catégories</p>
+              </div>
+            </div>
+            <div class="subsection">
+              <h4>Backend Storage</h4>
+              <div class="grid-2">
+                <div class="card">
+                  <h5>MongoDB</h5>
+                  <p>Base de données principale (production)</p>
+                </div>
+                <div class="card">
+                  <h5>Fichiers JSON</h5>
+                  <p>Fallback local pour développement</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scripts Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('scripts')">
+            <div class="section-title">
+              <span class="section-icon">⚙️</span>
+              <span>Scripts JavaScript</span>
+            </div>
+            <span class="toggle-icon" id="toggle-scripts">▼</span>
+          </div>
+          <div class="section-content collapsed" id="content-scripts">
+            <div class="subsection">
+              <h4>Scripts Principaux</h4>
+              <ul class="item-list">
+                <li>
+                  <span class="item-name">script.js</span>
+                  <span class="item-description">Logique principale, gestion des apps, FAB, thème</span>
+                </li>
+                <li>
+                  <span class="item-name">apps-data.js</span>
+                  <span class="item-description">Catalogue des applications disponibles</span>
+                </li>
+                <li>
+                  <span class="item-name">api-sync.js</span>
+                  <span class="item-description">Communication avec l'API backend</span>
+                </li>
+                <li>
+                  <span class="item-name">include-partials.js</span>
+                  <span class="item-description">Système d'inclusion de composants HTML</span>
+                </li>
+                <li>
+                  <span class="item-name">notify.js</span>
+                  <span class="item-description">Système de notifications</span>
+                </li>
+                <li>
+                  <span class="item-name">weekend-utils.js</span>
+                  <span class="item-description">Utilitaires de gestion des week-ends</span>
+                </li>
+              </ul>
+            </div>
+            <div class="subsection">
+              <h4>Bibliothèques (/js/libs)</h4>
+              <ul class="item-list">
+                <li><span class="item-name">chart.min.js</span><span class="badge">Chart.js</span></li>
+                <li><span class="item-name">datastore.js</span><span class="badge">Custom</span></li>
+                <li><span class="item-name">datetime.js</span><span class="badge">Custom</span></li>
+                <li><span class="item-name">jszip.min.js</span><span class="badge">JSZip</span></li>
+                <li><span class="item-name">presence.js</span><span class="badge">Custom</span></li>
+                <li><span class="item-name">utils.js</span><span class="badge">Custom</span></li>
+                <li><span class="item-name">xlsx.full.min.js</span><span class="badge">SheetJS</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Styles Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('styles')">
+            <div class="section-title">
+              <span class="section-icon">🎨</span>
+              <span>Feuilles de Style</span>
+            </div>
+            <span class="toggle-icon" id="toggle-styles">▼</span>
+          </div>
+          <div class="section-content collapsed" id="content-styles">
+            <ul class="item-list">
+              <li>
+                <span class="item-name">style.css</span>
+                <span class="item-description">Styles principaux et layout</span>
+              </li>
+              <li>
+                <span class="item-name">theme.css</span>
+                <span class="item-description">Système de thèmes (dark/light, couleurs)</span>
+              </li>
+              <li>
+                <span class="item-name">agents.css</span>
+                <span class="item-description">Styles spécifiques à la gestion des agents</span>
+              </li>
+              <li>
+                <span class="item-name">system.css</span>
+                <span class="item-description">Styles système et composants UI</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('features')">
+            <div class="section-title">
+              <span class="section-icon">✨</span>
+              <span>Fonctionnalités Principales</span>
+            </div>
+            <span class="toggle-icon" id="toggle-features">▼</span>
+          </div>
+          <div class="section-content collapsed" id="content-features">
+            <div class="grid-2">
+              <div class="card">
+                <h5>Gestion des Agents</h5>
+                <p>CRUD complet avec filtres par service, recherche, édition groupée</p>
+              </div>
+              <div class="card">
+                <h5>Planning Dynamique</h5>
+                <p>Plusieurs vues (mensuel, bihebdo, hebdo) avec drag & drop</p>
+              </div>
+              <div class="card">
+                <h5>Statistiques</h5>
+                <p>Visualisation des données avec Chart.js</p>
+              </div>
+              <div class="card">
+                <h5>Export/Import</h5>
+                <p>Export Excel via SheetJS, import de données</p>
+              </div>
+              <div class="card">
+                <h5>Synchronisation</h5>
+                <p>API REST pour persistance MongoDB avec fallback local</p>
+              </div>
+              <div class="card">
+                <h5>Thèmes</h5>
+                <p>Mode sombre/clair avec thèmes colorés par page</p>
+              </div>
+              <div class="card">
+                <h5>Responsive</h5>
+                <p>Interface adaptative pour desktop et mobile</p>
+              </div>
+              <div class="card">
+                <h5>Notifications</h5>
+                <p>Système de notifications pour les actions utilisateur</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tech Stack Section -->
+        <div class="section">
+          <div class="section-header" onclick="toggleSection('techStack')">
+            <div class="section-title">
+              <span class="section-icon">🔧</span>
+              <span>Stack Technique</span>
+            </div>
+            <span class="toggle-icon" id="toggle-techStack">▼</span>
+          </div>
+          <div class="section-content collapsed" id="content-techStack">
+            <div class="subsection">
+              <h4>Frontend</h4>
+              <div class="tech-grid">
+                <div class="tech-badge">HTML5</div>
+                <div class="tech-badge">CSS3</div>
+                <div class="tech-badge">JavaScript ES6+</div>
+                <div class="tech-badge">Chart.js</div>
+                <div class="tech-badge">SheetJS</div>
+                <div class="tech-badge">JSZip</div>
+              </div>
+            </div>
+            <div class="subsection">
+              <h4>Backend</h4>
+              <div class="tech-grid">
+                <div class="tech-badge">Node.js</div>
+                <div class="tech-badge">Express.js</div>
+                <div class="tech-badge">MongoDB</div>
+                <div class="tech-badge">Mongoose</div>
+                <div class="tech-badge">CORS</div>
+                <div class="tech-badge">Body-Parser</div>
+              </div>
+            </div>
+            <div class="subsection">
+              <h4>Outils & Déploiement</h4>
+              <div class="tech-grid">
+                <div class="tech-badge">Git</div>
+                <div class="tech-badge">GitHub</div>
+                <div class="tech-badge">Render</div>
+                <div class="tech-badge">npm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+  <footer data-include="footer"></footer>
+
+  <script>
+    function toggleSection(sectionId) {
+      const content = document.getElementById('content-' + sectionId);
+      const toggle = document.getElementById('toggle-' + sectionId);
+      
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        toggle.classList.add('expanded');
+      } else {
+        content.classList.add('collapsed');
+        toggle.classList.remove('expanded');
+      }
+    }
+  </script>
+
+  <script src="/js/include-partials.js?v=2"></script>
+</body>
+
+</html>

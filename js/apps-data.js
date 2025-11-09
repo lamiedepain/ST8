@@ -57,6 +57,13 @@ if (!window.APP_CATALOG.index) {
       url: 'easydict.html',
       theme: 'theme-yellow',
       animationDelay: 1.4
+    },
+    {
+      title: 'Analyse de Structure',
+      abbr: 'SA',
+      url: 'structure-analysis.html',
+      theme: 'theme-dark',
+      animationDelay: 1.6
     }
   ];
 }
