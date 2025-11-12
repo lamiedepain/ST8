@@ -6,14 +6,47 @@ Ce dépôt contient une application front-end statique (HTML/CSS/JS) pour gérer
 
 But de ce commit : préparer le code local pour être poussé vers https://github.com/lamiedepain/ST8.git
 
+## Structure du Projet
+
 Fichiers importants :
 - `html/` : pages statiques (planning, bihebdo, stats, etc.)
 - `js/` : scripts front-end
 - `css/` : styles
 - `data/agents_source.json` : base de données source
 - `server/` : serveur Node.js (API GET/POST /api/agents)
+- `tests/` : système de vérification automatique
 
-Comment préparer et pousser (PowerShell) :
+## Vérification et Tests
+
+Le projet inclut un système complet de vérification des pages et fonctions :
+
+```bash
+# Exécuter la vérification complète
+node tests/verify-pages.js
+```
+
+Résultats actuels :
+- ✅ **218 tests** : 206 réussis (94.5%)
+- ✅ **10 pages HTML** vérifiées
+- ✅ **102+ fonctions JavaScript** validées
+- ✅ Intégration CI/CD complète
+
+Voir [`tests/README.md`](tests/README.md) pour plus de détails et [`VERIFICATION_REPORT.md`](VERIFICATION_REPORT.md) pour le rapport complet.
+
+## Démarrage
+
+### Serveur
+```bash
+cd server
+npm install
+npm start
+# Serveur accessible sur http://localhost:3000
+```
+
+### Pages
+Ouvrir `index.html` dans un navigateur ou servir via un serveur web statique.
+
+## Comment préparer et pousser (PowerShell)
 
 ```powershell
 cd 'C:\Users\Gonçalves\Desktop\v2'
