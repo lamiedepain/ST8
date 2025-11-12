@@ -131,8 +131,17 @@ function verifyJsReferences(filename, content, baseDir = HTML_DIR) {
 function verifyInlineFunctions(filename, content) {
   if (!content) return;
   
-  // Extract script content
-  const scriptBlocks = content.match(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  // Extract script content more safely
+  const scriptBlockRegex = /<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi;
+  const scriptBlocks = [];
+  let match;
+  
+  while ((match = scriptBlockRegex.exec(content)) !== null) {
+    // Extract just the content between script tags (group 1)
+    if (match[1]) {
+      scriptBlocks.push(match[1]);
+    }
+  }
   
   if (scriptBlocks.length === 0) {
     test(`${filename} has inline JavaScript`, false, true);
@@ -142,19 +151,14 @@ function verifyInlineFunctions(filename, content) {
   test(`${filename} has inline JavaScript`, true);
   
   let totalFunctions = 0;
-  scriptBlocks.forEach(block => {
-    // Remove HTML from block to get just the script content
-    const scriptContent = block.replace(/<script[^>]*>|<\/script>/gi, '');
-    
-    // Extract function names
+  scriptBlocks.forEach(scriptContent => {
+    // Extract function names from the actual script content
     const functions = scriptContent.match(/function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g) || [];
     totalFunctions += functions.length;
     
     // Check for common syntax errors - count braces and parens in actual JavaScript only
     const hasUnclosedBraces = (scriptContent.match(/{/g) || []).length !== (scriptContent.match(/}/g) || []).length;
     test(`  No unclosed braces in ${filename} inline scripts`, !hasUnclosedBraces);
-    
-    // Parentheses check is less reliable in mixed HTML/JS, so skip it
     
     // Check for strict mode
     const hasStrictMode = /['"]use strict['"]/.test(scriptContent);
