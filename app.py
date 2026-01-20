@@ -18,7 +18,6 @@ load_dotenv()
 
 # Import modules locaux
 from config import *
-from teams_structure import AGENTS
 from utils import (
     load_workbook, save_workbook, create_backup, cell_to_str, cell_to_date_str, normalize_status,
     find_header_row, list_excel_files, resolve_excel_path, list_backups,
@@ -471,14 +470,9 @@ def get_agents():
                 prenom = cell_to_str(config_sheet.cell(row_idx, AGENT_COL_PRENOM).value) or ''
                 
                 # Lire toutes les colonnes
-                # Trouver équipe et couleur
+                # Équipe et couleur par défaut
                 agent_equipe = ''
                 agent_equipe_color = '#E0E0E0'
-                for agent_data in AGENTS:
-                    if agent_data['nom'] == nom:
-                        agent_equipe = agent_data.get('equipe', '')
-                        agent_equipe_color = TEAM_COLORS.get(agent_equipe, '#E0E0E0')
-                        break
                 
                 agent = {
                     'index': row_idx - header_row,
