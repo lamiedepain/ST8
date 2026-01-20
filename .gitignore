@@ -19,7 +19,7 @@ instance/
 # Excel files (commentez si vous voulez versionner)
 *.xlsx
 *.xlsm
-!2026_PLANNING_CENTRE_ST8 .xlsm
+!2026_PLANNING_CENTRE_ST8.xlsm
 
 # Backups
 backups/
