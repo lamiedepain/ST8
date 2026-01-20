@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extracteur DT-DICT Complet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-container {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        header {
+            background: #F2C94C;
+            padding: 0;
+            margin: 0 0 20px;
+            box-shadow: 0 8px 32px rgba(242, 201, 76, 0.4);
+            width: 100%;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            order: 2;
+        }
+
+        .header-logo-icon {
+            width: 56px;
+            height: 56px;
+            background: #F2C94C;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: white;
+            border: 3px solid white;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .header-logo-icon::before {
+            content: 'ST8';
+            position: absolute;
+        }
+
+        .header-kicker {
+            font-size: 11px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.65);
+            margin: 0;
+        }
+
+        h1 {
+            color: #fff;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            order: 1;
+        }
+
+        nav {
+            display: flex;
+            gap: 8px;
+            padding: 0 40px 20px;
+        }
+
+        nav a {
+            padding: 10px 20px;
+            background: transparent;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            border: 2px solid white;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        nav a.active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+            padding: 28px;
+            margin: 20px auto;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 6px;
+            color: #2b2b2b;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 18px;
+        }
+
+        .template-section {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 14px;
+            background: #111;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input[type=file] {
+            display: none;
+        }
+
+        .drop-zone {
+            border: 3px dashed #FFD200;
+            border-radius: 12px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #fffdf5;
+            margin-bottom: 18px;
+            transition: all .2s;
+        }
+
+        .drop-zone.dragover {
+            background: #fff8db;
+            transform: scale(1.01);
+        }
+
+        .drop-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            background: #FFD200;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #111;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .btn.secondary {
+            background: #6b7280;
+            color: #fff;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .progress-container {
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        .log {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 260px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #FFD200 0%, #ffdd00 100%);
+            padding: 12px;
+            border-radius: 10px;
+            color: #111;
+            text-align: center;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container">
+        <header>
+            <div class="header-top">
+                <div class="header-logo">
+                    <div class="header-logo-icon"></div>
+                    <div>
+                        <p class="header-kicker">Service Territorial N°08</p>
+                        <h1>Easy Dict</h1>
+                    </div>
+                </div>
+                <div class="header-actions">
+                </div>
+            </div>
+            <nav>
+                <a href="/">Agents</a>
+                <a href="/planning">Planning</a>
+                <a href="/generator">Générateur</a>
+                <a href="/easydict" class="active">Easy Dict</a>
+            </nav>
+        </header>
+
+        <div class="container">
+            <h2>Extracteur DT-DICT Complet</h2>
+            <p class="subtitle">Extraction automatique DT/DICT → Excel (Projet / Exploitants / Emails)</p>
+
+            <div class="template-section">
+                <div style="margin-bottom:8px"><strong>📄 Template XLSM (optionnel)</strong></div>
+                <label class="file-label" for="templateInput">Charger template XLSM</label>
+                <input id="templateInput" type="file" accept=".xlsm,.xls" />
+                <div class="small" style="margin-top:6px">Template chargé : <span id="tplName">—</span></div>
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-icon">📥</div>
+                <div class="drop-text">Glissez-déposez votre ZIP ici ou cliquez pour sélectionner</div>
+                <input id="fileInput" type="file" accept=".zip" style="display:none" />
+                <div class="drop-subtext small">Structure: emprise.pdf + conjointes.pdf + sous-ZIP ou XMLs</div>
+            </div>
+            <div id="progressContainer" class="progress-container">
+                <div id="progressText" class="small">Préparation...</div>
+            </div>
+            <div id="results" class="hidden">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div id="statProjects">0</div>
+                        <div class="small">Projets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="statExploitants">0</div>
+                        <div class="small">Exploitants</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="statConjointes">0</div>
+                        <div class="small">PDFs Conjointes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="statMatched">0</div>
+                        <div class="small">Associés</div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="exportXlsmBtn" class="btn">🔒 Exporter XLSM + ZIP</button>
+                    <button id="exportExcelBtn" class="btn">📑 Télécharger Excel Simple</button>
+                    <button id="exportZipBtn" class="btn secondary">📦 ZIP par Exploitant</button>
+                    <button id="generatePresentationBtn" class="btn">📄 Présentation A4</button>
+                    <button id="resetBtn" class="btn secondary">🔄 Traiter un autre fichier</button>
+                </div>
+                <div id="log" class="log"></div>
+            </div>
+        </div>
+
+        <script>
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const templateInput = document.getElementById('templateInput');
+            const tplNameSpan = document.getElementById('tplName');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressText = document.getElementById('progressText');
+            const results = document.getElementById('results');
+            const exportXlsmBtn = document.getElementById('exportXlsmBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const exportZipBtn = document.getElementById('exportZipBtn');
+            const generatePresentationBtn = document.getElementById('generatePresentationBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const logDiv = document.getElementById('log');
+            const statProjects = document.getElementById('statProjects');
+            const statExploitants = document.getElementById('statExploitants');
+            const statConjointes = document.getElementById('statConjointes');
+            const statMatched = document.getElementById('statMatched');
+
+            let extractedData = { projet: null, exploitants: [], conjointes: [], emprise: null, description: null };
+            let templateFile = null;
+
+            // Charger automatiquement le template au démarrage
+            async function loadDefaultTemplate() {
+                try {
+                    const response = await fetch('/api/easydict-template');
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        templateFile = new File([blob], 'T-DICT_Template.xlsm', { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' });
+                        tplNameSpan.textContent = templateFile.name;
+                        addLog('Template XLSM chargé automatiquement: ' + templateFile.name, 'success');
+                    } else {
+                        addLog('Template non disponible (optionnel)', 'warning');
+                    }
+                } catch (error) {
+                    addLog('Erreur chargement template: ' + error.message, 'warning');
+                }
+            }
+
+            // Charger le template au démarrage
+            loadDefaultTemplate();
+
+            function addLog(message, type = 'info') {
+                const d = document.createElement('div');
+                const time = new Date().toLocaleTimeString();
+                d.textContent = '[' + time + '] ' + message;
+                if (type === 'error') d.style.color = '#dc2626';
+                if (type === 'success') d.style.color = '#059669';
+                if (type === 'warning') d.style.color = '#d97706';
+                logDiv.appendChild(d);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+
+            templateInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    templateFile = e.target.files[0];
+                    tplNameSpan.textContent = templateFile.name;
+                    addLog('Template XLSM chargé: ' + templateFile.name, 'success');
+                }
+            });
+
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.zip'));
+                if (files.length) processZip(files[0]);
+            });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) processZip(e.target.files[0]);
+            });
+
+            function cleanSheetName(name) {
+                return String(name || '').replace(/[:\\\/\?\*\[\]]/g, '').replace(/\s+/g, ' ').trim().substring(0, 31) || 'Sheet';
+            }
+            function cleanFileName(name) {
+                return String(name || '').replace(/[^a-z0-9\-_.() ]/gi, '_');
+            }
+            function normalizeText(s) {
+                if (!s && s !== 0) return '';
+                return String(s).replace(/\s+/g, ' ').trim();
+            }
+
+            async function processZip(file) {
+                extractedData = { projet: null, exploitants: [], conjointes: [], emprise: null, description: null };
+                logDiv.innerHTML = '';
+                addLog('Décompression du ZIP: ' + file.name, 'info');
+                progressContainer.style.display = 'block';
+                progressText.textContent = 'Chargement du ZIP...';
+                try {
+                    const zip = await JSZip.loadAsync(file);
+                    addLog('Recherche emprise.pdf...', 'info');
+                    for (const filename in zip.files) {
+                        const fo = zip.files[filename];
+                        if (!fo.dir && filename.toLowerCase().includes('emprise') && filename.toLowerCase().endsWith('.pdf')) {
+                            extractedData.emprise = { filename, blob: await fo.async('blob') };
+                            addLog('Emprise trouvé : ' + filename, 'success');
+                            break;
+                        }
+                    }
+
+                    addLog('Recherche des PDFs conjointes...', 'info');
+                    for (const filename in zip.files) {
+                        const fo = zip.files[filename];
+                        if (!fo.dir && filename.toLowerCase().endsWith('.pdf')) {
+                            const lower = filename.toLowerCase();
+                            if (lower.includes('conjointe') || lower.includes('dict-dt')) {
+                                const blob = await fo.async('blob');
+                                const exploitantFromPdf = await extractExploitantFromPDF(blob);
+                                extractedData.conjointes.push({ filename, blob, exploitant: exploitantFromPdf });
+                                addLog('Conjointe: ' + filename + ' -> exploitant: ' + (exploitantFromPdf || 'NON_TROUVE'), exploitantFromPdf ? 'success' : 'warning');
+                            }
+                        }
+                    }
+                    statConjointes.textContent = extractedData.conjointes.length;
+
+                    let processedAnyXML = false;
+                    for (const filename in zip.files) {
+                        const fo = zip.files[filename];
+                        if (!fo.dir && filename.toLowerCase().endsWith('.zip')) {
+                            addLog('Sous-ZIP trouvé: ' + filename, 'info');
+                            const blob = await fo.async('blob');
+                            await processSubZip(blob);
+                            processedAnyXML = true;
+                        }
+                    }
+                    if (!processedAnyXML) {
+                        addLog('Recherche directe de XMLs dans le ZIP...', 'info');
+                        for (const filename in zip.files) {
+                            const fo = zip.files[filename];
+                            if (!fo.dir && filename.toLowerCase().endsWith('.xml') && !filename.toLowerCase().includes('signature')) {
+                                const text = await fo.async('text');
+                                await parseConsultationXML(text, filename);
+                                processedAnyXML = true;
+                            }
+                        }
+                    }
+
+                    matchExploitantsToConjointes();
+                    progressText.textContent = 'Terminé';
+                    results.classList.remove('hidden');
+                    updateStats();
+                    addLog('Traitement terminé', 'success');
+                } catch (err) {
+                    addLog('ERREUR: ' + (err && err.message ? err.message : String(err)), 'error');
+                    console.error(err);
+                }
+            }
+
+            async function processSubZip(blob) {
+                try {
+                    const subZip = await JSZip.loadAsync(blob);
+                    addLog('Lecture du sous-ZIP...', 'info');
+                    for (const filename in subZip.files) {
+                        const fo = subZip.files[filename];
+                        if (!fo.dir && filename.toLowerCase().endsWith('.xml') && !filename.toLowerCase().includes('signature')) {
+                            const txt = await fo.async('text');
+                            await parseConsultationXML(txt, filename);
+                            if (filename.toLowerCase().includes('description')) {
+                                extractedData.description = { filename, blob: await fo.async('blob') };
+                                addLog('Description XML trouvé: ' + filename, 'success');
+                            }
+                        }
+                        if (!fo.dir && filename.toLowerCase().includes('emprise') && filename.toLowerCase().endsWith('.pdf')) {
+                            extractedData.emprise = { filename, blob: await fo.async('blob') };
+                            addLog('Emprise (sous-zip) : ' + filename, 'success');
+                        }
+                    }
+                } catch (err) {
+                    addLog('Erreur sous-ZIP: ' + err.message, 'error');
+                }
+            }
+
+            async function extractExploitantFromPDF(blob) {
+                try {
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    try {
+                        const page = await pdf.getPage(1);
+                        const annotations = await page.getAnnotations();
+                        for (const a of annotations) {
+                            if (a.fieldName && /exploitant/i.test(a.fieldName) && (a.fieldValue || a.buttonValue)) {
+                                return normalizeText(a.fieldValue || a.buttonValue);
+                            }
+                        }
+                    } catch (e) { }
+                    try {
+                        const page = await pdf.getPage(1);
+                        const textContent = await page.getTextContent();
+                        const text = textContent.items.map(i => i.str).join(' ');
+                        const match = text.match(/(Exploitant|Soci[ée]t[ée]|SOCIETE)\s*[:\-]?\s*([A-Z0-9À-ÖØ-öø-ÿ '&\.\,\-]+)/i);
+                        if (match && match[2]) return normalizeText(match[2]);
+                        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+                        for (const l of lines.slice(0, 8)) {
+                            if (/[A-Z]{2,}/.test(l) && l.length > 3 && l.length < 60) return normalizeText(l);
+                        }
+                    } catch (e) { }
+                    return null;
+                } catch (err) {
+                    return null;
+                }
+            }
+
+            async function parseConsultationXML(xmlContent, filePath) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+                    addLog('Analyse du fichier XML: ' + filePath, 'info');
+                    const rootEl = xmlDoc.documentElement;
+                    addLog('  Root element: ' + (rootEl ? rootEl.tagName : 'N/A'), 'info');
+                    if (rootEl && rootEl.children) {
+                        const childNames = Array.from(rootEl.children).slice(0, 10).map(c => c.tagName || c.localName).join(', ');
+                        addLog('  Enfants directs (10 premiers): ' + childNames, 'info');
+                    }
+
+                    function getEl(tagName, base) {
+                        base = base || xmlDoc;
+                        let el = base.getElementsByTagName(tagName)[0];
+                        if (!el) {
+                            const all = base.getElementsByTagName('*');
+                            for (let i = 0; i < all.length; i++) {
+                                if (all[i].localName === tagName || all[i].tagName === tagName) {
+                                    el = all[i];
+                                    break;
+                                }
+                            }
+                        }
+                        return el;
+                    }
+                    function getElText(tagName, base) {
+                        const el = getEl(tagName, base);
+                        return el ? normalizeText(el.textContent) : '';
+                    }
+                    function getAllEls(tagName, base) {
+                        base = base || xmlDoc;
+                        const result = [];
+                        const all = base.getElementsByTagName('*');
+                        for (let i = 0; i < all.length; i++) {
+                            if (all[i].localName === tagName || all[i].tagName === tagName) {
+                                result.push(all[i]);
+                            }
+                        }
+                        return result;
+                    }
+
+                    const noConsult = getElText('noConsultationDuTeleservice');
+                    const dateDeclRaw = getElText('dateDeLaDeclaration');
+                    const dateDeLaDeclaration = dateDeclRaw ? dateDeclRaw.split('T')[0] : '';
+                    const responsableNode = getEl('responsableDuProjet');
+                    const executantNode = getEl('executantDesTravaux');
+                    const responsableDenom = responsableNode ? getElText('denomination', responsableNode) : '';
+                    const executantDenom = executantNode ? getElText('denomination', executantNode) : '';
+                    const contactNom = executantNode ? getElText('nomDeLaPersonneAContacter', executantNode) : '';
+                    const contactTel = executantNode ? getElText('tel', executantNode) : '';
+                    const contactEmail = executantNode ? getElText('courriel', executantNode) : '';
+                    const emplacementNode = getEl('emplacementDuProjet') || getEl('emplacementDesTravaux');
+                    const adresse = emplacementNode ? getElText('adresse', emplacementNode) : '';
+                    const cp = emplacementNode ? (getElText('CP', emplacementNode) || getElText('codePostal', emplacementNode)) : '';
+                    const commune = emplacementNode ? getElText('communePrincipale', emplacementNode) : '';
+                    const codeINSEE = emplacementNode ? getElText('codeINSEE', emplacementNode) : '';
+                    const travauxNode = getEl('travauxEtLeurCalendrier') || getEl('projetEtSonCalendrier');
+                    const natureTravaux = travauxNode ? getElText('natureDesTravaux', travauxNode) : '';
+                    const descriptionTravaux = travauxNode ? (getElText('decrivezLesTravaux', travauxNode) || getElText('decrivezLeProjet', travauxNode)) : '';
+                    const techniquesNodes = getAllEls('techniquesUtilisees');
+                    const techniques = techniquesNodes.map(n => normalizeText(n.textContent)).filter(Boolean).join(', ');
+                    const dateDebutRaw = getElText('datePrevuePourLeCommencementDesTravaux');
+                    const dateDebut = dateDebutRaw ? dateDebutRaw.split(/[+T]/)[0] : '';
+                    const duree = getElText('dureeDuChantierEnJours');
+                    const empriseNode = getEl('emprise');
+                    const surfaceEmprise = empriseNode ? getElText('surface', empriseNode) : '';
+                    const taillePlans = getElText('tailleDesPlans');
+                    const plansCouleur = getElText('couleurDesPlans');
+                    const plansVectoriels = getElText('souhaitDePlansVectoriels');
+
+                    extractedData.projet = {
+                        numeroDossier: noConsult,
+                        dateDeclaration: dateDeLaDeclaration,
+                        nomSignataire: getElText('nomDuSignataire'),
+                        responsableProjet: responsableDenom,
+                        executantTravaux: executantDenom,
+                        contactNom: contactNom,
+                        contactTel: contactTel,
+                        contactEmail: contactEmail,
+                        adresse: adresse,
+                        codePostal: cp,
+                        commune: commune,
+                        codeINSEE: codeINSEE,
+                        natureTravaux: natureTravaux,
+                        descriptionTravaux: descriptionTravaux,
+                        techniques: techniques,
+                        dateDebut: dateDebut,
+                        duree: duree,
+                        surfaceEmprise: surfaceEmprise,
+                        nbCommunes: getElText('nombreDeCommunes'),
+                        formatPlans: taillePlans,
+                        plansCouleur: plansCouleur,
+                        plansVectoriels: plansVectoriels
+                    };
+
+                    addLog('DEBUG Projet extrait:', 'info');
+                    addLog('  - N dossier: ' + (noConsult || 'VIDE'), noConsult ? 'success' : 'warning');
+                    addLog('  - Commune: ' + (commune || 'VIDE'), commune ? 'success' : 'warning');
+                    addLog('  - Adresse: ' + (adresse || 'VIDE'), adresse ? 'success' : 'warning');
+                    addLog('  - Nature travaux: ' + (natureTravaux || 'VIDE'), natureTravaux ? 'success' : 'warning');
+                    addLog('  - Description: ' + (descriptionTravaux ? descriptionTravaux.substring(0, 50) + '...' : 'VIDE'), descriptionTravaux ? 'success' : 'warning');
+                    addLog('Projet extrait : ' + (extractedData.projet.numeroDossier || filePath), 'success');
+
+                    const ouvrageNodes = getAllEls('ouvrage');
+                    for (const ouvrage of ouvrageNodes) {
+                        const zones = getAllEls('zone').filter(z => ouvrage.contains(z));
+                        const categorieOuvrage = getElText('categorieOuvrage', ouvrage);
+                        const classeOuvrage = getElText('classeOuvrage', ouvrage);
+                        const codeOuvrage = getElText('code', ouvrage);
+                        const statut = getElText('statut', ouvrage);
+                        const dateCreationRaw = getElText('dateCreation', ouvrage);
+                        const dateCreation = dateCreationRaw ? dateCreationRaw.split('+')[0] : '';
+                        for (const zone of zones.length ? zones : [ouvrage]) {
+                            const zoneCode = getElText('code', zone);
+                            const contactNode = getEl('contact', zone);
+                            if (!contactNode) continue;
+                            const societe = getElText('societe', contactNode);
+                            const courriel = getElText('courriel', contactNode) || getElText('courrielElectronique', contactNode);
+                            const telephone = getElText('telephone', contactNode) || getElText('tel', contactNode);
+                            const telephoneUrgence = getElText('telephoneUrgence', contactNode);
+                            const mailUrgence = getElText('mailUrgence', contactNode);
+                            const telEndommagement = getElText('telEndommagement', contactNode);
+                            const fichiersDemat = getElText('gestionDesFichiersDematerialises', contactNode);
+                            const formatDemat = getElText('formatDesFichiersDematerialises', contactNode);
+                            const exploitant = {
+                                societe: societe,
+                                codeOuvrage: codeOuvrage,
+                                categorieOuvrage: categorieOuvrage,
+                                classeOuvrage: classeOuvrage,
+                                codeZone: zoneCode,
+                                courriel: courriel,
+                                telephone: telephone,
+                                telephoneUrgence: telephoneUrgence,
+                                mailUrgence: mailUrgence,
+                                telEndommagement: telEndommagement,
+                                fichiersDemat: fichiersDemat,
+                                formatDemat: formatDemat,
+                                statut: statut,
+                                dateCreation: dateCreation,
+                                pdfConjointe: null,
+                                pdfConjointeFilename: null
+                            };
+                            const key = (exploitant.societe + '|' + exploitant.courriel + '|' + exploitant.telephone).toLowerCase();
+                            const exists = extractedData.exploitants.find(e => ((e.societe + '|' + e.courriel + '|' + e.telephone).toLowerCase() === key));
+                            if (!exists) extractedData.exploitants.push(exploitant);
+                        }
+                    }
+                    addLog(extractedData.exploitants.length + ' exploitants extraits (fichier: ' + filePath + ')', 'success');
+                } catch (err) {
+                    addLog('Erreur parsing XML (' + filePath + '): ' + (err && err.message ? err.message : String(err)), 'error');
+                    console.error(err);
+                }
+            }
+
+            function matchExploitantsToConjointes() {
+                let matched = 0;
+                for (const exp of extractedData.exploitants) {
+                    if (!exp.societe) { addLog('Exploitant sans nom (skipped)', 'warning'); continue; }
+                    const normExp = exp.societe.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const c = extractedData.conjointes.find(cc => {
+                        if (!cc.exploitant) return false;
+                        const normC = cc.exploitant.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return normC.includes(normExp) || normExp.includes(normC) || (exp.courriel && cc.filename.toLowerCase().includes(exp.courriel.split('@')[0]));
+                    });
+                    if (c) {
+                        exp.pdfConjointe = c.blob;
+                        exp.pdfConjointeFilename = c.filename;
+                        matched++;
+                        addLog('Associé : ' + exp.societe + ' ↔ ' + c.filename, 'success');
+                    } else {
+                        addLog('Non associé : ' + exp.societe, 'warning');
+                    }
+                }
+                addLog(matched + '/' + extractedData.exploitants.length + ' exploitants associés', matched === extractedData.exploitants.length ? 'success' : 'warning');
+            }
+
+            function updateStats() {
+                statProjects.textContent = extractedData.projet ? 1 : 0;
+                statExploitants.textContent = extractedData.exploitants.length;
+                statConjointes.textContent = extractedData.conjointes.length;
+                statMatched.textContent = extractedData.exploitants.filter(e => e.pdfConjointe).length;
+            }
+
+            function buildEmailTemplate(project) {
+                return {
+                    subjectTemplate: 'Demande de plan réseau DT-DICT n°{{numeroDossier}}',
+                    bodyTemplate: 'Bonjour,\n\nDans le cadre du projet "{{descriptionTravaux}}" situé {{adresse}}, à {{commune}},\nje vous adresse la déclaration conjointe DT-DICT n°{{numeroDossier}}.\n\nLes travaux débuteront le {{dateDebut}} pour une durée de {{duree}} jours.\n\nBien cordialement,'
+                };
+            }
+
+            function renderTemplate(tpl, project) {
+                if (!tpl) return '';
+                return tpl
+                    .replace(/\{\{numeroDossier\}\}/g, project.numeroDossier || '')
+                    .replace(/\{\{descriptionTravaux\}\}/g, project.descriptionTravaux || project.natureTravaux || '')
+                    .replace(/\{\{adresse\}\}/g, project.adresse || '')
+                    .replace(/\{\{commune\}\}/g, project.commune || '')
+                    .replace(/\{\{dateDebut\}\}/g, project.dateDebut || '')
+                    .replace(/\{\{duree\}\}/g, project.duree || '')
+                    .replace(/\{\{responsableProjet\}\}/g, project.responsableProjet || project.nomSignataire || '')
+                    .replace(/\{\{nature_travaux\}\}/g, project.natureTravaux || '');
+            }
+
+            exportXlsmBtn.addEventListener('click', async () => {
+                try {
+                    if (!extractedData.projet) { addLog('Aucune donnée à exporter', 'error'); return; }
+                    if (!templateFile) {
+                        addLog('Aucun template chargé. Sélectionne un fichier .xlsm avant d\'exporter.', 'error');
+                        alert('Charge d\'abord un template XLSM avec le bouton "Charger template XLSM"');
+                        return;
+                    }
+
+                    addLog('Lecture du template XLSM (' + templateFile.name + ')...', 'info');
+                    const tplArray = await templateFile.arrayBuffer();
+
+                    // Ouvrir le template comme un ZIP pour préserver tous les composants
+                    const tplZip = await JSZip.loadAsync(tplArray);
+
+                    const p = extractedData.projet || {};
+
+                    // Créer les feuilles de données avec SheetJS
+                    const wb = XLSX.utils.book_new();
+
+                    const projetRow = [{
+                        'Numéro de dossier': p.numeroDossier || '',
+                        'Date de déclaration': p.dateDeclaration || '',
+                        'Signataire': p.nomSignataire || '',
+                        'Responsable projet': p.responsableProjet || '',
+                        'Executant travaux': p.executantTravaux || '',
+                        'Contact (nom)': p.contactNom || '',
+                        'Contact (tel)': p.contactTel || '',
+                        'Contact (email)': p.contactEmail || '',
+                        'Adresse chantier': p.adresse || '',
+                        'Code postal': p.codePostal || '',
+                        'Commune': p.commune || '',
+                        'Code INSEE': p.codeINSEE || '',
+                        'Nature travaux': p.natureTravaux || '',
+                        'Description': p.descriptionTravaux || '',
+                        'Techniques': p.techniques || '',
+                        'Date début': p.dateDebut || '',
+                        'Durée (jours)': p.duree || '',
+                        'Surface emprise': p.surfaceEmprise || '',
+                        'Nb communes': p.nbCommunes || '',
+                        'Format plans': p.formatPlans || '',
+                        'Plans couleur': p.plansCouleur || '',
+                        'Plans vectoriels': p.plansVectoriels || ''
+                    }];
+                    const wsProjet = XLSX.utils.json_to_sheet(projetRow);
+                    XLSX.utils.book_append_sheet(wb, wsProjet, 'Projet');
+
+                    const exploitantsRows = extractedData.exploitants.map(e => ({
+                        'Société': e.societe || '',
+                        'Code ouvrage': e.codeOuvrage || '',
+                        'Catégorie': e.categorieOuvrage || '',
+                        'Classe': e.classeOuvrage || '',
+                        'Zone': e.codeZone || '',
+                        'Courriel': e.courriel || '',
+                        'Téléphone': e.telephone || '',
+                        'Tél urgence': e.telephoneUrgence || '',
+                        'Mail urgence': e.mailUrgence || '',
+                        'Tel endommagement': e.telEndommagement || '',
+                        'Fichiers démat.': e.fichiersDemat || '',
+                        'Format démat.': e.formatDemat || '',
+                        'Statut': e.statut || '',
+                        'Date création': e.dateCreation || '',
+                        'PDF Conjointe associée': e.pdfConjointeFilename ? 'Oui' : 'Non',
+                        'Nom fichier conjointe': e.pdfConjointeFilename || ''
+                    }));
+                    const wsExpl = XLSX.utils.json_to_sheet(exploitantsRows);
+                    XLSX.utils.book_append_sheet(wb, wsExpl, 'Exploitants');
+
+                    const templates = buildEmailTemplate(p);
+                    const emailsRows = extractedData.exploitants.map(e => {
+                        const subject = renderTemplate(templates.subjectTemplate, p);
+                        const body = renderTemplate(templates.bodyTemplate, p);
+                        const parts = [];
+                        if (extractedData.emprise && extractedData.emprise.filename) parts.push(extractedData.emprise.filename);
+                        if (e.pdfConjointeFilename) parts.push(e.pdfConjointeFilename);
+                        if (extractedData.description && extractedData.description.filename) parts.push(extractedData.description.filename);
+                        const attachments = parts.join(';');
+                        return {
+                            'Société': e.societe || '',
+                            'Courriel': e.courriel || '',
+                            'Objet': subject,
+                            'Corps': body,
+                            'Pièces jointes': attachments
+                        };
+                    });
+                    const wsEmails = XLSX.utils.json_to_sheet(emailsRows);
+                    XLSX.utils.book_append_sheet(wb, wsEmails, 'Emails & Conjointes');
+
+                    // Générer les nouvelles feuilles en XML
+                    addLog('Génération des feuilles de données...', 'info');
+                    const dataArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const dataZip = await JSZip.loadAsync(dataArray);
+
+                    // Remplacer uniquement les fichiers de feuilles dans le template original
+                    addLog('Fusion avec template (préservation des boutons/macros)...', 'info');
+
+                    // Copier les nouvelles feuilles dans le template
+                    const sheets = ['Projet', 'Exploitants', 'Emails & Conjointes'];
+                    for (let i = 0; i < sheets.length; i++) {
+                        const sheetNum = i + 1;
+                        const sheetFile = `xl/worksheets/sheet${sheetNum}.xml`;
+
+                        if (dataZip.files[sheetFile]) {
+                            const sheetContent = await dataZip.file(sheetFile).async('uint8array');
+                            tplZip.file(sheetFile, sheetContent);
+                            addLog(`  Mise à jour: ${sheets[i]}`, 'info');
+                        }
+                    }
+
+                    // Mettre à jour le fichier workbook.xml pour s'assurer que les feuilles sont référencées
+                    if (dataZip.files['xl/workbook.xml']) {
+                        const workbookContent = await dataZip.file('xl/workbook.xml').async('uint8array');
+                        tplZip.file('xl/workbook.xml', workbookContent);
+                    }
+
+                    // Générer le fichier XLSM final
+                    addLog('Génération du XLSM final...', 'info');
+                    const xlsmBlob = await tplZip.generateAsync({
+                        type: 'blob',
+                        compression: 'DEFLATE',
+                        compressionOptions: { level: 9 }
+                    });
+
+                    const xlsmFilename = 'DT-DICT_Complet_' + new Date().toISOString().slice(0, 10) + '.xlsm';
+
+                    addLog('Construction du ZIP (XLSM + pièces)...', 'info');
+                    const mainZip = new JSZip();
+                    mainZip.file(xlsmFilename, xlsmBlob);
+
+                    if (extractedData.emprise && extractedData.emprise.blob) {
+                        mainZip.file(extractedData.emprise.filename, extractedData.emprise.blob);
+                        addLog('Ajout emprise: ' + extractedData.emprise.filename, 'info');
+                    }
+                    if (extractedData.description && extractedData.description.blob) {
+                        mainZip.file(extractedData.description.filename, extractedData.description.blob);
+                        addLog('Ajout description: ' + extractedData.description.filename, 'info');
+                    }
+                    for (const e of extractedData.exploitants) {
+                        if (e.pdfConjointe && e.pdfConjointeFilename) {
+                            mainZip.file(e.pdfConjointeFilename, e.pdfConjointe);
+                            addLog('Ajout conjointe: ' + e.pdfConjointeFilename, 'info');
+                        }
+                    }
+
+                    addLog('Génération du blob ZIP...', 'info');
+                    const zipBlob = await mainZip.generateAsync({ type: 'blob' });
+                    const url = URL.createObjectURL(zipBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'DT-DICT_Export_' + new Date().toISOString().slice(0, 10) + '.zip';
+                    a.click();
+
+                    addLog('✅ ZIP téléchargé! Les boutons et macros sont préservés.', 'success');
+                    addLog('Ouvre le .xlsm, active les macros, puis lance EnvoyerEmails.', 'success');
+                } catch (err) {
+                    addLog('Erreur export XLSM: ' + (err && err.message ? err.message : err), 'error');
+                    console.error(err);
+                }
+            });
+
+            exportExcelBtn.addEventListener('click', () => {
+                if (!extractedData.projet) { addLog('Aucune donnée à exporter', 'error'); return; }
+                try {
+                    const wb = XLSX.utils.book_new();
+                    const p = extractedData.projet || {};
+                    const projetRow = [{
+                        'Numéro de dossier': p.numeroDossier || '',
+                        'Date de déclaration': p.dateDeclaration || '',
+                        'Signataire': p.nomSignataire || '',
+                        'Responsable projet': p.responsableProjet || '',
+                        'Executant travaux': p.executantTravaux || '',
+                        'Contact (nom)': p.contactNom || '',
+                        'Contact (tel)': p.contactTel || '',
+                        'Contact (email)': p.contactEmail || '',
+                        'Adresse chantier': p.adresse || '',
+                        'Code postal': p.codePostal || '',
+                        'Commune': p.commune || '',
+                        'Code INSEE': p.codeINSEE || '',
+                        'Nature travaux': p.natureTravaux || '',
+                        'Description': p.descriptionTravaux || '',
+                        'Techniques': p.techniques || '',
+                        'Date début': p.dateDebut || '',
+                        'Durée (jours)': p.duree || '',
+                        'Surface emprise': p.surfaceEmprise || '',
+                        'Nb communes': p.nbCommunes || '',
+                        'Format plans': p.formatPlans || '',
+                        'Plans couleur': p.plansCouleur || '',
+                        'Plans vectoriels': p.plansVectoriels || ''
+                    }];
+                    const wsProjet = XLSX.utils.json_to_sheet(projetRow);
+                    XLSX.utils.book_append_sheet(wb, wsProjet, 'Projet');
+
+                    const exploitantsRows = extractedData.exploitants.map(e => ({
+                        'Société': e.societe || '',
+                        'Code ouvrage': e.codeOuvrage || '',
+                        'Catégorie': e.categorieOuvrage || '',
+                        'Classe': e.classeOuvrage || '',
+                        'Zone': e.codeZone || '',
+                        'Courriel': e.courriel || '',
+                        'Téléphone': e.telephone || '',
+                        'Tél urgence': e.telephoneUrgence || '',
+                        'Mail urgence': e.mailUrgence || '',
+                        'Tel endommagement': e.telEndommagement || '',
+                        'Fichiers démat.': e.fichiersDemat || '',
+                        'Format démat.': e.formatDemat || '',
+                        'Statut': e.statut || '',
+                        'Date création': e.dateCreation || '',
+                        'PDF Conjointe associée': e.pdfConjointeFilename ? 'Oui' : 'Non',
+                        'Nom fichier conjointe': e.pdfConjointeFilename || ''
+                    }));
+                    const wsExpl = XLSX.utils.json_to_sheet(exploitantsRows);
+                    XLSX.utils.book_append_sheet(wb, wsExpl, 'Exploitants');
+
+                    const templates = buildEmailTemplate(p);
+                    const emailsRows = extractedData.exploitants.map(e => {
+                        const subject = renderTemplate(templates.subjectTemplate, p);
+                        const body = renderTemplate(templates.bodyTemplate, p);
+                        const parts = [];
+                        if (extractedData.emprise) parts.push(extractedData.emprise.filename);
+                        if (e.pdfConjointeFilename) parts.push(e.pdfConjointeFilename);
+                        if (extractedData.description) parts.push(extractedData.description.filename);
+                        return {
+                            'Société': e.societe || '',
+                            'Courriel': e.courriel || '',
+                            'Objet': subject,
+                            'Corps': body,
+                            'Pièces jointes': parts.filter(Boolean).join(' ; ')
+                        };
+                    });
+                    const wsEmails = XLSX.utils.json_to_sheet(emailsRows);
+                    XLSX.utils.book_append_sheet(wb, wsEmails, 'Emails & Conjointes');
+
+                    XLSX.writeFile(wb, 'DT-DICT_Complet_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+                    addLog('Excel exporté', 'success');
+                } catch (err) {
+                    addLog('Erreur export Excel: ' + (err.message || err), 'error');
+                }
+            });
+
+            exportZipBtn.addEventListener('click', async () => {
+                try {
+                    const mainZip = new JSZip();
+                    for (const e of extractedData.exploitants) {
+                        if (!e.pdfConjointe) { addLog('Ignoré (pas de conjointe): ' + e.societe, 'warning'); continue; }
+                        const folderName = cleanFileName(e.societe || 'exploitant').substring(0, 80);
+                        const folder = mainZip.folder(folderName);
+                        folder.file(e.pdfConjointeFilename || 'conjointe.pdf', e.pdfConjointe);
+                        if (extractedData.emprise) folder.file(extractedData.emprise.filename || 'emprise.pdf', extractedData.emprise.blob);
+                        if (extractedData.description) folder.file(extractedData.description.filename || 'description.xml', extractedData.description.blob);
+                        addLog('Dossier créé: ' + folderName, 'success');
+                    }
+                    const blob = await mainZip.generateAsync({ type: 'blob' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'Dossiers_Exploitants_' + new Date().toISOString().slice(0, 10) + '.zip';
+                    a.click();
+                    addLog('ZIP téléchargé', 'success');
+                } catch (err) {
+                    addLog('Erreur ZIP: ' + err.message, 'error');
+                }
+            });
+
+            generatePresentationBtn.addEventListener('click', () => {
+                if (!extractedData.projet) { addLog('Aucune donnée à présenter', 'error'); return; }
+                const p = extractedData.projet;
+                const timestamp = new Date().toLocaleString('fr-FR');
+
+                let html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">';
+                html += '<title>Présentation DT-DICT - ' + (p.numeroDossier || 'Projet') + '</title>';
+                html += '<style>@media print{@page{size:A4 portrait;margin:10mm;}body{margin:0;font-family:"Segoe UI",Arial,sans-serif;font-size:9pt;line-height:1.2;color:#333;}';
+                html += '.container{width:100%;max-width:190mm;margin:0 auto;}';
+                html += '.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:linear-gradient(90deg,#FFD200,#ffd54a);padding:8px 12px;border-radius:6px;}';
+                html += '.header h1{font-size:14pt;margin:0;color:#111;}';
+                html += '.header .subtitle{font-size:10pt;color:#333;}';
+                html += '.section{border:1px solid #FFD200;border-radius:5px;margin-bottom:5px;padding:4px;}';
+                html += '.section-title{background:#FFD200;font-weight:bold;font-size:10pt;padding:3px 5px;color:black;}';
+                html += '.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px 4px;font-size:8pt;}';
+                html += '.info-item{display:flex;flex-direction:column;}';
+                html += '.info-label{font-weight:bold;color:#666;font-size:7.5pt;}';
+                html += '.info-value{color:#111;font-size:8pt;}';
+                html += 'table{width:100%;border-collapse:collapse;font-size:8pt;margin-top:2px;}th,td{border:1px solid #FFD200;padding:2px;text-align:left;}th{background:#FFD200;font-weight:bold;color:black;}';
+                html += '</style></head><body><div class="container">';
+
+                html += '<div class="header"><div><h1>DÉCLARATION DT-DICT</h1>';
+                html += '<div class="subtitle">Dossier N° ' + (p.numeroDossier || '-') + '</div></div>';
+                html += '<div style="font-weight:bold;color:#111">BORDEAUX MÉTROPOLE</div></div>';
+
+                html += '<div class="section"><div class="section-title">Informations Projet</div><div class="info-grid">';
+                const projetFields = [
+                    ['Numéro dossier', p.numeroDossier], ['Date déclaration', p.dateDeclaration], ['Signataire', p.nomSignataire], ['Responsable projet', p.responsableProjet],
+                    ['Exécutant travaux', p.executantTravaux], ['Contact (nom)', p.contactNom], ['Contact (tel)', p.contactTel], ['Contact (email)', p.contactEmail],
+                    ['Adresse chantier', p.adresse], ['Code postal', p.codePostal], ['Commune', p.commune], ['Nature travaux', p.natureTravaux],
+                    ['Description', p.descriptionTravaux], ['Techniques', p.techniques], ['Date début', p.dateDebut], ['Durée (jours)', p.duree],
+                    ['Surface emprise', p.surfaceEmprise], ['Nb communes', p.nbCommunes], ['Format plans', p.formatPlans]
+                ];
+                for (const [label, value] of projetFields) {
+                    html += '<div class="info-item"><span class="info-label">' + label + '</span><span class="info-value">' + (value || '') + '</span></div>';
+                }
+                html += '</div></div>';
+
+                html += '<div class="section"><div class="section-title">Exploitants (' + extractedData.exploitants.length + ')</div>';
+                html += '<table><thead><tr><th>Société</th><th>Catégorie</th><th>Classe</th><th>Tél urgence</th><th>Tel endommagement</th><th>Date création</th></tr></thead><tbody>';
+                for (const e of extractedData.exploitants) {
+                    html += '<tr><td>' + (e.societe || '') + '</td><td>' + (e.categorieOuvrage || '') + '</td><td>' + (e.classeOuvrage || '') + '</td>';
+                    html += '<td>' + (e.telephoneUrgence || '') + '</td><td>' + (e.telEndommagement || '') + '</td><td>' + (e.dateCreation || '') + '</td></tr>';
+                }
+                html += '</tbody></table></div>';
+
+                html += '<p style="text-align:center;font-size:7.5pt;margin-top:2px;">Document généré le ' + timestamp + ' - Bordeaux Métropole</p>';
+                html += '</div></body></html>';
+
+                const w = window.open('', '_blank');
+                w.document.write(html);
+                w.document.close();
+                addLog('Page de présentation générée (A4 Portrait)', 'success');
+            });
+
+            resetBtn.addEventListener('click', () => location.reload());
+
+        </script>
+    </div>
+</body>
+
+</html>

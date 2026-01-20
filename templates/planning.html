@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Planning - ST8 Planning{% endblock %}
+
+{% block extra_css %}
+<style>
+    .planning-cell {
+        padding: 0.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+        min-width: 60px;
+    }
+
+    .status-P {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-CA,
+    .status-RTT,
+    .status-R {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    .status-M,
+    .status-AT {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-F {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+
+    .week-selector {
+        max-width: 250px;
+    }
+
+    .agent-name {
+        font-weight: 500;
+        min-width: 150px;
+    }
+
+    .team-card {
+        border-left: 4px solid #0d6efd;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>
+                <i class="bi bi-calendar3"></i> Planning Hebdomadaire
+            </h1>
+            <p class="text-muted">
+                Gestion du planning et génération des équipes
+            </p>
+        </div>
+    </div>
+
+    <!-- Sélection semaine et groupe -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label class="form-label fw-bold">
+                <i class="bi bi-calendar-week"></i> Semaine
+            </label>
+            <input type="week" class="form-control week-selector" id="week-selector">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label fw-bold">
+                <i class="bi bi-people"></i> Groupe
+            </label>
+            <select class="form-select" id="group-selector">
+                <option value="all">Tous les agents</option>
+                <option value="voirie">Voirie</option>
+                <option value="espaces_verts">Espaces Verts</option>
+                <option value="responsables">Responsables</option>
+                <option value="surveillance">Surveillance</option>
+                <option value="proprete">Propreté</option>
+                <option value="autres">Autres</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label fw-bold">
+                <i class="bi bi-people-fill"></i> Taille équipe
+            </label>
+            <input type="number" class="form-control" id="team-size" value="3" min="1" max="10">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label fw-bold">&nbsp;</label>
+            <div>
+                <button class="btn btn-primary w-100" onclick="loadWeekPlanning()">
+                    <i class="bi bi-arrow-clockwise"></i> Charger
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglets -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#disponibilites-tab" type="button">
+                <i class="bi bi-check-circle"></i> Disponibilités
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#equipes-tab" type="button">
+                <i class="bi bi-people-fill"></i> Équipes
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Onglet Disponibilités -->
+        <div class="tab-pane fade show active" id="disponibilites-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="bi bi-table"></i> Disponibilités par jour
+                    </span>
+                    <button class="btn btn-sm btn-success" onclick="generateTeams()">
+                        <i class="bi bi-gear"></i> Générer les équipes
+                    </button>
+                </div>
+                <div class="card-body" id="disponibilites-content">
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Sélectionnez une semaine et cliquez sur "Charger"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Équipes -->
+        <div class="tab-pane fade" id="equipes-tab">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-people-fill"></i> Équipes générées
+                </div>
+                <div class="card-body" id="equipes-content">
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-people" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Générez d'abord les disponibilités puis cliquez sur "Générer les équipes"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentWeekData = null;
+    let currentEquipes = null;
+
+    $(document).ready(function () {
+        // Définir semaine actuelle par défaut
+        const today = new Date();
+        const weekString = getISOWeekString(today);
+        $('#week-selector').val(weekString);
+    });
+
+    function getISOWeekString(date) {
+        const year = date.getFullYear();
+        const week = getISOWeek(date);
+        return `${year}-W${week.toString().padStart(2, '0')}`;
+    }
+
+    function getISOWeek(date) {
+        const target = new Date(date.valueOf());
+        const dayNr = (date.getDay() + 6) % 7;
+        target.setDate(target.getDate() - dayNr + 3);
+        const firstThursday = target.valueOf();
+        target.setMonth(0, 1);
+        if (target.getDay() !== 4) {
+            target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+        }
+        return 1 + Math.ceil((firstThursday - target) / 604800000);
+    }
+
+    function loadWeekPlanning() {
+        const week = $('#week-selector').val();
+        const group = $('#group-selector').val();
+
+        if (!week) {
+            alert('Veuillez sélectionner une semaine');
+            return;
+        }
+
+        $('#disponibilites-content').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3">Chargement des disponibilités...</p>
+            </div>
+        `);
+
+        fetch('/api/generate-week', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                week: week,
+                group: group,
+                slots: 2
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentWeekData = data;
+                    displayDisponibilites(data.disponibilites);
+                    showAlert('success', 'Disponibilités chargées');
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                    $('#disponibilites-content').html(`
+                    <div class="text-center py-5 text-danger">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                        <p class="mt-3">${data.error}</p>
+                    </div>
+                `);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            });
+    }
+
+    function displayDisponibilites(disponibilites) {
+        let html = '<div class="row">';
+
+        const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+        let jourIndex = 0;
+
+        for (const [date, agents] of Object.entries(disponibilites)) {
+            const dateObj = new Date(date);
+            const jourNom = jours[jourIndex % 7];
+            jourIndex++;
+
+            html += `
+                <div class="col-12 mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-calendar-day"></i> ${jourNom} ${dateObj.toLocaleDateString('fr-FR')}
+                        <span class="badge bg-primary ms-2">${agents.length} disponible(s)</span>
+                    </h5>
+                    <div class="row">
+            `;
+
+            if (agents.length === 0) {
+                html += `
+                    <div class="col-12">
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-circle"></i> Aucun agent disponible ce jour
+                        </div>
+                    </div>
+                `;
+            } else {
+                agents.forEach(agent => {
+                    const bgColor = agent.equipe_color || '#E0E0E0';
+
+                    // Construire les pastilles de certifications
+                    let certBadges = '';
+                    const certs = agent.certifications || {};
+                    const certMap = {
+                        'r482_a_1': { label: 'R482A', color: '#007bff' },
+                        'r482_b1_2': { label: 'R482B1', color: '#6610f2' },
+                        'r482_c2_3': { label: 'R482C2', color: '#6f42c1' },
+                        'r482_c1_4': { label: 'R482C1', color: '#d63384' },
+                        'r482_d_7': { label: 'R482D', color: '#dc3545' },
+                        'r482_e_8': { label: 'R482E', color: '#fd7e14' },
+                        'r482_f_9': { label: 'R482F', color: '#ffc107' },
+                        'r482_g_10': { label: 'R482G', color: '#20c997' },
+                        'grue_r490': { label: 'R490', color: '#0dcaf0' },
+                        'b_nacelle': { label: 'Nacelle', color: '#198754' },
+                        'chariot_r489_3': { label: 'R489', color: '#0d6efd' },
+                        'tronco': { label: 'Tronço', color: '#6c757d' },
+                        'permis_be': { label: 'BE', color: '#212529' },
+                        'permis_pl': { label: 'PL', color: '#495057' },
+                        'permis_ce': { label: 'CE', color: '#6c757d' },
+                        'fimo': { label: 'FIMO', color: '#e83e8c' },
+                        'aipr': { label: 'AIPR', color: '#fd7e14' },
+                        'premiers_secours': { label: '1er Sec', color: '#dc3545' }
+                    };
+
+                    for (const [key, info] of Object.entries(certMap)) {
+                        if (certs[key] && certs[key] !== '-') {
+                            certBadges += `<span class="badge" style="background-color: ${info.color}; font-size: 0.65rem; margin: 1px;" title="${info.label}: ${certs[key]}">${info.label}</span> `;
+                        }
+                    }
+
+                    html += `
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="card h-100" style="border-left: 4px solid ${bgColor};">
+                                <div class="card-body py-2 px-3" style="background-color: ${bgColor}20;">
+                                    <small class="text-muted d-block">${agent.equipe || 'N/A'}</small>
+                                    <strong class="d-block">${agent.nom} ${agent.prenom}</strong>
+                                    <div class="mt-2">${certBadges}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        $('#disponibilites-content').html(html);
+    }
+
+    function generateTeams() {
+        if (!currentWeekData) {
+            alert('Veuillez d\'abord charger les disponibilités');
+            return;
+        }
+
+        const week = $('#week-selector').val();
+        const group = $('#group-selector').val();
+        const teamSize = parseInt($('#team-size').val());
+
+        // Vérifier que le groupe est voirie ou espaces_verts
+        if (group !== 'voirie' && group !== 'espaces_verts') {
+            alert('La génération d\'équipes est disponible uniquement pour les groupes Voirie et Espaces Verts');
+            return;
+        }
+
+        $('#equipes-content').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3">Génération des équipes...</p>
+            </div>
+        `);
+
+        fetch('/api/generate-teams', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                week: week,
+                group: group,
+                team_size: teamSize
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentEquipes = data;
+                    displayEquipes(data.equipes);
+                    showAlert('success', 'Équipes générées');
+
+                    // Basculer vers l'onglet équipes
+                    const equipesTab = new bootstrap.Tab(document.querySelector('[data-bs-target="#equipes-tab"]'));
+                    equipesTab.show();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            });
+    }
+
+    function displayEquipes(equipes) {
+        let html = '<div class="row">';
+
+        const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+        let jourIndex = 0;
+
+        for (const [date, dayEquipes] of Object.entries(equipes)) {
+            const dateObj = new Date(date);
+            const jourNom = jours[jourIndex % 7];
+            jourIndex++;
+
+            html += `
+                <div class="col-12 mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-calendar-day"></i> ${jourNom} ${dateObj.toLocaleDateString('fr-FR')}
+                        <span class="badge bg-success ms-2">${dayEquipes.length} équipe(s)</span>
+                    </h5>
+            `;
+
+            if (dayEquipes.length === 0) {
+                html += `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i> Aucune équipe formée ce jour
+                    </div>
+                `;
+            } else {
+                dayEquipes.forEach((equipe, idx) => {
+                    html += `
+                        <div class="card team-card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-people-fill text-primary"></i> Équipe ${idx + 1}
+                                    <span class="badge bg-light text-dark">${equipe.length} agent(s)</span>
+                                </h6>
+                                <div class="row">
+                    `;
+
+                    equipe.forEach(agent => {
+                        html += `
+                            <div class="col-md-4 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                                    <strong>${agent.nom} ${agent.prenom}</strong>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+        }
+
+        html += '</div>';
+        $('#equipes-content').html(html);
+    }
+</script>
+{% endblock %}

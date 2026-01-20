@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Agents - ST8 Planning{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>
+                <i class="bi bi-people"></i> Gestion des Agents
+            </h1>
+            <p class="text-muted">
+                Liste complète des agents du service ST8
+            </p>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control" id="search-input"
+                    placeholder="Rechercher un agent (nom, prénom, matricule)...">
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAgentModal">
+                <i class="bi bi-plus-circle"></i> Ajouter un agent
+            </button>
+        </div>
+    </div>
+
+    <!-- Alertes échéances -->
+    <div class="row mb-4" id="alerts-section" style="display: none;">
+        <div class="col-12">
+            <!-- Alertes dépassées -->
+            <div class="alert alert-danger" id="alerts-depassees"
+                style="display: none; border-left: 5px solid #dc3545;">
+                <h5 class="alert-heading"><i class="bi bi-x-circle-fill"></i> Échéances DÉPASSÉES</h5>
+                <div id="alerts-depassees-content"></div>
+            </div>
+
+            <!-- Alertes 3 mois -->
+            <div class="alert alert-warning" id="alerts-3-mois" style="display: none; border-left: 5px solid #ffc107;">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Échéances dans les 3 mois</h5>
+                <div id="alerts-3-mois-content"></div>
+            </div>
+
+            <!-- Alertes année -->
+            <div class="alert alert-info" id="alerts-annee" style="display: none; border-left: 5px solid #0dcaf0;">
+                <h5 class="alert-heading"><i class="bi bi-info-circle-fill"></i> Échéances dans l'année</h5>
+                <div id="alerts-annee-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des agents -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="bi bi-table"></i> Liste des agents
+                    </span>
+                    <span class="badge bg-light text-dark" id="agents-count-badge">
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 table-sm" id="agents-table" style="font-size: 0.85rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="position: sticky; left: 0; background: white; z-index: 10;">Matricule
+                                    </th>
+                                    <th style="position: sticky; left: 80px; background: white; z-index: 10;">Nom</th>
+                                    <th style="position: sticky; left: 180px; background: white; z-index: 10;">Prénom
+                                    </th>
+                                    <th>Anniversaire</th>
+                                    <th>Dernières visites</th>
+                                    <th>Prochaines visites</th>
+                                    <th>R.482 A (1)</th>
+                                    <th>R.482 B1 (2)</th>
+                                    <th>R.482 C2 (3)</th>
+                                    <th>R.482 C1 (4)</th>
+                                    <th>R.482 5</th>
+                                    <th>R.482 D (7)</th>
+                                    <th>R.482 E (8)</th>
+                                    <th>R.482 F (9)</th>
+                                    <th>R.482 G (10)</th>
+                                    <th>Tondeuse</th>
+                                    <th>Grue R.490</th>
+                                    <th>B (Nacelle)</th>
+                                    <th>Chariot R.489 / 3</th>
+                                    <th>Tronço</th>
+                                    <th>Permis BE</th>
+                                    <th>Permis PL</th>
+                                    <th>Permis CE</th>
+                                    <th>FIMO</th>
+                                    <th>AIPR</th>
+                                    <th>Premiers secours</th>
+                                    <th class="text-center"
+                                        style="position: sticky; right: 0; background: white; z-index: 10;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agents-tbody">
+                                <tr>
+                                    <td colspan="27" class="text-center py-5">
+                                        <div class="spinner-border text-primary"></div>
+                                        <p class="mt-3 mb-0">Chargement des agents...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Agent -->
+<div class="modal fade" id="addAgentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Ajouter un agent
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="add-agent-form">
+                    <div class="mb-3">
+                        <label class="form-label">Matricule *</label>
+                        <input type="text" class="form-control" id="add-matricule" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nom *</label>
+                        <input type="text" class="form-control" id="add-nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" id="add-prenom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Anniversaire</label>
+                        <input type="date" class="form-control" id="add-anniversaire">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="addAgent()">
+                    <i class="bi bi-check-circle"></i> Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier Agent -->
+<div class="modal fade" id="editAgentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil"></i> Modifier l'agent
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-agent-form">
+                    <input type="hidden" id="edit-index">
+                    <div class="mb-3">
+                        <label class="form-label">Matricule</label>
+                        <input type="text" class="form-control" id="edit-matricule">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="edit-nom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" id="edit-prenom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Anniversaire</label>
+                        <input type="date" class="form-control" id="edit-anniversaire">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="updateAgent()">
+                    <i class="bi bi-check-circle"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allAgents = [];
+
+    $(document).ready(function () {
+        loadAgents();
+
+        // Recherche en temps réel
+        $('#search-input').on('input', function () {
+            filterAgents($(this).val());
+        });
+    });
+
+    function loadAgents() {
+        fetch('/api/agents')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allAgents = data.agents;
+                    displayAgents(allAgents);
+                    displayAlerts(data.alerts);
+                    $('#agents-count-badge').text(data.count + ' agent(s)');
+                } else {
+                    showError('Erreur chargement agents: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showError('Erreur de connexion: ' + error);
+            });
+    }
+
+    function displayAlerts(alerts) {
+        console.log('Alertes reçues:', alerts);
+        const alertsDepassees = alerts['depassees'] || [];
+        const alerts3Mois = alerts['3_mois'] || [];
+        const alertsAnnee = alerts['annee'] || [];
+
+        console.log('Alertes dépassées:', alertsDepassees.length);
+        console.log('Alertes 3 mois:', alerts3Mois.length);
+        console.log('Alertes année:', alertsAnnee.length);
+
+        if (alertsDepassees.length > 0) {
+            let html = '<ul class="mb-0">';
+            alertsDepassees.forEach(alert => {
+                html += `<li><strong>${alert.agent}</strong> - ${alert.type} : <span class="text-danger fw-bold">${alert.echeance}</span></li>`;
+            });
+            html += '</ul>';
+            $('#alerts-depassees-content').html(html);
+            $('#alerts-depassees').show();
+            $('#alerts-section').show();
+        }
+
+        if (alerts3Mois.length > 0) {
+            let html = '<ul class="mb-0">';
+            alerts3Mois.forEach(alert => {
+                html += `<li><strong>${alert.agent}</strong> - ${alert.type} : ${alert.echeance}</li>`;
+            });
+            html += '</ul>';
+            $('#alerts-3-mois-content').html(html);
+            $('#alerts-3-mois').show();
+            $('#alerts-section').show();
+        }
+
+        if (alertsAnnee.length > 0) {
+            let html = '<ul class="mb-0">';
+            alertsAnnee.forEach(alert => {
+                html += `<li><strong>${alert.agent}</strong> - ${alert.type} : ${alert.echeance}</li>`;
+            });
+            html += '</ul>';
+            $('#alerts-annee-content').html(html);
+            $('#alerts-annee').show();
+            $('#alerts-section').show();
+        }
+
+        // Si aucune alerte, masquer la section
+        if (alertsDepassees.length === 0 && alerts3Mois.length === 0 && alertsAnnee.length === 0) {
+            $('#alerts-section').hide();
+        }
+    }
+
+    function displayAgents(agents) {
+        const tbody = $('#agents-tbody');
+        tbody.empty();
+
+        if (agents.length === 0) {
+            tbody.append(`
+                <tr>
+                    <td colspan="27" class="text-center py-4 text-muted">
+                        Aucun agent trouvé
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        agents.forEach(agent => {
+            const bgColor = agent.equipe_color || '#E0E0E0';
+            tbody.append(`
+                <tr style="border-left: 4px solid ${bgColor};">
+                    <td style="position: sticky; left: 0; background: white;">${agent.matricule}</td>
+                    <td style="position: sticky; left: 80px; background: white; font-weight: 600;">${agent.nom}</td>
+                    <td style="position: sticky; left: 180px; background: white;">${agent.prenom}</td>
+                    <td>${agent.anniversaire || '-'}</td>
+                    <td>${agent.dernieres_visites || '-'}</td>
+                    <td>${agent.prochaines_visites || '-'}</td>
+                    <td>${agent.r482_a_1 || '-'}</td>
+                    <td>${agent.r482_b1_2 || '-'}</td>
+                    <td>${agent.r482_c2_3 || '-'}</td>
+                    <td>${agent.r482_c1_4 || '-'}</td>
+                    <td>${agent.r482_5 || '-'}</td>
+                    <td>${agent.r482_d_7 || '-'}</td>
+                    <td>${agent.r482_e_8 || '-'}</td>
+                    <td>${agent.r482_f_9 || '-'}</td>
+                    <td>${agent.r482_g_10 || '-'}</td>
+                    <td>${agent.tondeuse || '-'}</td>
+                    <td>${agent.grue_r490 || '-'}</td>
+                    <td>${agent.b_nacelle || '-'}</td>
+                    <td>${agent.chariot_r489_3 || '-'}</td>
+                    <td>${agent.tronco || '-'}</td>
+                    <td>${agent.permis_be || '-'}</td>
+                    <td>${agent.permis_pl || '-'}</td>
+                    <td>${agent.permis_ce || '-'}</td>
+                    <td>${agent.fimo || '-'}</td>
+                    <td>${agent.aipr || '-'}</td>
+                    <td>${agent.premiers_secours || '-'}</td>
+                    <td class="text-center" style="position: sticky; right: 0; background: white;">
+                        <button class="btn btn-sm btn-primary" onclick="editAgent(${agent.index})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAgent(${agent.index}, '${agent.nom} ${agent.prenom}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function filterAgents(query) {
+        if (!query) {
+            displayAgents(allAgents);
+            return;
+        }
+
+        query = query.toLowerCase();
+        const filtered = allAgents.filter(agent =>
+            agent.matricule.toLowerCase().includes(query) ||
+            agent.nom.toLowerCase().includes(query) ||
+            agent.prenom.toLowerCase().includes(query)
+        );
+
+        displayAgents(filtered);
+    }
+
+    function addAgent() {
+        const matricule = $('#add-matricule').val().trim();
+        const nom = $('#add-nom').val().trim();
+        const prenom = $('#add-prenom').val().trim();
+        const anniversaire = $('#add-anniversaire').val();
+
+        if (!matricule || !nom) {
+            alert('Matricule et nom sont obligatoires');
+            return;
+        }
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Ajout...';
+
+        fetch('/api/agents', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                matricule: matricule,
+                nom: nom,
+                prenom: prenom,
+                anniversaire: anniversaire
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    $('#addAgentModal').modal('hide');
+                    $('#add-agent-form')[0].reset();
+                    loadAgents();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Ajouter';
+            });
+    }
+
+    function editAgent(index) {
+        const agent = allAgents.find(a => a.index === index);
+        if (!agent) return;
+
+        $('#edit-index').val(agent.index);
+        $('#edit-matricule').val(agent.matricule);
+        $('#edit-nom').val(agent.nom);
+        $('#edit-prenom').val(agent.prenom);
+        $('#edit-anniversaire').val(agent.anniversaire);
+
+        $('#editAgentModal').modal('show');
+    }
+
+    function updateAgent() {
+        const index = $('#edit-index').val();
+        const matricule = $('#edit-matricule').val().trim();
+        const nom = $('#edit-nom').val().trim();
+        const prenom = $('#edit-prenom').val().trim();
+        const anniversaire = $('#edit-anniversaire').val();
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enregistrement...';
+
+        fetch(`/api/agents/${index}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                matricule: matricule,
+                nom: nom,
+                prenom: prenom,
+                anniversaire: anniversaire
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    $('#editAgentModal').modal('hide');
+                    loadAgents();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Enregistrer';
+            });
+    }
+
+    function deleteAgent(index, name) {
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer l'agent ${name} ?`)) {
+            return;
+        }
+
+        fetch(`/api/agents/${index}`, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    loadAgents();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            });
+    }
+
+    function showError(message) {
+        $('#agents-tbody').html(`
+            <tr>
+                <td colspan="5" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> ${message}
+                </td>
+            </tr>
+        `);
+    }
+</script>
+{% endblock %}
