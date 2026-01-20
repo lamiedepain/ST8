@@ -16,10 +16,6 @@
                     <p class="lead mb-4">
                         Gestion du planning et des équipes du service ST8
                     </p>
-                    <p class="mb-0">
-                        <i class="bi bi-cloud-check-fill"></i>
-                        Synchronisé automatiquement avec SharePoint
-                    </p>
                 </div>
             </div>
         </div>
@@ -115,6 +111,31 @@
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
+                    <i class="bi bi-book"></i> EasyDict
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Dictionnaire de traduction</h5>
+                    <p class="card-text">
+                        • Outil de traduction automatique<br>
+                        • Interface Excel intégrée<br>
+                        • Modèle prêt à l'emploi<br>
+                        • Facilite la communication multilingue
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="/easydict/easydict.html" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-arrow-right"></i> Ouvrir EasyDict
+                        </a>
+                        <a href="/easydict/T-DICT_Template.xlsm" download class="btn btn-outline-primary">
+                            <i class="bi bi-download"></i> Télécharger modèle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
                     <i class="bi bi-people-fill"></i> Équipes
                 </div>
                 <div class="card-body">
@@ -128,26 +149,6 @@
                     <a href="/planning" class="btn btn-primary">
                         <i class="bi bi-arrow-right"></i> Créer des équipes
                     </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <i class="bi bi-cloud-arrow-down"></i> SharePoint
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Synchronisation cloud</h5>
-                    <p class="card-text">
-                        • Synchronisation automatique<br>
-                        • Mise à jour quotidienne<br>
-                        • Sauvegarde sécurisée<br>
-                        • Accès centralisé
-                    </p>
-                    <button class="btn btn-primary" onclick="syncSharePoint()">
-                        <i class="bi bi-cloud-download"></i> Synchroniser maintenant
-                    </button>
                 </div>
             </div>
         </div>
@@ -165,16 +166,6 @@
                         <tr>
                             <td><strong>Fichier Excel:</strong></td>
                             <td>{{ excel_file }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Synchronisation SharePoint:</strong></td>
-                            <td>
-                                {% if sync_enabled %}
-                                <span class="badge bg-success">Activée</span>
-                                {% else %}
-                                <span class="badge bg-warning">Désactivée</span>
-                                {% endif %}
-                            </td>
                         </tr>
                         <tr>
                             <td><strong>Dernière mise à jour:</strong></td>
