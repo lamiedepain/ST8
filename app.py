@@ -3,7 +3,6 @@
 """
 ST8 Planning - Application Flask
 Application web pour la gestion du planning et des équipes ST8
-Avec synchronisation automatique depuis SharePoint
 """
 
 from flask import Flask, render_template, jsonify, request, send_file
@@ -22,13 +21,7 @@ from teams_structure import AGENTS, get_agent_equipe, get_agent_equipe_color
 from utils import (
     load_workbook, save_workbook, create_backup, cell_to_str, cell_to_date_str, normalize_status,
     find_header_row, list_excel_files, resolve_excel_path, list_backups,
-    restore_backup, download_from_sharepoint, upload_to_sharepoint,
-    sync_from_sharepoint_if_enabled, ExcelError, SharePointError
-)
-
-# Import des constantes de configuration pour l'API
-from config import (
-    SHAREPOINT_USERNAME, SHAREPOINT_PASSWORD, SHAREPOINT_SITE_URL, AUTO_SYNC_ENABLED
+    restore_backup, ExcelError
 )
 
 
@@ -41,25 +34,14 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Max 50MB upload
 
 # ==============================================================================
-# SYNCHRONISATION SHAREPOINT AU DÉMARRAGE
+# VÉRIFICATION AU DÉMARRAGE
 # ==============================================================================
 
 def startup_sync():
-    """Synchronise le fichier depuis SharePoint au démarrage"""
+    """Vérifie le fichier au démarrage"""
     print("\n" + "="*60)
     print("ST8 PLANNING - Démarrage")
     print("="*60)
-    
-    # Synchronisation SharePoint
-    if AUTO_SYNC_ENABLED:
-        print("\n📥 Synchronisation SharePoint activée")
-        try:
-            sync_from_sharepoint_if_enabled()
-        except Exception as e:
-            print(f"⚠️  Synchronisation échouée: {e}")
-            print("ℹ️  Utilisation du fichier local")
-    else:
-        print("\nℹ️  Synchronisation SharePoint désactivée")
     
     # Vérifier fichier local
     if LOCAL_EXCEL_PATH.exists():
@@ -78,8 +60,7 @@ def startup_sync():
 def index():
     """Page d'accueil"""
     return render_template('index.html', 
-                         excel_file=EXCEL_FILE,
-                         sync_enabled=AUTO_SYNC_ENABLED)
+                         excel_file=EXCEL_FILE)
 
 @app.route('/planning')
 def planning_page():
@@ -90,86 +71,6 @@ def planning_page():
 def agents_page():
     """Page de gestion des agents"""
     return render_template('agents.html')
-
-# ==============================================================================
-# ROUTES - SHAREPOINT
-# ==============================================================================
-
-@app.route('/api/sync-sharepoint', methods=['POST'])
-def sync_sharepoint():
-    """
-    Synchronise le fichier depuis SharePoint manuellement
-    
-    Returns:
-        JSON: {success: bool, message: str}
-    """
-    try:
-        # Créer backup avant sync
-        if LOCAL_EXCEL_PATH.exists():
-            create_backup()
-        
-        # Télécharger depuis SharePoint
-        download_from_sharepoint()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Fichier synchronisé depuis SharePoint'
-        })
-    
-    except SharePointError as e:
-        print(f"❌ Erreur SharePoint: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-    except Exception as e:
-        print(f"❌ Erreur inattendue: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': f'Erreur inattendue: {str(e)}'
-        }), 500
-
-@app.route('/api/upload-sharepoint', methods=['POST'])
-def upload_sharepoint():
-    """
-    Upload le fichier local vers SharePoint
-    
-    Returns:
-        JSON: {success: bool, message: str}
-    """
-    try:
-        upload_to_sharepoint()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Fichier uploadé vers SharePoint'
-        })
-    
-    except SharePointError as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@app.route('/api/sharepoint-status', methods=['GET'])
-def sharepoint_status():
-    """
-    Vérifie la configuration SharePoint
-    
-    Returns:
-        JSON: État de la configuration
-    """
-    return jsonify({
-        'configured': bool(SHAREPOINT_USERNAME and SHAREPOINT_PASSWORD),
-        'username': SHAREPOINT_USERNAME if SHAREPOINT_USERNAME else 'Non configuré',
-        'has_password': bool(SHAREPOINT_PASSWORD),
-        'site_url': SHAREPOINT_SITE_URL,
-        'auto_sync': AUTO_SYNC_ENABLED
-    })
 
 # ==============================================================================
 # ROUTES - FICHIERS
@@ -1191,10 +1092,9 @@ if __name__ == '__main__':
     print("\n🚀 Lancement ST8 Planning")
     print(f"📍 URL: http://{FLASK_HOST}:{FLASK_PORT}")
     print(f"📂 Fichier: {EXCEL_FILE}")
-    print(f"☁️  SharePoint: {'Activé' if AUTO_SYNC_ENABLED else 'Désactivé'}")
     print("\nCtrl+C pour arrêter\n")
     
-    # Exécuter la synchronisation au démarrage
+    # Vérifier le fichier au démarrage
     startup_sync()
     
     app.run(
