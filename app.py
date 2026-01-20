@@ -82,6 +82,15 @@ def easydict_files(filename):
     easydict_dir = str(Path(__file__).parent / 'easydict')
     return send_file(Path(easydict_dir) / filename)
 
+@app.route('/api/easydict-template')
+def get_easydict_template():
+    """Servir le template XLSM pour EasyDict"""
+    template_path = Path(__file__).parent / 'easydict' / 'T-DICT_Template.xlsm'
+    if template_path.exists():
+        return send_file(template_path, mimetype='application/vnd.ms-excel.sheet.macroEnabled.12')
+    else:
+        return jsonify({'error': 'Template non trouvé'}), 404
+
 # ==============================================================================
 # ROUTES - FICHIERS
 # ==============================================================================
