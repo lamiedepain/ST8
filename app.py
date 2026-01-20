@@ -66,7 +66,7 @@ def startup_sync():
         print(f"✅ Fichier Excel: {EXCEL_FILE}")
     else:
         print(f"⚠️  Fichier Excel introuvable: {EXCEL_FILE}")
-        print("❌ L'application ne pourra pas fonctionner correctement")
+        print("⚠️  Mode dégradé - Uploadez un fichier Excel via l'interface")
     
     print("\n" + "="*60)
 
