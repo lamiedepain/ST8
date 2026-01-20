@@ -73,6 +73,17 @@ def agents_page():
     return render_template('agents.html')
 
 # ==============================================================================
+# ROUTES - EASYDICT
+# ==============================================================================
+
+@app.route('/easydict/<path:filename>')
+def easydict_files(filename):
+    """Servir les fichiers du dossier easydict"""
+    from flask import send_from_directory
+    easydict_dir = Path(__file__).parent / 'easydict'
+    return send_from_directory(easydict_dir, filename)
+
+# ==============================================================================
 # ROUTES - FICHIERS
 # ==============================================================================
 
