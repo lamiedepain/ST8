@@ -18,7 +18,7 @@ load_dotenv()
 
 # Import modules locaux
 from config import *
-from teams_structure import get_agent_equipe, get_agent_equipe_color
+from teams_structure import AGENTS, get_agent_equipe, get_agent_equipe_color
 from utils import (
     load_workbook, save_workbook, create_backup, cell_to_str, cell_to_date_str, normalize_status,
     find_header_row, list_excel_files, resolve_excel_path, list_backups,
