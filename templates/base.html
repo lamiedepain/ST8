@@ -138,13 +138,7 @@
                     </li>
                 </ul>
 
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <button class="btn btn-sm btn-outline-light" onclick="syncSharePoint()">
-                            <i class="bi bi-cloud-download"></i> Synchroniser SharePoint
-                        </button>
-                    </li>
-                </ul>
+
             </div>
         </div>
     </nav>
@@ -160,9 +154,6 @@
             <p class="mb-0">
                 &copy; 2026 ST8 Planning - Bordeaux Métropole
             </p>
-            <p class="mb-0 text-muted small">
-                <i class="bi bi-cloud"></i> Synchronisation SharePoint activée
-            </p>
         </div>
     </footer>
 
@@ -174,38 +165,6 @@
 
     <!-- Custom JS -->
     <script>
-        // Fonction de synchronisation SharePoint
-        function syncSharePoint() {
-            const btn = event.target.closest('button');
-            const originalHtml = btn.innerHTML;
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Synchronisation...';
-
-            fetch('/api/sync-sharepoint', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('success', data.message);
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showAlert('danger', 'Erreur: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    showAlert('danger', 'Erreur de connexion: ' + error);
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                });
-        }
-
         // Fonction d'affichage d'alerte
         function showAlert(type, message) {
             const alertDiv = `
