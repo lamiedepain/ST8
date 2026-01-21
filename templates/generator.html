@@ -208,12 +208,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
     // Liste complète des articles du magasin
-    const articlesData = {{ articles_json|safe }};
+    const articlesData = {{ articles_json| safe }};
     let selectedArticles = [];
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         console.log(`${articlesData.length} articles chargés`);
-        
+
         // Surveiller les changements de dates
         $('#chantierDateDebut, #chantierDateFin').on('change', checkAgentsDisponibles);
     });
@@ -222,39 +222,45 @@
     function checkAgentsDisponibles() {
         const dateDebut = $('#chantierDateDebut').val();
         const dateFin = $('#chantierDateFin').val();
-        
+
         if (dateDebut && dateFin) {
             $('#agentsDispoSection').show();
             $('#agentsDispo').html(`<div class="text-center text-muted">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
                 <span class="ms-2">Chargement...</span>
             </div>`);
-            
+
             fetch('/api/agents-disponibles', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({dateDebut, dateFin})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dateDebut, dateFin })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.agents.length > 0) {
-                    let html = '<div class="row g-2">';
-                    data.agents.forEach(agent => {
-                        html += `<div class="col-md-6">
-                            <div class="badge bg-success w-100 text-start p-2">
-                                ${agent.nom} ${agent.prenom}
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.agents.length > 0) {
+                        let html = '<div class="row g-2">';
+                        data.agents.forEach(agent => {
+                            const agentId = `agent_${agent.nom}_${agent.prenom}`.replace(/[^a-z0-9]/gi, '_');
+                            html += `<div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input agent-checkbox" type="checkbox" 
+                                       value="${agent.nom} ${agent.prenom}" 
+                                       id="${agentId}">
+                                <label class="form-check-label" for="${agentId}">
+                                    ${agent.nom} ${agent.prenom}
+                                </label>
                             </div>
                         </div>`;
-                    });
-                    html += '</div>';
-                    $('#agentsDispo').html(html);
-                } else {
-                    $('#agentsDispo').html('<p class="text-muted mb-0">Aucun agent voirie disponible pour cette période</p>');
-                }
-            })
-            .catch(error => {
-                $('#agentsDispo').html('<p class="text-danger mb-0">Erreur de chargement</p>');
-            });
+                        });
+                        html += '</div>';
+                        $('#agentsDispo').html(html);
+                    } else {
+                        $('#agentsDispo').html('<p class="text-muted mb-0">Aucun agent voirie disponible pour cette période</p>');
+                    }
+                })
+                .catch(error => {
+                    $('#agentsDispo').html('<p class="text-danger mb-0">Erreur de chargement</p>');
+                });
         } else {
             $('#agentsDispoSection').hide();
         }
@@ -365,6 +371,19 @@
             if (reqPermisPL) readme += `✓ Permis PL requis\n`;
         } else {
             readme += `Aucune spécificité particulière\n`;
+        }
+
+        // Ajouter les agents sélectionnés
+        const selectedAgents = [];
+        $('.agent-checkbox:checked').each(function() {
+            selectedAgents.push($(this).val());
+        });
+        
+        if (selectedAgents.length > 0) {
+            readme += `\n--- AGENTS AFFECTÉS ---\n`;
+            selectedAgents.forEach(agent => {
+                readme += `✓ ${agent}\n`;
+            });
         }
 
         if (description) {
