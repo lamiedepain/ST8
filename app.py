@@ -145,7 +145,6 @@ def get_agents_disponibles():
             return jsonify({'success': False, 'error': 'Dates manquantes'}), 400
         
         # Filtrer les agents voirie depuis teams_structure
-        from teams_structure import AGENTS
         agents_voirie = [a for a in AGENTS if get_agent_equipe(a['nom'], a['prenom']) == 'voirie']
         
         # TODO: Vérifier la disponibilité dans le planning Excel
