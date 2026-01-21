@@ -7,6 +7,7 @@ Application web pour la gestion du planning et des équipes ST8
 
 from flask import Flask, render_template, jsonify, request, send_file
 from datetime import datetime, timedelta
+from openpyxl import load_workbook
 import json
 from pathlib import Path
 import os
@@ -144,13 +145,61 @@ def get_agents_disponibles():
         if not date_debut or not date_fin:
             return jsonify({'success': False, 'error': 'Dates manquantes'}), 400
         
-        # Filtrer les agents voirie depuis teams_structure
+        # Convertir les dates
+        debut = datetime.strptime(date_debut, '%Y-%m-%d')
+        fin = datetime.strptime(date_fin, '%Y-%m-%d')
+        
+        # Charger le fichier Excel
+        wb = load_workbook(LOCAL_EXCEL_PATH, data_only=True)
+        
+        # Filtrer les agents voirie
         agents_voirie = [a for a in AGENTS if 'voirie' in get_agent_equipe(a['nom']).lower()]
+        agents_disponibles = []
         
-        # TODO: Vérifier la disponibilité dans le planning Excel
-        # Pour l'instant, on retourne tous les agents voirie
+        # Pour chaque agent voirie
+        for agent in agents_voirie:
+            nom_complet = f"{agent['nom']} {agent['prenom']}"
+            est_disponible = True
+            
+            # Vérifier les mois entre debut et fin
+            current_date = debut
+            while current_date <= fin:
+                month_name = current_date.strftime('%B %Y')  # "Janvier 2026"
+                
+                # Vérifier si la feuille existe
+                if month_name in wb.sheetnames:
+                    ws = wb[month_name]
+                    
+                    # Trouver la ligne de l'agent
+                    agent_row = None
+                    for row in range(PLANNING_AGENTS_START_ROW, ws.max_row + 1):
+                        cell_nom = ws.cell(row, 2).value  # Colonne B = nom
+                        cell_prenom = ws.cell(row, 3).value  # Colonne C = prenom
+                        if cell_nom and cell_prenom:
+                            if cell_nom.strip().upper() == agent['nom'].upper() and cell_prenom.strip().upper() == agent['prenom'].upper():
+                                agent_row = row
+                                break
+                    
+                    # Vérifier les jours du mois
+                    if agent_row:
+                        jour = current_date.day
+                        col = PLANNING_DAYS_START_COL + jour - 1  # Colonne D = jour 1
+                        statut = ws.cell(agent_row, col).value
+                        
+                        # Si statut est dans les absences ou vide/None = pas dispo
+                        if statut and str(statut).strip().upper() in ['CA', 'RTT', 'CEX', 'CM', 'F', 'AH', 'AST', 'PC', 'M', 'PA', 'R', 'AS', 'AT']:
+                            est_disponible = False
+                            break
+                
+                # Passer au jour suivant
+                current_date += timedelta(days=1)
+            
+            if est_disponible:
+                agents_disponibles.append(agent)
         
-        return jsonify({'success': True, 'agents': agents_voirie, 'count': len(agents_voirie)})
+        wb.close()
+        
+        return jsonify({'success': True, 'agents': agents_disponibles, 'count': len(agents_disponibles)})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
