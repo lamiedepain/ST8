@@ -67,6 +67,11 @@ def planning_page():
     """Page de planification"""
     return render_template('planning.html')
 
+@app.route('/generator')
+def generator_page():
+    """Page générateur de dossiers"""
+    return render_template('generator.html')
+
 @app.route('/agents')
 def agents_page():
     """Page de gestion des agents"""

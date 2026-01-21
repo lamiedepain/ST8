@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Générateur de dossiers - ST8 Planning{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">
+                <i class="bi bi-folder-plus"></i> Générateur de dossiers de chantier
+            </h1>
+            <p class="lead text-muted">
+                Créez automatiquement une structure de dossiers organisée pour vos chantiers
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-file-earmark-text"></i> Informations du chantier
+                </div>
+                <div class="card-body">
+                    <form id="generatorForm">
+                        <div class="mb-3">
+                            <label for="chantierNom" class="form-label">Nom du chantier <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="chantierNom" placeholder="Ex: Réfection voirie Rue de la République" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chantierRef" class="form-label">Référence</label>
+                            <input type="text" class="form-control" id="chantierRef" placeholder="Ex: ST8-2026-001">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="chantierDateDebut" class="form-label">Date de début</label>
+                                <input type="date" class="form-control" id="chantierDateDebut">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="chantierDateFin" class="form-label">Date de fin prévisionnelle</label>
+                                <input type="date" class="form-control" id="chantierDateFin">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chantierAdresse" class="form-label">Adresse</label>
+                            <input type="text" class="form-control" id="chantierAdresse" placeholder="Adresse complète du chantier">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chantierResponsable" class="form-label">Responsable</label>
+                            <input type="text" class="form-control" id="chantierResponsable" placeholder="Nom du responsable">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Structure des dossiers</label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder1" checked>
+                                    <label class="form-check-label" for="folder1">
+                                        📁 01_Documents_administratifs
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder2" checked>
+                                    <label class="form-check-label" for="folder2">
+                                        📁 02_Plans_et_schemas
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder3" checked>
+                                    <label class="form-check-label" for="folder3">
+                                        📁 03_Photos
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder4" checked>
+                                    <label class="form-check-label" for="folder4">
+                                        📁 04_Rapports_et_comptes_rendus
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder5" checked>
+                                    <label class="form-check-label" for="folder5">
+                                        📁 05_DICT_DT
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder6" checked>
+                                    <label class="form-check-label" for="folder6">
+                                        📁 06_Factures_et_devis
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="folder7" checked>
+                                    <label class="form-check-label" for="folder7">
+                                        📁 07_Correspondances
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="folder8" checked>
+                                    <label class="form-check-label" for="folder8">
+                                        📁 08_Divers
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-download"></i> Générer et télécharger
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-info-circle"></i> Comment ça marche ?
+                </div>
+                <div class="card-body">
+                    <ol class="small mb-0">
+                        <li class="mb-2">Remplissez les informations du chantier</li>
+                        <li class="mb-2">Sélectionnez les dossiers à créer</li>
+                        <li class="mb-2">Cliquez sur "Générer"</li>
+                        <li>Téléchargez le fichier ZIP contenant la structure complète</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightbulb"></i> Astuce
+                </div>
+                <div class="card-body">
+                    <p class="small mb-0">
+                        Un fichier README.txt avec les informations du chantier sera automatiquement créé dans le dossier principal.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+    $('#generatorForm').submit(function(e) {
+        e.preventDefault();
+        
+        const nom = $('#chantierNom').val();
+        const ref = $('#chantierRef').val();
+        const dateDebut = $('#chantierDateDebut').val();
+        const dateFin = $('#chantierDateFin').val();
+        const adresse = $('#chantierAdresse').val();
+        const responsable = $('#chantierResponsable').val();
+        
+        if (!nom) {
+            showAlert('danger', 'Le nom du chantier est obligatoire');
+            return;
+        }
+        
+        // Créer le ZIP
+        const zip = new JSZip();
+        
+        // Nom du dossier principal (sanitize)
+        const folderName = nom.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+        
+        // Créer le README
+        let readme = `CHANTIER: ${nom}\n`;
+        readme += `${'='.repeat(50)}\n\n`;
+        if (ref) readme += `Référence: ${ref}\n`;
+        if (dateDebut) readme += `Date de début: ${dateDebut}\n`;
+        if (dateFin) readme += `Date de fin: ${dateFin}\n`;
+        if (adresse) readme += `Adresse: ${adresse}\n`;
+        if (responsable) readme += `Responsable: ${responsable}\n`;
+        readme += `\nGénéré le: ${new Date().toLocaleString('fr-FR')}\n`;
+        
+        zip.file(`${folderName}/README.txt`, readme);
+        
+        // Ajouter les dossiers sélectionnés
+        const folders = [
+            { id: 'folder1', name: '01_Documents_administratifs' },
+            { id: 'folder2', name: '02_Plans_et_schemas' },
+            { id: 'folder3', name: '03_Photos' },
+            { id: 'folder4', name: '04_Rapports_et_comptes_rendus' },
+            { id: 'folder5', name: '05_DICT_DT' },
+            { id: 'folder6', name: '06_Factures_et_devis' },
+            { id: 'folder7', name: '07_Correspondances' },
+            { id: 'folder8', name: '08_Divers' }
+        ];
+        
+        folders.forEach(folder => {
+            if ($(`#${folder.id}`).is(':checked')) {
+                zip.file(`${folderName}/${folder.name}/.gitkeep`, '');
+            }
+        });
+        
+        // Générer et télécharger
+        zip.generateAsync({type: 'blob'}).then(function(content) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `${folderName}.zip`;
+            link.click();
+            
+            showAlert('success', 'Dossier généré avec succès !');
+        });
+    });
+</script>
+{% endblock %}
