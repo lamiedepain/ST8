@@ -70,7 +70,19 @@ def planning_page():
 @app.route('/generator')
 def generator_page():
     """Page générateur de dossiers"""
-    return render_template('generator.html')
+    # Charger les articles du magasin
+    try:
+        import json
+        magasin_path = Path(__file__).parent / 'articles_magasin.json'
+        if magasin_path.exists():
+            with open(magasin_path, 'r', encoding='utf-8') as f:
+                articles = json.load(f)
+        else:
+            articles = []
+    except:
+        articles = []
+    
+    return render_template('generator.html', articles_json=json.dumps(articles))
 
 @app.route('/agents')
 def agents_page():
@@ -118,6 +130,28 @@ def get_magasin_articles():
         
         wb.close()
         return jsonify({'success': True, 'articles': articles, 'count': len(articles)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/agents-disponibles', methods=['POST'])
+def get_agents_disponibles():
+    """Récupérer les agents voirie disponibles pour une période"""
+    try:
+        data = request.json
+        date_debut = data.get('dateDebut')
+        date_fin = data.get('dateFin')
+        
+        if not date_debut or not date_fin:
+            return jsonify({'success': False, 'error': 'Dates manquantes'}), 400
+        
+        # Filtrer les agents voirie depuis teams_structure
+        from teams_structure import AGENTS
+        agents_voirie = [a for a in AGENTS if get_agent_equipe(a['nom'], a['prenom']) == 'voirie']
+        
+        # TODO: Vérifier la disponibilité dans le planning Excel
+        # Pour l'instant, on retourne tous les agents voirie
+        
+        return jsonify({'success': True, 'agents': agents_voirie, 'count': len(agents_voirie)})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

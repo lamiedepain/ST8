@@ -46,6 +46,17 @@
                             </div>
                         </div>
 
+                        <!-- Agents disponibles -->
+                        <div id="agentsDispoSection" class="mb-3" style="display: none;">
+                            <label class="form-label">Agents voirie disponibles pour cette période</label>
+                            <div id="agentsDispo" class="border rounded p-3 bg-light">
+                                <div class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    <span class="ms-2">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="chantierAdresse" class="form-label">Adresse</label>
                             <input type="text" class="form-control" id="chantierAdresse"
@@ -83,13 +94,16 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Matériaux magasin</label>
                                 <div class="input-group mb-2">
-                                    <input type="text" class="form-control" id="searchArticle" placeholder="Rechercher un article...">
+                                    <input type="text" class="form-control" id="searchArticle"
+                                        placeholder="Rechercher un article...">
                                     <button class="btn btn-outline-secondary" type="button" id="btnSearchArticle">
                                         <i class="bi bi-search"></i>
                                     </button>
                                 </div>
-                                <div id="articleResults" class="border rounded p-2 mb-2" style="max-height: 150px; overflow-y: auto; display: none;"></div>
-                                <div id="selectedArticles" class="border rounded p-2 bg-light" style="min-height: 60px;">
+                                <div id="articleResults" class="border rounded p-2 mb-2"
+                                    style="max-height: 150px; overflow-y: auto; display: none;"></div>
+                                <div id="selectedArticles" class="border rounded p-2 bg-light"
+                                    style="min-height: 60px;">
                                     <small class="text-muted">Aucun article sélectionné</small>
                                 </div>
                             </div>
@@ -193,32 +207,69 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-    let articlesData = [];
+    // Liste complète des articles du magasin
+    const articlesData = {{ articles_json|safe }};
     let selectedArticles = [];
 
-    // Charger les articles au démarrage
     $(document).ready(function() {
-        fetch('/api/magasin-articles')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    articlesData = data.articles;
-                    console.log(`${data.count} articles chargés`);
-                }
-            })
-            .catch(error => console.error('Erreur chargement articles:', error));
+        console.log(`${articlesData.length} articles chargés`);
+        
+        // Surveiller les changements de dates
+        $('#chantierDateDebut, #chantierDateFin').on('change', checkAgentsDisponibles);
     });
 
+    // Vérifier les agents disponibles
+    function checkAgentsDisponibles() {
+        const dateDebut = $('#chantierDateDebut').val();
+        const dateFin = $('#chantierDateFin').val();
+        
+        if (dateDebut && dateFin) {
+            $('#agentsDispoSection').show();
+            $('#agentsDispo').html(`<div class="text-center text-muted">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span class="ms-2">Chargement...</span>
+            </div>`);
+            
+            fetch('/api/agents-disponibles', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({dateDebut, dateFin})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.agents.length > 0) {
+                    let html = '<div class="row g-2">';
+                    data.agents.forEach(agent => {
+                        html += `<div class="col-md-6">
+                            <div class="badge bg-success w-100 text-start p-2">
+                                ${agent.nom} ${agent.prenom}
+                            </div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    $('#agentsDispo').html(html);
+                } else {
+                    $('#agentsDispo').html('<p class="text-muted mb-0">Aucun agent voirie disponible pour cette période</p>');
+                }
+            })
+            .catch(error => {
+                $('#agentsDispo').html('<p class="text-danger mb-0">Erreur de chargement</p>');
+            });
+        } else {
+            $('#agentsDispoSection').hide();
+        }
+    }
+
     // Recherche d'articles
-    $('#searchArticle').on('input', function() {
+    $('#searchArticle').on('input', function () {
         const query = $(this).val().toLowerCase();
         if (query.length < 2) {
             $('#articleResults').hide();
             return;
         }
 
-        const results = articlesData.filter(art => 
-            art.code.toLowerCase().includes(query) || 
+        const results = articlesData.filter(art =>
+            art.code.toLowerCase().includes(query) ||
             art.description.toLowerCase().includes(query)
         ).slice(0, 20);
 
@@ -237,22 +288,22 @@
     });
 
     // Ajouter un article
-    $(document).on('click', '.add-article', function(e) {
+    $(document).on('click', '.add-article', function (e) {
         e.preventDefault();
         const code = $(this).data('code');
         const desc = $(this).data('desc');
-        
+
         if (!selectedArticles.find(a => a.code === code)) {
-            selectedArticles.push({code, desc});
+            selectedArticles.push({ code, desc });
             updateSelectedArticles();
         }
-        
+
         $('#searchArticle').val('');
         $('#articleResults').hide();
     });
 
     // Supprimer un article
-    $(document).on('click', '.remove-article', function(e) {
+    $(document).on('click', '.remove-article', function (e) {
         e.preventDefault();
         const code = $(this).data('code');
         selectedArticles = selectedArticles.filter(a => a.code !== code);
