@@ -152,8 +152,8 @@ def get_agents_disponibles():
         # Charger le fichier Excel
         wb = load_workbook()
         
-        # Filtrer les agents voirie
-        agents_voirie = [a for a in AGENTS if 'voirie' in get_agent_equipe(a['nom']).lower()]
+        # Filtrer uniquement les agents de voirie (pas les responsables)
+        agents_voirie = [a for a in AGENTS if get_agent_equipe(a['nom']) == 'Agent.es de voirie']
         agents_disponibles = []
         
         # Pour chaque agent voirie
