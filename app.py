@@ -96,6 +96,31 @@ def get_easydict_template():
     else:
         return jsonify({'error': 'Template non trouvé'}), 404
 
+@app.route('/api/magasin-articles')
+def get_magasin_articles():
+    """Récupérer la liste des articles du magasin"""
+    try:
+        magasin_path = Path(__file__).parent / 'magasin_st8' / 'magasin.xlsx'
+        if not magasin_path.exists():
+            return jsonify({'success': False, 'error': 'Fichier magasin non trouvé'}), 404
+        
+        wb = load_workbook(magasin_path, read_only=True, data_only=True)
+        ws = wb.active
+        
+        articles = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0] and row[1]:  # Article et Description
+                articles.append({
+                    'code': row[0],
+                    'description': row[1],
+                    'stock': row[6] if len(row) > 6 else 0
+                })
+        
+        wb.close()
+        return jsonify({'success': True, 'articles': articles, 'count': len(articles)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ==============================================================================
 # ROUTES - FICHIERS
 # ==============================================================================

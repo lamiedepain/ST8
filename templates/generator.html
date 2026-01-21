@@ -24,8 +24,10 @@
                 <div class="card-body">
                     <form id="generatorForm">
                         <div class="mb-3">
-                            <label for="chantierNom" class="form-label">Nom du chantier <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="chantierNom" placeholder="Ex: Réfection voirie Rue de la République" required>
+                            <label for="chantierNom" class="form-label">Nom du chantier <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="chantierNom"
+                                placeholder="Ex: Réfection voirie Rue de la République" required>
                         </div>
 
                         <div class="mb-3">
@@ -46,17 +48,20 @@
 
                         <div class="mb-3">
                             <label for="chantierAdresse" class="form-label">Adresse</label>
-                            <input type="text" class="form-control" id="chantierAdresse" placeholder="Adresse complète du chantier">
+                            <input type="text" class="form-control" id="chantierAdresse"
+                                placeholder="Adresse complète du chantier">
                         </div>
 
                         <div class="mb-3">
                             <label for="chantierResponsable" class="form-label">Responsable</label>
-                            <input type="text" class="form-control" id="chantierResponsable" placeholder="Nom du responsable">
+                            <input type="text" class="form-control" id="chantierResponsable"
+                                placeholder="Nom du responsable">
                         </div>
 
                         <div class="mb-3">
                             <label for="chantierDescription" class="form-label">Description globale du chantier</label>
-                            <textarea class="form-control" id="chantierDescription" rows="3" placeholder="Description détaillée du chantier, travaux à réaliser, etc."></textarea>
+                            <textarea class="form-control" id="chantierDescription" rows="3"
+                                placeholder="Description détaillée du chantier, travaux à réaliser, etc."></textarea>
                         </div>
 
                         <div class="row">
@@ -76,8 +81,17 @@
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="chantierMateriaux" class="form-label">Matériaux magasin</label>
-                                <textarea class="form-control" id="chantierMateriaux" rows="3" placeholder="Liste des matériaux à prévoir du magasin"></textarea>
+                                <label class="form-label">Matériaux magasin</label>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="searchArticle" placeholder="Rechercher un article...">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnSearchArticle">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div id="articleResults" class="border rounded p-2 mb-2" style="max-height: 150px; overflow-y: auto; display: none;"></div>
+                                <div id="selectedArticles" class="border rounded p-2 bg-light" style="min-height: 60px;">
+                                    <small class="text-muted">Aucun article sélectionné</small>
+                                </div>
                             </div>
                         </div>
 
@@ -166,7 +180,8 @@
                 </div>
                 <div class="card-body">
                     <p class="small mb-0">
-                        Un fichier README.txt avec les informations du chantier sera automatiquement créé dans le dossier principal.
+                        Un fichier README.txt avec les informations du chantier sera automatiquement créé dans le
+                        dossier principal.
                     </p>
                 </div>
             </div>
@@ -178,9 +193,91 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-    $('#generatorForm').submit(function(e) {
+    let articlesData = [];
+    let selectedArticles = [];
+
+    // Charger les articles au démarrage
+    $(document).ready(function() {
+        fetch('/api/magasin-articles')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    articlesData = data.articles;
+                    console.log(`${data.count} articles chargés`);
+                }
+            })
+            .catch(error => console.error('Erreur chargement articles:', error));
+    });
+
+    // Recherche d'articles
+    $('#searchArticle').on('input', function() {
+        const query = $(this).val().toLowerCase();
+        if (query.length < 2) {
+            $('#articleResults').hide();
+            return;
+        }
+
+        const results = articlesData.filter(art => 
+            art.code.toLowerCase().includes(query) || 
+            art.description.toLowerCase().includes(query)
+        ).slice(0, 20);
+
+        if (results.length > 0) {
+            let html = '<div class="list-group list-group-flush">';
+            results.forEach(art => {
+                html += `<a href="#" class="list-group-item list-group-item-action py-1 px-2 add-article" data-code="${art.code}" data-desc="${art.description}">
+                    <small><strong>${art.code}</strong> - ${art.description}</small>
+                </a>`;
+            });
+            html += '</div>';
+            $('#articleResults').html(html).show();
+        } else {
+            $('#articleResults').hide();
+        }
+    });
+
+    // Ajouter un article
+    $(document).on('click', '.add-article', function(e) {
         e.preventDefault();
+        const code = $(this).data('code');
+        const desc = $(this).data('desc');
         
+        if (!selectedArticles.find(a => a.code === code)) {
+            selectedArticles.push({code, desc});
+            updateSelectedArticles();
+        }
+        
+        $('#searchArticle').val('');
+        $('#articleResults').hide();
+    });
+
+    // Supprimer un article
+    $(document).on('click', '.remove-article', function(e) {
+        e.preventDefault();
+        const code = $(this).data('code');
+        selectedArticles = selectedArticles.filter(a => a.code !== code);
+        updateSelectedArticles();
+    });
+
+    function updateSelectedArticles() {
+        if (selectedArticles.length === 0) {
+            $('#selectedArticles').html('<small class="text-muted">Aucun article sélectionné</small>');
+        } else {
+            let html = '<div class="d-flex flex-wrap gap-1">';
+            selectedArticles.forEach(art => {
+                html += `<span class="badge bg-primary">
+                    ${art.code}
+                    <a href="#" class="text-white text-decoration-none remove-article" data-code="${art.code}">×</a>
+                </span>`;
+            });
+            html += '</div>';
+            $('#selectedArticles').html(html);
+        }
+    }
+
+    $('#generatorForm').submit(function (e) {
+        e.preventDefault();
+
         const nom = $('#chantierNom').val();
         const ref = $('#chantierRef').val();
         const dateDebut = $('#chantierDateDebut').val();
@@ -190,19 +287,18 @@
         const description = $('#chantierDescription').val();
         const reqCACES = $('#reqCACES').is(':checked');
         const reqPermisPL = $('#reqPermisPL').is(':checked');
-        const materiaux = $('#chantierMateriaux').val();
-        
+
         if (!nom) {
             showAlert('danger', 'Le nom du chantier est obligatoire');
             return;
         }
-        
+
         // Créer le ZIP
         const zip = new JSZip();
-        
+
         // Nom du dossier principal (sanitize)
         const folderName = nom.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
-        
+
         // Créer le README
         let readme = `CHANTIER: ${nom}\n`;
         readme += `${'='.repeat(50)}\n\n`;
@@ -211,7 +307,7 @@
         if (dateFin) readme += `Date de fin: ${dateFin}\n`;
         if (adresse) readme += `Adresse: ${adresse}\n`;
         if (responsable) readme += `Responsable: ${responsable}\n`;
-        
+
         readme += `\n--- SPÉCIFICITÉS REQUISES ---\n`;
         if (reqCACES || reqPermisPL) {
             if (reqCACES) readme += `✓ CACES requis\n`;
@@ -219,21 +315,23 @@
         } else {
             readme += `Aucune spécificité particulière\n`;
         }
-        
+
         if (description) {
             readme += `\n--- DESCRIPTION DU CHANTIER ---\n`;
             readme += `${description}\n`;
         }
-        
-        if (materiaux) {
+
+        if (selectedArticles.length > 0) {
             readme += `\n--- MATÉRIAUX MAGASIN ---\n`;
-            readme += `${materiaux}\n`;
+            selectedArticles.forEach(art => {
+                readme += `• ${art.code} - ${art.desc}\n`;
+            });
         }
-        
+
         readme += `\nGénéré le: ${new Date().toLocaleString('fr-FR')}\n`;
-        
+
         zip.file(`${folderName}/README.txt`, readme);
-        
+
         // Ajouter les dossiers sélectionnés
         const folders = [
             { id: 'folder1', name: 'GDU' },
@@ -245,20 +343,20 @@
             { id: 'folder7', name: 'Test_amiante' },
             { id: 'folder8', name: 'Divers' }
         ];
-        
+
         folders.forEach(folder => {
             if ($(`#${folder.id}`).is(':checked')) {
                 zip.file(`${folderName}/${folder.name}/.gitkeep`, '');
             }
         });
-        
+
         // Générer et télécharger
-        zip.generateAsync({type: 'blob'}).then(function(content) {
+        zip.generateAsync({ type: 'blob' }).then(function (content) {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = `${folderName}.zip`;
             link.click();
-            
+
             showAlert('success', 'Dossier généré avec succès !');
         });
     });

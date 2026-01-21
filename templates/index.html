@@ -180,10 +180,12 @@
                                 <i class="bi bi-upload"></i> Charger
                             </button>
                         </div>
-                        <div class="form-text">Remplacera le fichier actuel (une sauvegarde sera créée automatiquement)</div>
+                        <div class="form-text">Remplacera le fichier actuel (une sauvegarde sera créée automatiquement)
+                        </div>
                         <div id="uploadProgress" class="mt-2" style="display:none;">
                             <div class="progress">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                    style="width: 100%"></div>
                             </div>
                         </div>
                     </div>
@@ -250,10 +252,10 @@
     }
 
     // Gestion de l'upload du fichier Excel
-    $('#uploadPlanningBtn').click(function() {
+    $('#uploadPlanningBtn').click(function () {
         const fileInput = $('#planningFileInput')[0];
         const file = fileInput.files[0];
-        
+
         if (!file) {
             showAlert('danger', 'Veuillez sélectionner un fichier');
             return;
@@ -269,23 +271,23 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            $('#uploadProgress').hide();
-            $('#uploadPlanningBtn').prop('disabled', false);
-            
-            if (data.success) {
-                showAlert('success', 'Fichier chargé avec succès !');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert('danger', 'Erreur : ' + data.error);
-            }
-        })
-        .catch(error => {
-            $('#uploadProgress').hide();
-            $('#uploadPlanningBtn').prop('disabled', false);
-            showAlert('danger', 'Erreur de connexion : ' + error);
-        });
+            .then(response => response.json())
+            .then(data => {
+                $('#uploadProgress').hide();
+                $('#uploadPlanningBtn').prop('disabled', false);
+
+                if (data.success) {
+                    showAlert('success', 'Fichier chargé avec succès !');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('danger', 'Erreur : ' + data.error);
+                }
+            })
+            .catch(error => {
+                $('#uploadProgress').hide();
+                $('#uploadPlanningBtn').prop('disabled', false);
+                showAlert('danger', 'Erreur de connexion : ' + error);
+            });
     });
 </script>
 {% endblock %}
