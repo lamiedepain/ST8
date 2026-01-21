@@ -159,10 +159,16 @@ def get_agents_disponibles():
         # Pour chaque agent voirie
         for agent in agents_voirie:
             est_disponible = True
+            agent_trouve_dans_excel = False
             
             # Vérifier les mois entre debut et fin
             current_date = debut
             while current_date <= fin and est_disponible:
+                # Ignorer les weekends (5=samedi, 6=dimanche)
+                if current_date.weekday() >= 5:
+                    current_date += timedelta(days=1)
+                    continue
+                
                 sheet_name = get_month_sheet_name(current_date.year, current_date.month)
                 
                 # Vérifier si la feuille existe
@@ -171,6 +177,7 @@ def get_agents_disponibles():
                     header_row = find_header_row(sheet, 'Matricule')
                     
                     if header_row:
+                        agent_trouve_ce_jour = False
                         # Trouver la ligne de l'agent
                         for row_idx in range(header_row + 1, sheet.max_row + 1):
                             nom = cell_to_str(sheet.cell(row_idx, 2).value)
@@ -178,6 +185,9 @@ def get_agents_disponibles():
                             
                             if nom and prenom:
                                 if nom.strip().upper() == agent['nom'].upper() and prenom.strip().upper() == agent['prenom'].upper():
+                                    agent_trouve_ce_jour = True
+                                    agent_trouve_dans_excel = True
+                                    
                                     # Vérifier le jour spécifique
                                     jour = current_date.day
                                     col_idx = PLANNING_DAYS_START_COL + jour - 1
@@ -187,11 +197,16 @@ def get_agents_disponibles():
                                     if statut and statut.upper() in ABSENT_STATUSES:
                                         est_disponible = False
                                     break
+                        
+                        # Si l'agent n'est pas trouvé dans le planning, on ne peut pas garantir sa disponibilité
+                        if not agent_trouve_ce_jour:
+                            est_disponible = False
                 
                 # Passer au jour suivant
                 current_date += timedelta(days=1)
             
-            if est_disponible:
+            # Ajouter seulement si l'agent est disponible ET trouvé dans l'Excel
+            if est_disponible and agent_trouve_dans_excel:
                 agents_disponibles.append(agent)
         
         wb.close()
