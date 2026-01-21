@@ -150,7 +150,7 @@ def get_agents_disponibles():
         fin = datetime.strptime(date_fin, '%Y-%m-%d')
         
         # Charger le fichier Excel
-        wb = load_workbook(LOCAL_EXCEL_PATH, data_only=True)
+        wb = load_workbook()
         
         # Filtrer les agents voirie
         agents_voirie = [a for a in AGENTS if 'voirie' in get_agent_equipe(a['nom']).lower()]
@@ -158,38 +158,35 @@ def get_agents_disponibles():
         
         # Pour chaque agent voirie
         for agent in agents_voirie:
-            nom_complet = f"{agent['nom']} {agent['prenom']}"
             est_disponible = True
             
             # Vérifier les mois entre debut et fin
             current_date = debut
-            while current_date <= fin:
-                month_name = current_date.strftime('%B %Y')  # "Janvier 2026"
+            while current_date <= fin and est_disponible:
+                sheet_name = get_month_sheet_name(current_date.year, current_date.month)
                 
                 # Vérifier si la feuille existe
-                if month_name in wb.sheetnames:
-                    ws = wb[month_name]
+                if sheet_name in wb.sheetnames:
+                    sheet = wb[sheet_name]
+                    header_row = find_header_row(sheet, 'Matricule')
                     
-                    # Trouver la ligne de l'agent
-                    agent_row = None
-                    for row in range(PLANNING_AGENTS_START_ROW, ws.max_row + 1):
-                        cell_nom = ws.cell(row, 2).value  # Colonne B = nom
-                        cell_prenom = ws.cell(row, 3).value  # Colonne C = prenom
-                        if cell_nom and cell_prenom:
-                            if cell_nom.strip().upper() == agent['nom'].upper() and cell_prenom.strip().upper() == agent['prenom'].upper():
-                                agent_row = row
-                                break
-                    
-                    # Vérifier les jours du mois
-                    if agent_row:
-                        jour = current_date.day
-                        col = PLANNING_DAYS_START_COL + jour - 1  # Colonne D = jour 1
-                        statut = ws.cell(agent_row, col).value
-                        
-                        # Si statut est dans les absences ou vide/None = pas dispo
-                        if statut and str(statut).strip().upper() in ['CA', 'RTT', 'CEX', 'CM', 'F', 'AH', 'AST', 'PC', 'M', 'PA', 'R', 'AS', 'AT']:
-                            est_disponible = False
-                            break
+                    if header_row:
+                        # Trouver la ligne de l'agent
+                        for row_idx in range(header_row + 1, sheet.max_row + 1):
+                            nom = cell_to_str(sheet.cell(row_idx, 2).value)
+                            prenom = cell_to_str(sheet.cell(row_idx, 3).value)
+                            
+                            if nom and prenom:
+                                if nom.strip().upper() == agent['nom'].upper() and prenom.strip().upper() == agent['prenom'].upper():
+                                    # Vérifier le jour spécifique
+                                    jour = current_date.day
+                                    col_idx = PLANNING_DAYS_START_COL + jour - 1
+                                    statut = normalize_status(sheet.cell(row_idx, col_idx).value)
+                                    
+                                    # Si statut indique une absence
+                                    if statut and statut.upper() in ABSENT_STATUSES:
+                                        est_disponible = False
+                                    break
                 
                 # Passer au jour suivant
                 current_date += timedelta(days=1)
