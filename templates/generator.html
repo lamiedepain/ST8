@@ -54,55 +54,82 @@
                             <input type="text" class="form-control" id="chantierResponsable" placeholder="Nom du responsable">
                         </div>
 
+                        <div class="mb-3">
+                            <label for="chantierDescription" class="form-label">Description globale du chantier</label>
+                            <textarea class="form-control" id="chantierDescription" rows="3" placeholder="Description détaillée du chantier, travaux à réaliser, etc."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Spécificités requises</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reqCACES">
+                                    <label class="form-check-label" for="reqCACES">
+                                        CACES requis
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reqPermisPL">
+                                    <label class="form-check-label" for="reqPermisPL">
+                                        Permis PL requis
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="chantierMateriaux" class="form-label">Matériaux magasin</label>
+                                <textarea class="form-control" id="chantierMateriaux" rows="3" placeholder="Liste des matériaux à prévoir du magasin"></textarea>
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label">Structure des dossiers</label>
                             <div class="border rounded p-3 bg-light">
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder1" checked>
                                     <label class="form-check-label" for="folder1">
-                                        📁 01_Documents_administratifs
+                                        📁 GDU
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder2" checked>
                                     <label class="form-check-label" for="folder2">
-                                        📁 02_Plans_et_schemas
+                                        📁 Mage
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder3" checked>
                                     <label class="form-check-label" for="folder3">
-                                        📁 03_Photos
+                                        📁 Photos
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder4" checked>
                                     <label class="form-check-label" for="folder4">
-                                        📁 04_Rapports_et_comptes_rendus
+                                        📁 Plans_et_schemas
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder5" checked>
                                     <label class="form-check-label" for="folder5">
-                                        📁 05_DICT_DT
+                                        📁 Arrete
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder6" checked>
                                     <label class="form-check-label" for="folder6">
-                                        📁 06_Factures_et_devis
+                                        📁 DT_DICT
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="folder7" checked>
                                     <label class="form-check-label" for="folder7">
-                                        📁 07_Correspondances
+                                        📁 Test_amiante
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="folder8" checked>
                                     <label class="form-check-label" for="folder8">
-                                        📁 08_Divers
+                                        📁 Divers
                                     </label>
                                 </div>
                             </div>
@@ -160,6 +187,10 @@
         const dateFin = $('#chantierDateFin').val();
         const adresse = $('#chantierAdresse').val();
         const responsable = $('#chantierResponsable').val();
+        const description = $('#chantierDescription').val();
+        const reqCACES = $('#reqCACES').is(':checked');
+        const reqPermisPL = $('#reqPermisPL').is(':checked');
+        const materiaux = $('#chantierMateriaux').val();
         
         if (!nom) {
             showAlert('danger', 'Le nom du chantier est obligatoire');
@@ -180,20 +211,39 @@
         if (dateFin) readme += `Date de fin: ${dateFin}\n`;
         if (adresse) readme += `Adresse: ${adresse}\n`;
         if (responsable) readme += `Responsable: ${responsable}\n`;
+        
+        readme += `\n--- SPÉCIFICITÉS REQUISES ---\n`;
+        if (reqCACES || reqPermisPL) {
+            if (reqCACES) readme += `✓ CACES requis\n`;
+            if (reqPermisPL) readme += `✓ Permis PL requis\n`;
+        } else {
+            readme += `Aucune spécificité particulière\n`;
+        }
+        
+        if (description) {
+            readme += `\n--- DESCRIPTION DU CHANTIER ---\n`;
+            readme += `${description}\n`;
+        }
+        
+        if (materiaux) {
+            readme += `\n--- MATÉRIAUX MAGASIN ---\n`;
+            readme += `${materiaux}\n`;
+        }
+        
         readme += `\nGénéré le: ${new Date().toLocaleString('fr-FR')}\n`;
         
         zip.file(`${folderName}/README.txt`, readme);
         
         // Ajouter les dossiers sélectionnés
         const folders = [
-            { id: 'folder1', name: '01_Documents_administratifs' },
-            { id: 'folder2', name: '02_Plans_et_schemas' },
-            { id: 'folder3', name: '03_Photos' },
-            { id: 'folder4', name: '04_Rapports_et_comptes_rendus' },
-            { id: 'folder5', name: '05_DICT_DT' },
-            { id: 'folder6', name: '06_Factures_et_devis' },
-            { id: 'folder7', name: '07_Correspondances' },
-            { id: 'folder8', name: '08_Divers' }
+            { id: 'folder1', name: 'GDU' },
+            { id: 'folder2', name: 'Mage' },
+            { id: 'folder3', name: 'Photos' },
+            { id: 'folder4', name: 'Plans_et_schemas' },
+            { id: 'folder5', name: 'Arrete' },
+            { id: 'folder6', name: 'DT_DICT' },
+            { id: 'folder7', name: 'Test_amiante' },
+            { id: 'folder8', name: 'Divers' }
         ];
         
         folders.forEach(folder => {
