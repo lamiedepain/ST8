@@ -162,7 +162,7 @@
                     <i class="bi bi-info-circle"></i> Informations système
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless mb-0">
+                    <table class="table table-borderless mb-3">
                         <tr>
                             <td><strong>Fichier Excel:</strong></td>
                             <td>{{ excel_file }}</td>
@@ -172,6 +172,21 @@
                             <td id="last-update">Chargement...</td>
                         </tr>
                     </table>
+                    <div class="border-top pt-3">
+                        <h6 class="mb-3"><i class="bi bi-upload"></i> Charger un nouveau fichier Excel</h6>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="planningFileInput" accept=".xlsx,.xlsm">
+                            <button class="btn btn-primary" type="button" id="uploadPlanningBtn">
+                                <i class="bi bi-upload"></i> Charger
+                            </button>
+                        </div>
+                        <div class="form-text">Remplacera le fichier actuel (une sauvegarde sera créée automatiquement)</div>
+                        <div id="uploadProgress" class="mt-2" style="display:none;">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,5 +248,44 @@
         const now = new Date();
         $('#last-update').text(formatDate(now.toISOString()));
     }
+
+    // Gestion de l'upload du fichier Excel
+    $('#uploadPlanningBtn').click(function() {
+        const fileInput = $('#planningFileInput')[0];
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showAlert('danger', 'Veuillez sélectionner un fichier');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        $('#uploadProgress').show();
+        $('#uploadPlanningBtn').prop('disabled', true);
+
+        fetch('/api/load-planning', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            $('#uploadProgress').hide();
+            $('#uploadPlanningBtn').prop('disabled', false);
+            
+            if (data.success) {
+                showAlert('success', 'Fichier chargé avec succès !');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('danger', 'Erreur : ' + data.error);
+            }
+        })
+        .catch(error => {
+            $('#uploadProgress').hide();
+            $('#uploadPlanningBtn').prop('disabled', false);
+            showAlert('danger', 'Erreur de connexion : ' + error);
+        });
+    });
 </script>
 {% endblock %}
