@@ -111,7 +111,6 @@ CERTIFICATION_COLUMNS = {
 
 # Statuts d'absence (13 statuts + vide/P = présent)
 ABSENT_STATUSES = {
-    'AH',   # AH
     'PC',   # Prev Congés
     'F',    # Formation
     'AST',  # Statutf
