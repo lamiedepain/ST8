@@ -26,13 +26,36 @@
                         <div class="mb-3">
                             <label for="chantierNom" class="form-label">Nom du chantier <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="chantierNom"
-                                placeholder="Ex: Réfection voirie Rue de la République" required>
+                            <div class="position-relative">
+                                <input type="text" class="form-control" id="chantierNom"
+                                    placeholder="Ex: Réfection voirie Rue de la République" required autocomplete="off">
+                                <div id="rueResultsNom" class="border rounded bg-white position-absolute w-100" 
+                                     style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="chantierRef" class="form-label">Référence</label>
-                            <input type="text" class="form-control" id="chantierRef" placeholder="Ex: ST8-2026-001">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Quartier <span class="text-danger">*</span></label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ1" value="Q1" checked>
+                                        <label class="form-check-label" for="quartierQ1">
+                                            Q1 (Bx-Maritime)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ7" value="Q7">
+                                        <label class="form-check-label" for="quartierQ7">
+                                            Q7 (Bastide)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="chantierRef" class="form-label">Référence <span class="text-muted">(automatique)</span></label>
+                                <input type="text" class="form-control" id="chantierRef" readonly placeholder="Sera générée automatiquement">
+                            </div>
                         </div>
 
                         <div class="row">
@@ -58,9 +81,21 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="chantierAdresse" class="form-label">Adresse</label>
-                            <input type="text" class="form-control" id="chantierAdresse"
-                                placeholder="Adresse complète du chantier">
+                            <label class="form-label">Adresse</label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="chantierNumero"
+                                        placeholder="N°" autocomplete="off">
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="chantierAdresse"
+                                            placeholder="Nom de la rue" autocomplete="off">
+                                        <div id="rueResultsAdresse" class="border rounded bg-white position-absolute w-100" 
+                                             style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -213,13 +248,128 @@
     // Liste complète des articles du magasin
     const articlesData = {{ articles_json| safe }};
     let selectedArticles = [];
+    let ruesData = [];
 
     $(document).ready(function () {
         console.log(`${articlesData.length} articles chargés`);
 
+        // Charger les rues
+        loadRues();
+
         // Surveiller les changements de dates
         $('#chantierDateDebut, #chantierDateFin').on('change', checkAgentsDisponibles);
+        
+        // Générer la référence au chargement de la page
+        generateReference();
+        
+        // Surveiller les changements de quartier et date de début
+        $('input[name="quartier"]').on('change', generateReference);
+        $('#chantierDateDebut').on('change', generateReference);
+        
+        // Autocomplétion pour le nom du chantier
+        $('#chantierNom').on('input', function() {
+            searchRue($(this).val(), 'Nom');
+        });
+        
+        // Autocomplétion pour l'adresse
+        $('#chantierAdresse').on('input', function() {
+            searchRue($(this).val(), 'Adresse');
+        });
+        
+        // Fermer les suggestions au clic ailleurs
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#chantierNom, #rueResultsNom').length) {
+                $('#rueResultsNom').hide();
+            }
+            if (!$(e.target).closest('#chantierAdresse, #rueResultsAdresse').length) {
+                $('#rueResultsAdresse').hide();
+            }
+        });
     });
+
+    // Charger les rues depuis l'API
+    function loadRues() {
+        fetch('/api/rues-st8')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ruesData = data.rues;
+                    console.log(`${ruesData.length} rues chargées`);
+                } else {
+                    console.error('Erreur chargement rues:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+    }
+
+    // Rechercher une rue
+    function searchRue(query, field) {
+        const resultsDiv = field === 'Nom' ? '#rueResultsNom' : '#rueResultsAdresse';
+        
+        if (query.length < 2) {
+            $(resultsDiv).hide();
+            return;
+        }
+
+        const queryLower = query.toLowerCase();
+        const results = ruesData.filter(rue =>
+            rue.toLowerCase().includes(queryLower)
+        ).slice(0, 15);
+
+        if (results.length > 0) {
+            let html = '<div class="list-group list-group-flush">';
+            results.forEach(rue => {
+                html += `<a href="#" class="list-group-item list-group-item-action py-2 px-3 select-rue-${field.toLowerCase()}" data-rue="${rue}">
+                    <small>${rue}</small>
+                </a>`;
+            });
+            html += '</div>';
+            $(resultsDiv).html(html).show();
+        } else {
+            $(resultsDiv).hide();
+        }
+    }
+
+    // Sélectionner une rue pour le nom
+    $(document).on('click', '.select-rue-nom', function(e) {
+        e.preventDefault();
+        const rue = $(this).data('rue');
+        $('#chantierNom').val(rue);
+        $('#rueResultsNom').hide();
+    });
+
+    // Sélectionner une rue pour l'adresse
+    $(document).on('click', '.select-rue-adresse', function(e) {
+        e.preventDefault();
+        const rue = $(this).data('rue');
+        $('#chantierAdresse').val(rue);
+        $('#rueResultsAdresse').hide();
+    });
+
+    // Générer la référence automatique
+    function generateReference() {
+        const quartier = $('input[name="quartier"]:checked').val();
+        const dateDebut = $('#chantierDateDebut').val();
+        
+        fetch('/api/generate-reference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quartier, dateDebut })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#chantierRef').val(data.reference);
+                } else {
+                    console.error('Erreur génération référence:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+    }
 
     // Vérifier les agents disponibles
     function checkAgentsDisponibles() {
@@ -342,6 +492,7 @@
         const ref = $('#chantierRef').val();
         const dateDebut = $('#chantierDateDebut').val();
         const dateFin = $('#chantierDateFin').val();
+        const numero = $('#chantierNumero').val();
         const adresse = $('#chantierAdresse').val();
         const responsable = $('#chantierResponsable').val();
         const description = $('#chantierDescription').val();
@@ -365,7 +516,12 @@
         if (ref) readme += `Référence: ${ref}\n`;
         if (dateDebut) readme += `Date de début: ${dateDebut}\n`;
         if (dateFin) readme += `Date de fin: ${dateFin}\n`;
-        if (adresse) readme += `Adresse: ${adresse}\n`;
+        if (numero || adresse) {
+            let adresseComplete = '';
+            if (numero) adresseComplete += numero + ' ';
+            if (adresse) adresseComplete += adresse;
+            readme += `Adresse: ${adresseComplete.trim()}\n`;
+        }
         if (responsable) readme += `Responsable: ${responsable}\n`;
 
         readme += `\n--- SPÉCIFICITÉS REQUISES ---\n`;

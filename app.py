@@ -134,6 +134,21 @@ def get_magasin_articles():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/rues-st8')
+def get_rues_st8():
+    """Récupérer la liste des rues de ST8"""
+    try:
+        rues_path = Path(__file__).parent / 'rues_st8.json'
+        if not rues_path.exists():
+            return jsonify({'success': False, 'error': 'Fichier rues non trouvé'}), 404
+        
+        with open(rues_path, 'r', encoding='utf-8') as f:
+            rues = json.load(f)
+        
+        return jsonify({'success': True, 'rues': rues, 'count': len(rues)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/agents-disponibles', methods=['POST'])
 def get_agents_disponibles():
     """Récupérer les agents voirie disponibles pour une période"""
@@ -212,6 +227,58 @@ def get_agents_disponibles():
         wb.close()
         
         return jsonify({'success': True, 'agents': agents_disponibles, 'count': len(agents_disponibles)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/generate-reference', methods=['POST'])
+def generate_reference():
+    """Générer une référence automatique pour un chantier"""
+    try:
+        data = request.json
+        quartier = data.get('quartier', 'Q1')
+        date_debut = data.get('dateDebut')
+        
+        # Utiliser la date de début si fournie, sinon la date actuelle
+        if date_debut:
+            ref_date = datetime.strptime(date_debut, '%Y-%m-%d')
+        else:
+            ref_date = datetime.now()
+        
+        annee = ref_date.year
+        mois = f"{ref_date.month:02d}"
+        
+        # Charger les références existantes
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        if refs_path.exists():
+            with open(refs_path, 'r', encoding='utf-8') as f:
+                references = json.load(f)
+        else:
+            references = {}
+        
+        # Clé pour ce quartier et ce mois
+        key = f"{quartier}-{annee}-{mois}"
+        
+        # Trouver le prochain numéro
+        if key in references:
+            dernier_numero = references[key]
+            prochain_numero = dernier_numero + 1
+        else:
+            prochain_numero = 1
+        
+        # Mettre à jour les références
+        references[key] = prochain_numero
+        
+        # Sauvegarder
+        with open(refs_path, 'w', encoding='utf-8') as f:
+            json.dump(references, f, indent=2, ensure_ascii=False)
+        
+        # Générer la référence
+        reference = f"{quartier}-{annee}-{mois}-{prochain_numero:03d}"
+        
+        return jsonify({
+            'success': True,
+            'reference': reference
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
