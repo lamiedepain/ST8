@@ -7,11 +7,15 @@ Application web pour la gestion du planning et des équipes ST8
 
 from flask import Flask, render_template, jsonify, request, send_file
 from datetime import datetime, timedelta
-from openpyxl import load_workbook
+from openpyxl import load_workbook as openpyxl_load_workbook
+from docx import Document
+from docx.shared import Pt, Inches, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import json
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import io
 
 # Charger variables d'environnement
 load_dotenv()
@@ -117,7 +121,7 @@ def get_magasin_articles():
         if not magasin_path.exists():
             return jsonify({'success': False, 'error': 'Fichier magasin non trouvé'}), 404
         
-        wb = load_workbook(magasin_path, read_only=True, data_only=True)
+        wb = openpyxl_load_workbook(magasin_path, read_only=True, data_only=True)
         ws = wb.active
         
         articles = []
@@ -146,6 +150,57 @@ def get_rues_st8():
             rues = json.load(f)
         
         return jsonify({'success': True, 'rues': rues, 'count': len(rues)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/outillage')
+def get_outillage():
+    """Récupérer la liste de l'outillage DPM"""
+    try:
+        outil_path = Path(__file__).parent / 'magasin_st8' / 'outil_dpm.xlsx'
+        if not outil_path.exists():
+            return jsonify({'success': False, 'error': 'Fichier outillage non trouvé'}), 404
+        
+        wb = openpyxl_load_workbook(outil_path, read_only=True, data_only=True)
+        ws = wb.active
+        
+        outils = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0] and row[1]:  # Article et Description
+                outils.append({
+                    'code': row[0],
+                    'description': row[1],
+                    'categorie': row[2] if len(row) > 2 else '',
+                    'stock': row[6] if len(row) > 6 else 0
+                })
+        
+        wb.close()
+        return jsonify({'success': True, 'outils': outils, 'count': len(outils)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/vehicules')
+def get_vehicules():
+    """Récupérer la liste des véhicules"""
+    try:
+        vehicules_path = Path(__file__).parent / 'magasin_st8' / 'vehicules.xlsx'
+        if not vehicules_path.exists():
+            return jsonify({'success': False, 'error': 'Fichier véhicules non trouvé'}), 404
+        
+        wb = openpyxl_load_workbook(vehicules_path, read_only=True, data_only=True)
+        ws = wb.active
+        
+        vehicules = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0] or row[1] or row[2]:  # Code mage, Véhicule ou Immatriculation
+                vehicules.append({
+                    'code_mage': str(row[0]) if row[0] else '',
+                    'numero': row[1] if row[1] else '',
+                    'immatriculation': row[2] if len(row) > 2 and row[2] else ''
+                })
+        
+        wb.close()
+        return jsonify({'success': True, 'vehicules': vehicules, 'count': len(vehicules)})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -279,6 +334,293 @@ def generate_reference():
             'success': True,
             'reference': reference
         })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/generate-fiche-docx', methods=['POST'])
+def generate_fiche_docx():
+    """Générer un document Word formaté pour la fiche travaux"""
+    try:
+        data = request.json
+        
+        # Créer un nouveau document
+        doc = Document()
+        
+        # Définir les marges
+        sections = doc.sections
+        for section in sections:
+            section.top_margin = Inches(0.6)
+            section.bottom_margin = Inches(0.6)
+            section.left_margin = Inches(0.8)
+            section.right_margin = Inches(0.8)
+        
+        # === LOGO ET EN-TÊTE ===
+        # Essayer d'ajouter le logo
+        logo_path = Path(__file__).parent / 'static' / 'images' / 'logo_bordeaux_metropole.png'
+        if logo_path.exists():
+            header_para = doc.add_paragraph()
+            header_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = header_para.add_run()
+            run.add_picture(str(logo_path), width=Inches(2.5))
+            doc.add_paragraph()
+        else:
+            # Fallback si pas de logo
+            header = doc.add_heading('BORDEAUX MÉTROPOLE', level=1)
+            header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            header.runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            header.runs[0].font.size = Pt(20)
+            header.runs[0].font.bold = True
+        
+        subtitle = doc.add_paragraph('Régie Voirie Espaces Verts | 60 rue New-York')
+        subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        subtitle.runs[0].font.size = Pt(11)
+        subtitle.runs[0].font.color.rgb = RGBColor(102, 102, 102)
+        
+        # Ligne de séparation élégante
+        separator = doc.add_paragraph()
+        separator.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        sep_run = separator.add_run('━' * 60)
+        sep_run.font.color.rgb = RGBColor(0, 102, 204)
+        sep_run.font.size = Pt(8)
+        
+        doc.add_paragraph()
+        
+        # === TITRE FICHE ===
+        titre = doc.add_heading('FICHE TRAVAUX', level=1)
+        titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        titre.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+        titre.runs[0].font.size = Pt(18)
+        titre.runs[0].font.bold = True
+        
+        # Nom du chantier
+        nom_chantier = doc.add_paragraph()
+        nom_chantier.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        nom_run = nom_chantier.add_run(data.get('nom', ''))
+        nom_run.font.size = Pt(14)
+        nom_run.font.bold = True
+        nom_run.font.color.rgb = RGBColor(51, 51, 51)
+        
+        doc.add_paragraph()
+        
+        # === LOCALISATION ===
+        loc_heading = doc.add_heading('📍 LOCALISATION', level=2)
+        loc_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+        loc_heading.runs[0].font.size = Pt(14)
+        
+        table_loc = doc.add_table(rows=4, cols=2)
+        table_loc.style = 'Medium Grid 1 Accent 1'
+        table_loc.autofit = True
+        
+        cells_loc = [
+            ('Quartier', data.get('quartier', '')),
+            ('Référence', data.get('reference', '')),
+            ('Adresse', f"{data.get('numero', '')} {data.get('adresse', '')}".strip()),
+            ('Responsable', data.get('responsable', ''))
+        ]
+        
+        for i, (label, value) in enumerate(cells_loc):
+            cell_label = table_loc.rows[i].cells[0]
+            cell_label.text = label
+            cell_label.paragraphs[0].runs[0].font.bold = True
+            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            table_loc.rows[i].cells[1].text = value
+        
+        doc.add_paragraph()
+        
+        # === TYPE DE DEMANDE ===
+        if any([data.get('numeroGDU'), data.get('numeroMages'), data.get('dateDemande'), data.get('nomDemandeur')]):
+            demande_heading = doc.add_heading('📋 TYPE DE DEMANDE', level=2)
+            demande_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+            demande_heading.runs[0].font.size = Pt(14)
+            
+            table_demande = doc.add_table(rows=4, cols=2)
+            table_demande.style = 'Medium Grid 1 Accent 1'
+            
+            cells_demande = [
+                ('N° GDU', data.get('numeroGDU', '')),
+                ('N° Mages', data.get('numeroMages', '')),
+                ('Date de demande', data.get('dateDemande', '')),
+                ('Demandeur', data.get('nomDemandeur', ''))
+            ]
+            
+            for i, (label, value) in enumerate(cells_demande):
+                cell_label = table_demande.rows[i].cells[0]
+                cell_label.text = label
+                cell_label.paragraphs[0].runs[0].font.bold = True
+                cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+                table_demande.rows[i].cells[1].text = value
+            
+            doc.add_paragraph()
+        
+        # === DATES ET DURÉE ===
+        dates_heading = doc.add_heading('📅 DATES ET DURÉE', level=2)
+        dates_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+        dates_heading.runs[0].font.size = Pt(14)
+        
+        table_dates = doc.add_table(rows=3, cols=2)
+        table_dates.style = 'Medium Grid 1 Accent 1'
+        
+        cells_dates = [
+            ('Date de début', data.get('dateDebut', '')),
+            ('Date de fin prévisionnelle', data.get('dateFin', '')),
+            ('Nombre de jours envisagés', data.get('nombreJours', ''))
+        ]
+        
+        for i, (label, value) in enumerate(cells_dates):
+            cell_label = table_dates.rows[i].cells[0]
+            cell_label.text = label
+            cell_label.paragraphs[0].runs[0].font.bold = True
+            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            table_dates.rows[i].cells[1].text = str(value) if value else ''
+        
+        doc.add_paragraph()
+        
+        # === PRÉPARATION ===
+        prep_heading = doc.add_heading('🔍 PRÉPARATION', level=2)
+        prep_heading.runs[0].font.color.rgb = RGBColor(0, 153, 76)
+        prep_heading.runs[0].font.size = Pt(14)
+        
+        table_prep = doc.add_table(rows=5, cols=2)
+        table_prep.style = 'Medium List 1 Accent 3'
+        
+        cells_prep = [
+            ('Visite sur site', data.get('visiteSite', '')),
+            ('Date de visite', data.get('dateVisite', '')),
+            ("Nom de l'AM", data.get('nomAM', '')),
+            ('Travaux envisagés', data.get('travauxEnvisages', '')),
+            ('Priorisation', data.get('priorisationLabel', ''))
+        ]
+        
+        for i, (label, value) in enumerate(cells_prep):
+            cell_label = table_prep.rows[i].cells[0]
+            cell_label.text = label
+            cell_label.paragraphs[0].runs[0].font.bold = True
+            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 102, 51)
+            table_prep.rows[i].cells[1].text = value
+        
+        doc.add_paragraph()
+        
+        # === PRÉALABLES ===
+        prealables_heading = doc.add_heading('⚠️ PRÉALABLES', level=2)
+        prealables_heading.runs[0].font.color.rgb = RGBColor(255, 140, 0)
+        prealables_heading.runs[0].font.size = Pt(14)
+        
+        table_prealables = doc.add_table(rows=8, cols=2)
+        table_prealables.style = 'Medium List 1 Accent 6'
+        
+        cells_prealables = [
+            ('Demande Amiante', data.get('demandeAmiante', '')),
+            ('Présence Amiante', data.get('presenceAmiante', '')),
+            ('N° DT/DICT', data.get('numeroDTDICT', '')),
+            ('Date DICT', data.get('dateDICT', '')),
+            ('Arrêté demandé le', data.get('dateDemandeArrete', '')),
+            ("Date de l'arrêté", data.get('dateArrete', '')),
+            ('Proximité Tram', data.get('proximiteTram', '')),
+            ('Protocole signé', data.get('protocoleSign', ''))
+        ]
+        
+        for i, (label, value) in enumerate(cells_prealables):
+            cell_label = table_prealables.rows[i].cells[0]
+            cell_label.text = label
+            cell_label.paragraphs[0].runs[0].font.bold = True
+            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(153, 76, 0)
+            table_prealables.rows[i].cells[1].text = value
+        
+        doc.add_paragraph()
+        
+        # === DESCRIPTION DU CHANTIER ===
+        if data.get('description'):
+            desc_heading = doc.add_heading('📝 DESCRIPTION DU CHANTIER', level=2)
+            desc_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+            desc_heading.runs[0].font.size = Pt(14)
+            
+            desc_para = doc.add_paragraph(data.get('description', ''))
+            desc_para.runs[0].font.size = Pt(11)
+            
+            doc.add_paragraph()
+        
+        # === RESSOURCES ===
+        ressources_heading = doc.add_heading('👥 RESSOURCES HUMAINES ET MATÉRIELLES', level=2)
+        ressources_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
+        ressources_heading.runs[0].font.size = Pt(14)
+        
+        table_ressources = doc.add_table(rows=3, cols=2)
+        table_ressources.style = 'Medium Grid 1 Accent 1'
+        
+        cells_ressources = [
+            ("Nombre d'agents", data.get('nombreAgents', '')),
+            ('Matériaux nécessaires', data.get('materiauxNecessaires', '')),
+            ('Permis/CACES', data.get('permisCacesNecessaires', ''))
+        ]
+        
+        for i, (label, value) in enumerate(cells_ressources):
+            cell_label = table_ressources.rows[i].cells[0]
+            cell_label.text = label
+            cell_label.paragraphs[0].runs[0].font.bold = True
+            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            table_ressources.rows[i].cells[1].text = value
+        
+        doc.add_paragraph()
+        
+        # === AGENTS, VÉHICULES, MATÉRIAUX ===
+        if data.get('agents'):
+            agents_heading = doc.add_heading('👷 Agents affectés', level=3)
+            agents_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            for agent in data.get('agents', []):
+                p = doc.add_paragraph(style='List Bullet')
+                p.add_run(agent).font.size = Pt(10)
+        
+        if data.get('vehicules'):
+            veh_heading = doc.add_heading('🚗 Véhicules', level=3)
+            veh_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            for veh in data.get('vehicules', []):
+                p = doc.add_paragraph(style='List Bullet')
+                p.add_run(veh).font.size = Pt(10)
+        
+        if data.get('articles'):
+            art_heading = doc.add_heading('📦 Matériaux magasin', level=3)
+            art_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            for art in data.get('articles', []):
+                p = doc.add_paragraph(style='List Bullet')
+                p.add_run(art).font.size = Pt(10)
+        
+        if data.get('outils'):
+            outil_heading = doc.add_heading('🔧 Outillage', level=3)
+            outil_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            for outil in data.get('outils', []):
+                p = doc.add_paragraph(style='List Bullet')
+                p.add_run(outil).font.size = Pt(10)
+        
+        # === PIED DE PAGE ===
+        doc.add_paragraph()
+        separator2 = doc.add_paragraph()
+        separator2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        sep2_run = separator2.add_run('━' * 60)
+        sep2_run.font.color.rgb = RGBColor(0, 102, 204)
+        sep2_run.font.size = Pt(8)
+        
+        footer = doc.add_paragraph(f"Document généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+        footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        footer.runs[0].font.size = Pt(9)
+        footer.runs[0].font.italic = True
+        footer.runs[0].font.color.rgb = RGBColor(128, 128, 128)
+        
+        # Sauvegarder en mémoire
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+        
+        # Nom du fichier
+        nom_fichier = data.get('nom', 'Fiche_travaux').replace(' ', '_').replace('/', '_')
+        filename = f"Fiche_Travaux_{nom_fichier}.docx"
+        
+        return send_file(
+            file_stream,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            as_attachment=True,
+            download_name=filename
+        )
+        
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -1299,10 +1641,10 @@ def get_status_info():
 # ==============================================================================
 
 if __name__ == '__main__':
-    print("\n🚀 Lancement ST8 Planning")
-    print(f"📍 URL: http://{FLASK_HOST}:{FLASK_PORT}")
-    print(f"📂 Fichier: {EXCEL_FILE}")
-    print("\nCtrl+C pour arrêter\n")
+    print("\n>> Lancement ST8 Planning")
+    print(f"URL: http://{FLASK_HOST}:{FLASK_PORT}")
+    print(f"Fichier: {EXCEL_FILE}")
+    print("\nCtrl+C pour arreter\n")
     
     # Vérifier le fichier au démarrage
     startup_sync()

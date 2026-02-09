@@ -1,0 +1,19 @@
+================================================================================
+INSTRUCTIONS POUR AJOUTER LE LOGO BORDEAUX MÉTROPOLE
+================================================================================
+
+Pour que le logo apparaisse dans les documents Word générés :
+
+1. Enregistrez l'image du logo que vous avez envoyé
+
+2. Renommez le fichier en : logo_bordeaux_metropole.png
+
+3. Placez-le dans le dossier : static/images/
+
+4. Chemin complet : C:\Users\Gonçalves\Desktop\ST8\static\images\logo_bordeaux_metropole.png
+
+Le logo sera automatiquement ajouté en haut de tous les documents Word générés !
+
+Si le logo n'est pas trouvé, le titre "BORDEAUX MÉTROPOLE" s'affichera en texte.
+
+================================================================================

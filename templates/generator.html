@@ -29,8 +29,8 @@
                             <div class="position-relative">
                                 <input type="text" class="form-control" id="chantierNom"
                                     placeholder="Ex: Réfection voirie Rue de la République" required autocomplete="off">
-                                <div id="rueResultsNom" class="border rounded bg-white position-absolute w-100" 
-                                     style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
+                                <div id="rueResultsNom" class="border rounded bg-white position-absolute w-100"
+                                    style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
                             </div>
                         </div>
 
@@ -39,13 +39,15 @@
                                 <label class="form-label">Quartier <span class="text-danger">*</span></label>
                                 <div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ1" value="Q1" checked>
+                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ1"
+                                            value="Q1" checked>
                                         <label class="form-check-label" for="quartierQ1">
                                             Q1 (Bx-Maritime)
                                         </label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ7" value="Q7">
+                                        <input class="form-check-input" type="radio" name="quartier" id="quartierQ7"
+                                            value="Q7">
                                         <label class="form-check-label" for="quartierQ7">
                                             Q7 (Bastide)
                                         </label>
@@ -53,8 +55,10 @@
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="chantierRef" class="form-label">Référence <span class="text-muted">(automatique)</span></label>
-                                <input type="text" class="form-control" id="chantierRef" readonly placeholder="Sera générée automatiquement">
+                                <label for="chantierRef" class="form-label">Référence <span class="text-muted">(générée
+                                        à la création)</span></label>
+                                <input type="text" class="form-control bg-light" id="chantierRef" readonly
+                                    placeholder="Générée automatiquement lors de la création du dossier">
                             </div>
                         </div>
 
@@ -70,13 +74,15 @@
                         </div>
 
                         <!-- Agents disponibles -->
-                        <div id="agentsDispoSection" class="mb-3" style="display: none;">
-                            <label class="form-label">Agents voirie disponibles pour cette période</label>
+                        <div id="agentsDispoSection" class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-people"></i> Agents voirie disponibles pour cette période
+                            </label>
                             <div id="agentsDispo" class="border rounded p-3 bg-light">
-                                <div class="text-center text-muted">
-                                    <div class="spinner-border spinner-border-sm" role="status"></div>
-                                    <span class="ms-2">Chargement...</span>
-                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> Remplissez les dates de début et de fin pour voir
+                                    les agents disponibles
+                                </small>
                             </div>
                         </div>
 
@@ -84,15 +90,17 @@
                             <label class="form-label">Adresse</label>
                             <div class="row">
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="chantierNumero"
-                                        placeholder="N°" autocomplete="off">
+                                    <input type="text" class="form-control" id="chantierNumero" placeholder="N°"
+                                        autocomplete="off">
                                 </div>
                                 <div class="col-md-9">
                                     <div class="position-relative">
                                         <input type="text" class="form-control" id="chantierAdresse"
                                             placeholder="Nom de la rue" autocomplete="off">
-                                        <div id="rueResultsAdresse" class="border rounded bg-white position-absolute w-100" 
-                                             style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
+                                        <div id="rueResultsAdresse"
+                                            class="border rounded bg-white position-absolute w-100"
+                                            style="max-height: 200px; overflow-y: auto; display: none; z-index: 1000;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -113,23 +121,207 @@
                                 placeholder="Description détaillée du chantier, travaux à réaliser, etc."></textarea>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Spécificités requises</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="reqCACES">
-                                    <label class="form-check-label" for="reqCACES">
-                                        CACES requis
-                                    </label>
+                        <!-- FICHE TRAVAUX - TYPE DE DEMANDE -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-file-earmark-check"></i> Type de demande
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="numeroGDU" class="form-label">N° GDU</label>
+                                        <input type="text" class="form-control" id="numeroGDU" placeholder="Ex: GDU-2026-001">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="numeroMages" class="form-label">N° Mages</label>
+                                        <input type="text" class="form-control" id="numeroMages" placeholder="Ex: MAGES-2026-001">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="dateDemande" class="form-label">Date de demande</label>
+                                        <input type="date" class="form-control" id="dateDemande">
+                                    </div>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="reqPermisPL">
-                                    <label class="form-check-label" for="reqPermisPL">
-                                        Permis PL requis
-                                    </label>
+                                <div class="mb-3">
+                                    <label for="nomDemandeur" class="form-label">Nom du demandeur / Mairie de quartier</label>
+                                    <input type="text" class="form-control" id="nomDemandeur" placeholder="Ex: Mairie de quartier Bx-Maritime">
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                        </div>
+
+                        <!-- FICHE TRAVAUX - PREPARATION -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-clipboard-check"></i> Préparation
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Visite sur site effectuée</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="visiteSite" id="visiteSiteOui" value="Oui">
+                                                <label class="form-check-label" for="visiteSiteOui">Oui</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="visiteSite" id="visiteSiteNon" value="Non" checked>
+                                                <label class="form-check-label" for="visiteSiteNon">Non</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="dateVisite" class="form-label">Date de la visite</label>
+                                        <input type="date" class="form-control" id="dateVisite">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="nomAM" class="form-label">Agent de Maîtrise (AM)</label>
+                                    <select class="form-select" id="nomAM">
+                                        <option value="">Sélectionner un agent...</option>
+                                        <option value="GONCALVES Lionel">GONCALVES Lionel</option>
+                                        <option value="SIGALA Jean-Christophe">SIGALA Jean-Christophe</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="travauxEnvisages" class="form-label">Travaux envisagés</label>
+                                    <textarea class="form-control" id="travauxEnvisages" rows="2" 
+                                        placeholder="Description détaillée des travaux à réaliser"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Priorisation des travaux</label>
+                                    <select class="form-select" id="priorisation">
+                                        <option value="">Sélectionner une priorité...</option>
+                                        <option value="1">Priorité 1 : Danger des personnes sur chaussée après mise en sécurité</option>
+                                        <option value="2">Priorité 2 : Danger des personnes sur trottoirs, après sécurisation</option>
+                                        <option value="3">Priorité 3 : Travaux d'entretien courant (rejets trottoir, potelets, bloopatcheur, réfection des trottoirs…)</option>
+                                        <option value="4">Priorité 4 : Travaux d'amélioration (ex : Place PMR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FICHE TRAVAUX - PREALABLES -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <i class="bi bi-exclamation-triangle"></i> Préalables
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Demande Amiante</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="demandeAmiante" id="demandeAmianteOui" value="Oui">
+                                                <label class="form-check-label" for="demandeAmianteOui">Oui</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="demandeAmiante" id="demandeAmianteNon" value="Non" checked>
+                                                <label class="form-check-label" for="demandeAmianteNon">Non</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Présence Amiante</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="presenceAmiante" id="presenceAmianteOui" value="Oui">
+                                                <label class="form-check-label" for="presenceAmianteOui">Oui</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="presenceAmiante" id="presenceAmianteNon" value="Non" checked>
+                                                <label class="form-check-label" for="presenceAmianteNon">Non</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="numeroDTDICT" class="form-label">N° DT/DICT</label>
+                                        <input type="text" class="form-control" id="numeroDTDICT" placeholder="Ex: DT-2026-001">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="dateDICT" class="form-label">Date DICT</label>
+                                        <input type="date" class="form-control" id="dateDICT">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="dateDemandeArrete" class="form-label">Arrêté de circulation demandé le</label>
+                                        <input type="date" class="form-control" id="dateDemandeArrete">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="dateArrete" class="form-label">Date de l'arrêté</label>
+                                        <input type="date" class="form-control" id="dateArrete">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Travaux à proximité du Tram</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="proximiteTram" id="proximiteTramOui" value="Oui">
+                                                <label class="form-check-label" for="proximiteTramOui">Oui</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="proximiteTram" id="proximiteTramNon" value="Non" checked>
+                                                <label class="form-check-label" for="proximiteTramNon">Non</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Protocole signé</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="protocoleSign" id="protocoleSignOui" value="Oui">
+                                                <label class="form-check-label" for="protocoleSignOui">Oui</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="protocoleSign" id="protocoleSignNon" value="Non" checked>
+                                                <label class="form-check-label" for="protocoleSignNon">Non</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nombreJours" class="form-label">Nombre de jours envisagés</label>
+                                        <input type="number" class="form-control" id="nombreJours" min="1" placeholder="Ex: 5">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nombreAgents" class="form-label">Nombre d'agents envisagés (y compris enginiste)</label>
+                                        <input type="number" class="form-control" id="nombreAgents" min="1" placeholder="Ex: 3">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="materiauxNecessaires" class="form-label">Matériaux nécessaires</label>
+                                    <textarea class="form-control" id="materiauxNecessaires" rows="2" 
+                                        placeholder="Liste des matériaux nécessaires pour le chantier"></textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label for="permisCacesNecessaires" class="form-label">Permis / CACES nécessaires</label>
+                                    <textarea class="form-control" id="permisCacesNecessaires" rows="2" 
+                                        placeholder="Liste des permis et CACES requis"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Spécificités requises</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="reqCACES">
+                                <label class="form-check-label" for="reqCACES">
+                                    CACES requis
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="reqPermisPL">
+                                <label class="form-check-label" for="reqPermisPL">
+                                    Permis PL requis
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label">Matériaux magasin</label>
                                 <div class="input-group mb-2">
                                     <input type="text" class="form-control" id="searchArticle"
@@ -143,6 +335,37 @@
                                 <div id="selectedArticles" class="border rounded p-2 bg-light"
                                     style="min-height: 60px;">
                                     <small class="text-muted">Aucun article sélectionné</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Outillage</label>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="searchOutil"
+                                        placeholder="Rechercher un outil...">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnSearchOutil">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div id="outilResults" class="border rounded p-2 mb-2"
+                                    style="max-height: 150px; overflow-y: auto; display: none;"></div>
+                                <div id="selectedOutils" class="border rounded p-2 bg-light" style="min-height: 60px;">
+                                    <small class="text-muted">Aucun outil sélectionné</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Véhicules</label>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="searchVehicule"
+                                        placeholder="Rechercher un véhicule...">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnSearchVehicule">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div id="vehiculeResults" class="border rounded p-2 mb-2"
+                                    style="max-height: 150px; overflow-y: auto; display: none;"></div>
+                                <div id="selectedVehicules" class="border rounded p-2 bg-light"
+                                    style="min-height: 60px;">
+                                    <small class="text-muted">Aucun véhicule sélectionné</small>
                                 </div>
                             </div>
                         </div>
@@ -248,36 +471,35 @@
     // Liste complète des articles du magasin
     const articlesData = {{ articles_json| safe }};
     let selectedArticles = [];
+    let selectedOutils = [];
+    let selectedVehicules = [];
     let ruesData = [];
+    let outillageData = [];
+    let vehiculesData = [];
 
     $(document).ready(function () {
         console.log(`${articlesData.length} articles chargés`);
 
-        // Charger les rues
+        // Charger les rues, outillage et véhicules
         loadRues();
+        loadOutillage();
+        loadVehicules();
 
         // Surveiller les changements de dates
         $('#chantierDateDebut, #chantierDateFin').on('change', checkAgentsDisponibles);
-        
-        // Générer la référence au chargement de la page
-        generateReference();
-        
-        // Surveiller les changements de quartier et date de début
-        $('input[name="quartier"]').on('change', generateReference);
-        $('#chantierDateDebut').on('change', generateReference);
-        
+
         // Autocomplétion pour le nom du chantier
-        $('#chantierNom').on('input', function() {
+        $('#chantierNom').on('input', function () {
             searchRue($(this).val(), 'Nom');
         });
-        
+
         // Autocomplétion pour l'adresse
-        $('#chantierAdresse').on('input', function() {
+        $('#chantierAdresse').on('input', function () {
             searchRue($(this).val(), 'Adresse');
         });
-        
+
         // Fermer les suggestions au clic ailleurs
-        $(document).on('click', function(e) {
+        $(document).on('click', function (e) {
             if (!$(e.target).closest('#chantierNom, #rueResultsNom').length) {
                 $('#rueResultsNom').hide();
             }
@@ -307,7 +529,7 @@
     // Rechercher une rue
     function searchRue(query, field) {
         const resultsDiv = field === 'Nom' ? '#rueResultsNom' : '#rueResultsAdresse';
-        
+
         if (query.length < 2) {
             $(resultsDiv).hide();
             return;
@@ -333,7 +555,7 @@
     }
 
     // Sélectionner une rue pour le nom
-    $(document).on('click', '.select-rue-nom', function(e) {
+    $(document).on('click', '.select-rue-nom', function (e) {
         e.preventDefault();
         const rue = $(this).data('rue');
         $('#chantierNom').val(rue);
@@ -341,7 +563,7 @@
     });
 
     // Sélectionner une rue pour l'adresse
-    $(document).on('click', '.select-rue-adresse', function(e) {
+    $(document).on('click', '.select-rue-adresse', function (e) {
         e.preventDefault();
         const rue = $(this).data('rue');
         $('#chantierAdresse').val(rue);
@@ -352,7 +574,7 @@
     function generateReference() {
         const quartier = $('input[name="quartier"]:checked').val();
         const dateDebut = $('#chantierDateDebut').val();
-        
+
         fetch('/api/generate-reference', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -377,7 +599,6 @@
         const dateFin = $('#chantierDateFin').val();
 
         if (dateDebut && dateFin) {
-            $('#agentsDispoSection').show();
             $('#agentsDispo').html(`<div class="text-center text-muted">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
                 <span class="ms-2">Chargement...</span>
@@ -408,14 +629,16 @@
                         html += '</div>';
                         $('#agentsDispo').html(html);
                     } else {
-                        $('#agentsDispo').html('<p class="text-muted mb-0">Aucun agent voirie disponible pour cette période</p>');
+                        $('#agentsDispo').html('<p class="text-muted mb-0"><i class="bi bi-info-circle"></i> Aucun agent voirie disponible pour cette période</p>');
                     }
                 })
                 .catch(error => {
-                    $('#agentsDispo').html('<p class="text-danger mb-0">Erreur de chargement</p>');
+                    $('#agentsDispo').html('<p class="text-danger mb-0"><i class="bi bi-exclamation-triangle"></i> Erreur de chargement</p>');
                 });
         } else {
-            $('#agentsDispoSection').hide();
+            $('#agentsDispo').html(`<small class="text-muted">
+                <i class="bi bi-info-circle"></i> Remplissez les dates de début et de fin pour voir les agents disponibles
+            </small>`);
         }
     }
 
@@ -485,11 +708,189 @@
         }
     }
 
-    $('#generatorForm').submit(function (e) {
+    // === OUTILLAGE ===
+
+    // Charger l'outillage depuis l'API
+    function loadOutillage() {
+        fetch('/api/outillage')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    outillageData = data.outils;
+                    console.log(`${outillageData.length} outils chargés`);
+                } else {
+                    console.error('Erreur chargement outillage:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+    }
+
+    // Recherche d'outils
+    $('#searchOutil').on('input', function () {
+        const query = $(this).val().toLowerCase();
+        if (query.length < 2) {
+            $('#outilResults').hide();
+            return;
+        }
+
+        const results = outillageData.filter(outil =>
+            outil.code.toLowerCase().includes(query) ||
+            outil.description.toLowerCase().includes(query)
+        ).slice(0, 20);
+
+        if (results.length > 0) {
+            let html = '<div class="list-group list-group-flush">';
+            results.forEach(outil => {
+                html += `<a href="#" class="list-group-item list-group-item-action py-1 px-2 add-outil" data-code="${outil.code}" data-desc="${outil.description}">
+                    <small><strong>${outil.code}</strong> - ${outil.description}</small>
+                </a>`;
+            });
+            html += '</div>';
+            $('#outilResults').html(html).show();
+        } else {
+            $('#outilResults').hide();
+        }
+    });
+
+    // Ajouter un outil
+    $(document).on('click', '.add-outil', function (e) {
+        e.preventDefault();
+        const code = $(this).data('code');
+        const desc = $(this).data('desc');
+
+        if (!selectedOutils.find(o => o.code === code)) {
+            selectedOutils.push({ code, desc });
+            updateSelectedOutils();
+        }
+
+        $('#searchOutil').val('');
+        $('#outilResults').hide();
+    });
+
+    // Supprimer un outil
+    $(document).on('click', '.remove-outil', function (e) {
+        e.preventDefault();
+        const code = $(this).data('code');
+        selectedOutils = selectedOutils.filter(o => o.code !== code);
+        updateSelectedOutils();
+    });
+
+    function updateSelectedOutils() {
+        if (selectedOutils.length === 0) {
+            $('#selectedOutils').html('<small class="text-muted">Aucun outil sélectionné</small>');
+        } else {
+            let html = '<div class="d-flex flex-wrap gap-1">';
+            selectedOutils.forEach(outil => {
+                html += `<span class="badge bg-success">
+                    ${outil.code}
+                    <a href="#" class="text-white text-decoration-none remove-outil" data-code="${outil.code}">×</a>
+                </span>`;
+            });
+            html += '</div>';
+            $('#selectedOutils').html(html);
+        }
+    }
+
+    // === VÉHICULES ===
+
+    // Charger les véhicules depuis l'API
+    function loadVehicules() {
+        fetch('/api/vehicules')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    vehiculesData = data.vehicules;
+                    console.log(`${vehiculesData.length} véhicules chargés`);
+                } else {
+                    console.error('Erreur chargement véhicules:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+    }
+
+    // Recherche de véhicules
+    $('#searchVehicule').on('input', function () {
+        const query = $(this).val().toLowerCase();
+        if (query.length < 2) {
+            $('#vehiculeResults').hide();
+            return;
+        }
+
+        const results = vehiculesData.filter(veh =>
+            veh.immatriculation.toLowerCase().includes(query) ||
+            veh.numero.toLowerCase().includes(query) ||
+            veh.code_mage.toLowerCase().includes(query)
+        ).slice(0, 20);
+
+        if (results.length > 0) {
+            let html = '<div class="list-group list-group-flush">';
+            results.forEach(veh => {
+                const display = veh.code_mage || veh.numero || veh.immatriculation;
+                const details = [];
+                if (veh.numero && veh.numero !== display) details.push(veh.numero);
+                if (veh.immatriculation && veh.immatriculation !== display) details.push(veh.immatriculation);
+                const subtitle = details.length > 0 ? ' - ' + details.join(' - ') : '';
+                html += `<a href="#" class="list-group-item list-group-item-action py-1 px-2 add-vehicule" data-immat="${veh.immatriculation}" data-numero="${veh.numero}" data-code="${veh.code_mage}">
+                    <small><strong>${display}</strong>${subtitle}</small>
+                </a>`;
+            });
+            html += '</div>';
+            $('#vehiculeResults').html(html).show();
+        } else {
+            $('#vehiculeResults').hide();
+        }
+    });
+
+    // Ajouter un véhicule
+    $(document).on('click', '.add-vehicule', function (e) {
+        e.preventDefault();
+        const immat = $(this).data('immat');
+        const numero = $(this).data('numero');
+        const code = $(this).data('code');
+
+        if (!selectedVehicules.find(v => v.immatriculation === immat && v.numero === numero)) {
+            selectedVehicules.push({ immatriculation: immat, numero: numero, code_mage: code });
+            updateSelectedVehicules();
+        }
+
+        $('#searchVehicule').val('');
+        $('#vehiculeResults').hide();
+    });
+
+    // Supprimer un véhicule
+    $(document).on('click', '.remove-vehicule', function (e) {
+        e.preventDefault();
+        const immat = $(this).data('immat');
+        const numero = $(this).data('numero');
+        selectedVehicules = selectedVehicules.filter(v => !(v.immatriculation === immat && v.numero === numero));
+        updateSelectedVehicules();
+    });
+
+    function updateSelectedVehicules() {
+        if (selectedVehicules.length === 0) {
+            $('#selectedVehicules').html('<small class="text-muted">Aucun véhicule sélectionné</small>');
+        } else {
+            let html = '<div class="d-flex flex-wrap gap-1">';
+            selectedVehicules.forEach(veh => {
+                const display = veh.code_mage || veh.numero || veh.immatriculation;
+                html += `<span class="badge bg-warning text-dark">
+                    ${display}
+                    <a href="#" class="text-dark text-decoration-none remove-vehicule" data-immat="${veh.immatriculation}" data-numero="${veh.numero}">×</a>
+                </span>`;
+            });
+            html += '</div>';
+            $('#selectedVehicules').html(html);
+        }
+    }
+
+    $('#generatorForm').submit(async function (e) {
         e.preventDefault();
 
         const nom = $('#chantierNom').val();
-        const ref = $('#chantierRef').val();
         const dateDebut = $('#chantierDateDebut').val();
         const dateFin = $('#chantierDateFin').val();
         const numero = $('#chantierNumero').val();
@@ -504,26 +905,114 @@
             return;
         }
 
+        // Générer la référence maintenant
+        const quartier = $('input[name="quartier"]:checked').val();
+        let ref = '';
+
+        try {
+            const response = await fetch('/api/generate-reference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quartier, dateDebut })
+            });
+            const data = await response.json();
+            if (data.success) {
+                ref = data.reference;
+                $('#chantierRef').val(ref);
+            }
+        } catch (error) {
+            console.error('Erreur génération référence:', error);
+        }
+
         // Créer le ZIP
         const zip = new JSZip();
 
         // Nom du dossier principal (sanitize)
         const folderName = nom.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
 
-        // Créer le README
-        let readme = `CHANTIER: ${nom}\n`;
-        readme += `${'='.repeat(50)}\n\n`;
+        // Créer le README avec toutes les infos de la FICHE TRAVAUX
+        let readme = `${'='.repeat(70)}\n`;
+        readme += `FICHE TRAVAUX - ${nom}\n`;
+        readme += `${'='.repeat(70)}\n\n`;
+        
+        // LOCALISATION
+        readme += `--- LOCALISATION ---\n`;
+        readme += `Quartier: ${quartier}\n`;
         if (ref) readme += `Référence: ${ref}\n`;
-        if (dateDebut) readme += `Date de début: ${dateDebut}\n`;
-        if (dateFin) readme += `Date de fin: ${dateFin}\n`;
         if (numero || adresse) {
             let adresseComplete = '';
             if (numero) adresseComplete += numero + ' ';
             if (adresse) adresseComplete += adresse;
             readme += `Adresse: ${adresseComplete.trim()}\n`;
         }
+        
+        // TYPE DE DEMANDE
+        const numeroGDU = $('#numeroGDU').val();
+        const numeroMages = $('#numeroMages').val();
+        const dateDemande = $('#dateDemande').val();
+        const nomDemandeur = $('#nomDemandeur').val();
+        
+        if (numeroGDU || numeroMages || dateDemande || nomDemandeur) {
+            readme += `\n--- TYPE DE DEMANDE ---\n`;
+            if (numeroGDU) readme += `N° GDU: ${numeroGDU}\n`;
+            if (numeroMages) readme += `N° Mages: ${numeroMages}\n`;
+            if (dateDemande) readme += `Date de demande: ${dateDemande}\n`;
+            if (nomDemandeur) readme += `Demandeur: ${nomDemandeur}\n`;
+        }
+        
+        // DATES ET DURÉE
+        readme += `\n--- DATES ET DURÉE ---\n`;
+        if (dateDebut) readme += `Date de début: ${dateDebut}\n`;
+        if (dateFin) readme += `Date de fin prévisionnelle: ${dateFin}\n`;
+        const nombreJours = $('#nombreJours').val();
+        if (nombreJours) readme += `Nombre de jours envisagés: ${nombreJours}\n`;
+        
+        // PRÉPARATION
+        const visiteSite = $('input[name="visiteSite"]:checked').val();
+        const dateVisite = $('#dateVisite').val();
+        const nomAM = $('#nomAM').val();
+        const travauxEnvisages = $('#travauxEnvisages').val();
+        const priorisation = $('#priorisation').val();
+        const priorityLabels = {
+            '1': 'Priorité 1 : Danger des personnes sur chaussée',
+            '2': 'Priorité 2 : Danger des personnes sur trottoirs',
+            '3': 'Priorité 3 : Travaux d\'entretien courant',
+            '4': 'Priorité 4 : Travaux d\'amélioration'
+        };
+        
+        readme += `\n--- PRÉPARATION ---\n`;
+        if (visiteSite) readme += `Visite sur site: ${visiteSite}\n`;
+        if (dateVisite) readme += `Date de visite: ${dateVisite}\n`;
+        if (nomAM) readme += `Nom de l'AM: ${nomAM}\n`;
         if (responsable) readme += `Responsable: ${responsable}\n`;
-
+        if (travauxEnvisages) readme += `Travaux envisagés: ${travauxEnvisages}\n`;
+        if (priorisation) readme += `Priorisation: ${priorityLabels[priorisation]}\n`;
+        
+        // PRÉALABLES
+        const demandeAmiante = $('input[name="demandeAmiante"]:checked').val();
+        const presenceAmiante = $('input[name="presenceAmiante"]:checked').val();
+        const numeroDTDICT = $('#numeroDTDICT').val();
+        const dateDICT = $('#dateDICT').val();
+        const dateDemandeArrete = $('#dateDemandeArrete').val();
+        const dateArrete = $('#dateArrete').val();
+        const proximiteTram = $('input[name="proximiteTram"]:checked').val();
+        const protocoleSign = $('input[name="protocoleSign"]:checked').val();
+        
+        readme += `\n--- PRÉALABLES ---\n`;
+        if (demandeAmiante) readme += `Demande Amiante: ${demandeAmiante}\n`;
+        if (presenceAmiante) readme += `Présence Amiante: ${presenceAmiante}\n`;
+        if (numeroDTDICT) readme += `N° DT/DICT: ${numeroDTDICT}\n`;
+        if (dateDICT) readme += `Date DICT: ${dateDICT}\n`;
+        if (dateDemandeArrete) readme += `Arrêté de circulation demandé le: ${dateDemandeArrete}\n`;
+        if (dateArrete) readme += `Date de l'arrêté: ${dateArrete}\n`;
+        if (proximiteTram) readme += `Travaux à proximité du Tram: ${proximiteTram}\n`;
+        if (protocoleSign && proximiteTram === 'Oui') readme += `Protocole signé: ${protocoleSign}\n`;
+        
+        // RESSOURCES HUMAINES
+        const nombreAgents = $('#nombreAgents').val();
+        readme += `\n--- RESSOURCES HUMAINES ---\n`;
+        if (nombreAgents) readme += `Nombre d'agents envisagés (y compris enginiste): ${nombreAgents}\n`;
+        
         readme += `\n--- SPÉCIFICITÉS REQUISES ---\n`;
         if (reqCACES || reqPermisPL) {
             if (reqCACES) readme += `✓ CACES requis\n`;
@@ -531,13 +1020,18 @@
         } else {
             readme += `Aucune spécificité particulière\n`;
         }
+        
+        const permisCacesNecessaires = $('#permisCacesNecessaires').val();
+        if (permisCacesNecessaires) {
+            readme += `Détails: ${permisCacesNecessaires}\n`;
+        }
 
         // Ajouter les agents sélectionnés
         const selectedAgents = [];
-        $('.agent-checkbox:checked').each(function() {
+        $('.agent-checkbox:checked').each(function () {
             selectedAgents.push($(this).val());
         });
-        
+
         if (selectedAgents.length > 0) {
             readme += `\n--- AGENTS AFFECTÉS ---\n`;
             selectedAgents.forEach(agent => {
@@ -549,6 +1043,13 @@
             readme += `\n--- DESCRIPTION DU CHANTIER ---\n`;
             readme += `${description}\n`;
         }
+        
+        // MATÉRIAUX NÉCESSAIRES (champ texte libre de la fiche travaux)
+        const materiauxNecessaires = $('#materiauxNecessaires').val();
+        if (materiauxNecessaires) {
+            readme += `\n--- MATÉRIAUX NÉCESSAIRES ---\n`;
+            readme += `${materiauxNecessaires}\n`;
+        }
 
         if (selectedArticles.length > 0) {
             readme += `\n--- MATÉRIAUX MAGASIN ---\n`;
@@ -557,9 +1058,95 @@
             });
         }
 
+        if (selectedOutils.length > 0) {
+            readme += `\n--- OUTILLAGE ---\n`;
+            selectedOutils.forEach(outil => {
+                readme += `• ${outil.code} - ${outil.desc}\n`;
+            });
+        }
+
+        if (selectedVehicules.length > 0) {
+            readme += `\n--- VÉHICULES ---\n`;
+            selectedVehicules.forEach(veh => {
+                const parts = [];
+                if (veh.code_mage) parts.push(veh.code_mage);
+                if (veh.numero) parts.push(veh.numero);
+                if (veh.immatriculation) parts.push(veh.immatriculation);
+                readme += `• ${parts.join(' - ')}\n`;
+            });
+        }
+
         readme += `\nGénéré le: ${new Date().toLocaleString('fr-FR')}\n`;
 
-        zip.file(`${folderName}/README.txt`, readme);
+        // ====== GÉNÉRER LE DOCUMENT WORD ======
+        // Préparer toutes les données pour la fiche Word (réutilise priorisation et priorityLabels déjà définis)
+        const ficheData = {
+            nom: nom,
+            quartier: quartier,
+            reference: ref,
+            numero: numero,
+            adresse: adresse,
+            responsable: responsable,
+            description: description,
+            dateDebut: dateDebut,
+            dateFin: dateFin,
+            nombreJours: $('#nombreJours').val(),
+            numeroGDU: numeroGDU,
+            numeroMages: numeroMages,
+            dateDemande: dateDemande,
+            nomDemandeur: nomDemandeur,
+            visiteSite: $('input[name="visiteSite"]:checked').val(),
+            dateVisite: $('#dateVisite').val(),
+            nomAM: $('#nomAM').val(),
+            travauxEnvisages: $('#travauxEnvisages').val(),
+            priorisationLabel: priorisation ? priorityLabels[priorisation] : '',
+            demandeAmiante: $('input[name="demandeAmiante"]:checked').val(),
+            presenceAmiante: $('input[name="presenceAmiante"]:checked').val(),
+            numeroDTDICT: $('#numeroDTDICT').val(),
+            dateDICT: $('#dateDICT').val(),
+            dateDemandeArrete: $('#dateDemandeArrete').val(),
+            dateArrete: $('#dateArrete').val(),
+            proximiteTram: $('input[name="proximiteTram"]:checked').val(),
+            protocoleSign: $('input[name="protocoleSign"]:checked').val(),
+            nombreAgents: $('#nombreAgents').val(),
+            materiauxNecessaires: $('#materiauxNecessaires').val(),
+            permisCacesNecessaires: $('#permisCacesNecessaires').val(),
+            agents: selectedAgents,
+            vehicules: selectedVehicules.map(veh => {
+                const parts = [];
+                if (veh.code_mage) parts.push(veh.code_mage);
+                if (veh.numero) parts.push(veh.numero);
+                if (veh.immatriculation) parts.push(veh.immatriculation);
+                return parts.join(' - ');
+            }),
+            articles: selectedArticles.map(art => `${art.code} - ${art.desc}`),
+            outils: selectedOutils.map(outil => `${outil.code} - ${outil.desc}`)
+        };
+        
+        // Appeler l'API pour générer le Word
+        try {
+            const response = await fetch('/api/generate-fiche-docx', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ficheData)
+            });
+            
+            if (response.ok) {
+                const wordBlob = await response.blob();
+                // Ajouter le fichier Word
+                zip.file(`${folderName}/Fiche_Travaux.docx`, wordBlob);
+                // Ajouter aussi le README.txt (toujours utile)
+                zip.file(`${folderName}/README.txt`, readme);
+            } else {
+                // Si l'API échoue, on garde uniquement le README.txt
+                console.warn('Erreur génération Word, utilisation du README.txt seul');
+                zip.file(`${folderName}/README.txt`, readme);
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            // Fallback sur README.txt seul
+            zip.file(`${folderName}/README.txt`, readme);
+        }
 
         // Ajouter les dossiers sélectionnés
         const folders = [
