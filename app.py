@@ -550,6 +550,9 @@ def generate_fiche_docx():
         )
         
     except Exception as e:
+        print(f"ERREUR génération Word: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==============================================================================
