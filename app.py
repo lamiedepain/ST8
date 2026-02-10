@@ -96,6 +96,11 @@ def agents_page():
     """Page de gestion des agents"""
     return render_template('agents.html')
 
+@app.route('/references')
+def references_page():
+    """Page de gestion des références de chantiers"""
+    return render_template('references.html')
+
 # ==============================================================================
 # ROUTES - EASYDICT
 # ==============================================================================
@@ -335,6 +340,131 @@ def generate_reference():
         return jsonify({
             'success': True,
             'reference': reference
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/references')
+def get_references():
+    """Récupérer toutes les références de chantiers"""
+    try:
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        if refs_path.exists():
+            with open(refs_path, 'r', encoding='utf-8') as f:
+                references = json.load(f)
+        else:
+            references = {}
+        
+        return jsonify({
+            'success': True,
+            'references': references
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/references/<key>', methods=['PUT'])
+def update_reference(key):
+    """Modifier une référence existante"""
+    try:
+        data = request.json
+        nouveau_numero = int(data.get('numero', 0))
+        
+        if nouveau_numero < 0:
+            return jsonify({'success': False, 'error': 'Le numéro doit être positif'}), 400
+        
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        if refs_path.exists():
+            with open(refs_path, 'r', encoding='utf-8') as f:
+                references = json.load(f)
+        else:
+            references = {}
+        
+        references[key] = nouveau_numero
+        
+        with open(refs_path, 'w', encoding='utf-8') as f:
+            json.dump(references, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Référence {key} mise à jour à {nouveau_numero}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/references/<key>', methods=['DELETE'])
+def delete_reference(key):
+    """Supprimer une référence"""
+    try:
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        if refs_path.exists():
+            with open(refs_path, 'r', encoding='utf-8') as f:
+                references = json.load(f)
+        else:
+            return jsonify({'success': False, 'error': 'Fichier de références non trouvé'}), 404
+        
+        if key in references:
+            del references[key]
+            
+            with open(refs_path, 'w', encoding='utf-8') as f:
+                json.dump(references, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({
+                'success': True,
+                'message': f'Référence {key} supprimée'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Référence non trouvée'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/references', methods=['POST'])
+def add_reference():
+    """Ajouter une nouvelle référence"""
+    try:
+        data = request.json
+        key = data.get('key', '')
+        numero = int(data.get('numero', 0))
+        
+        if not key:
+            return jsonify({'success': False, 'error': 'Clé manquante'}), 400
+        
+        if numero < 0:
+            return jsonify({'success': False, 'error': 'Le numéro doit être positif'}), 400
+        
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        if refs_path.exists():
+            with open(refs_path, 'r', encoding='utf-8') as f:
+                references = json.load(f)
+        else:
+            references = {}
+        
+        if key in references:
+            return jsonify({'success': False, 'error': 'Cette clé existe déjà'}), 400
+        
+        references[key] = numero
+        
+        with open(refs_path, 'w', encoding='utf-8') as f:
+            json.dump(references, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Référence {key} ajoutée avec le numéro {numero}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/references/reset', methods=['POST'])
+def reset_references():
+    """Réinitialiser toutes les références"""
+    try:
+        refs_path = Path(__file__).parent / 'chantiers_references.json'
+        
+        with open(refs_path, 'w', encoding='utf-8') as f:
+            json.dump({}, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Toutes les références ont été réinitialisées'
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

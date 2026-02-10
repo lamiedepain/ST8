@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Références Chantiers - ST8{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-hash"></i> Gestion des Références de Chantiers
+                    </h4>
+                    <div>
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                            <i class="bi bi-plus-circle"></i> Nouvelle
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="resetAllBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Réinitialiser tout
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Les références sont générées au format: <strong>Quartier-Année-Mois-Numéro</strong> (ex: Q1-2026-02-008).<br>
+                        Le numéro affiché correspond au dernier numéro utilisé. Le prochain sera automatiquement incrémenté.
+                    </div>
+
+                    <div id="loadingSpinner" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+
+                    <div id="referencesTable" style="display:none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Quartier-Année-Mois</th>
+                                        <th>Dernier N°</th>
+                                        <th>Prochain N°</th>
+                                        <th>Exemple Référence</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="referencesBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="emptyState" class="text-center py-5" style="display:none;">
+                            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.3;"></i>
+                            <p class="text-muted mt-3">Aucune référence enregistrée</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                                <i class="bi bi-plus-circle"></i> Ajouter la première
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter une référence</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addForm">
+                    <div class="mb-3">
+                        <label class="form-label">Clé (Quartier-Année-Mois)</label>
+                        <input type="text" class="form-control" id="addKey" placeholder="Q1-2026-02" required>
+                        <div class="form-text">Format: Q1-2026-02 ou Q7-2026-03</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Numéro de départ</label>
+                        <input type="number" class="form-control" id="addNumero" value="0" min="0" required>
+                        <div class="form-text">Le prochain chantier aura le numéro +1</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="addSubmitBtn">Ajouter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier la référence</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="mb-3">
+                        <label class="form-label">Clé</label>
+                        <input type="text" class="form-control" id="editKey" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dernier numéro utilisé</label>
+                        <input type="number" class="form-control" id="editNumero" min="0" required>
+                        <div class="form-text">Le prochain chantier aura le numéro +1</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="editSubmitBtn">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let references = {};
+    const addModal = new bootstrap.Modal('#addModal');
+    const editModal = new bootstrap.Modal('#editModal');
+
+    $(document).ready(function () {
+        loadReferences();
+    });
+
+    function loadReferences() {
+        $('#loadingSpinner').show();
+        $('#referencesTable').hide();
+
+        fetch('/api/references')
+            .then(response => response.json())
+            .then(data => {
+                $('#loadingSpinner').hide();
+                $('#referencesTable').show();
+
+                if (data.success) {
+                    references = data.references;
+                    displayReferences();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                $('#loadingSpinner').hide();
+                showAlert('danger', 'Erreur de connexion: ' + error);
+            });
+    }
+
+    function displayReferences() {
+        const tbody = $('#referencesBody');
+        tbody.empty();
+
+        const keys = Object.keys(references).sort();
+
+        if (keys.length === 0) {
+            $('#emptyState').show();
+            tbody.closest('.table-responsive').hide();
+        } else {
+            $('#emptyState').hide();
+            tbody.closest('.table-responsive').show();
+
+            keys.forEach(key => {
+                const numero = references[key];
+                const prochain = numero + 1;
+                const exemple = `${key}-${prochain.toString().padStart(3, '0')}`;
+
+                const row = $('<tr>');
+                row.append(`<td><strong>${key}</strong></td>`);
+                row.append(`<td><span class="badge bg-secondary">${numero}</span></td>`);
+                row.append(`<td><span class="badge bg-primary">${prochain}</span></td>`);
+                row.append(`<td><code>${exemple}</code></td>`);
+                row.append(`
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editReference('${key}', ${numero})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteReference('${key}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `);
+
+                tbody.append(row);
+            });
+        }
+    }
+
+    // Ajouter
+    $('#addSubmitBtn').click(function () {
+        const key = $('#addKey').val().trim();
+        const numero = parseInt($('#addNumero').val());
+
+        if (!key) {
+            showAlert('warning', 'Veuillez saisir une clé');
+            return;
+        }
+
+        $(this).prop('disabled', true);
+
+        fetch('/api/references', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, numero })
+        })
+            .then(response => response.json())
+            .then(data => {
+                $(this).prop('disabled', false);
+
+                if (data.success) {
+                    showAlert('success', data.message);
+                    addModal.hide();
+                    $('#addForm')[0].reset();
+                    loadReferences();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                $(this).prop('disabled', false);
+                showAlert('danger', 'Erreur: ' + error);
+            });
+    });
+
+    // Modifier
+    function editReference(key, numero) {
+        $('#editKey').val(key);
+        $('#editNumero').val(numero);
+        editModal.show();
+    }
+
+    $('#editSubmitBtn').click(function () {
+        const key = $('#editKey').val();
+        const numero = parseInt($('#editNumero').val());
+
+        $(this).prop('disabled', true);
+
+        fetch(`/api/references/${encodeURIComponent(key)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero })
+        })
+            .then(response => response.json())
+            .then(data => {
+                $(this).prop('disabled', false);
+
+                if (data.success) {
+                    showAlert('success', data.message);
+                    editModal.hide();
+                    loadReferences();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                $(this).prop('disabled', false);
+                showAlert('danger', 'Erreur: ' + error);
+            });
+    });
+
+    // Supprimer
+    function deleteReference(key) {
+        if (!confirm(`Supprimer la référence "${key}" ?\n\nLe prochain chantier pour ce quartier/mois repartira à 001.`)) {
+            return;
+        }
+
+        fetch(`/api/references/${encodeURIComponent(key)}`, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    loadReferences();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'Erreur: ' + error);
+            });
+    }
+
+    // Réinitialiser tout
+    $('#resetAllBtn').click(function () {
+        if (!confirm('⚠️ ATTENTION ⚠️\n\nRéinitialiser TOUTES les références ?\n\nToutes les références seront supprimées et les chantiers repartiront à 001 pour chaque quartier.\n\nCette action est irréversible !')) {
+            return;
+        }
+
+        if (!confirm('Êtes-vous vraiment sûr ?')) {
+            return;
+        }
+
+        $(this).prop('disabled', true);
+
+        fetch('/api/references/reset', {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                $(this).prop('disabled', false);
+
+                if (data.success) {
+                    showAlert('success', data.message);
+                    loadReferences();
+                } else {
+                    showAlert('danger', 'Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                $(this).prop('disabled', false);
+                showAlert('danger', 'Erreur: ' + error);
+            });
+    });
+</script>
+{% endblock %}
