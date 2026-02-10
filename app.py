@@ -356,12 +356,29 @@ def generate_fiche_docx():
             section.left_margin = Inches(0.6)
             section.right_margin = Inches(0.6)
         
-        # === EN-TÊTE ===
-        header = doc.add_paragraph('BORDEAUX MÉTROPOLE')
-        header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        header.runs[0].font.bold = True
-        header.runs[0].font.size = Pt(14)
-        header.runs[0].font.name = 'Calibri'
+        # Déterminer la couleur selon le quartier
+        quartier = data.get('quartier', '')
+        if 'Q1' in quartier or 'Bx-Maritime' in quartier:
+            header_color = '92D050'  # Vert
+        elif 'Q7' in quartier or 'Bastide' in quartier:
+            header_color = 'FFC000'  # Orange
+        else:
+            header_color = 'D9D9D9'  # Gris par défaut
+        
+        # === EN-TÊTE AVEC LOGO ===
+        logo_path = Path(__file__).parent / 'static' / 'images' / 'logo_bordeaux_metropole.png'
+        if logo_path.exists():
+            header_para = doc.add_paragraph()
+            header_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = header_para.add_run()
+            run.add_picture(str(logo_path), width=Inches(1.8))
+            header_para.space_after = Pt(3)
+        else:
+            header = doc.add_paragraph('BORDEAUX MÉTROPOLE')
+            header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            header.runs[0].font.bold = True
+            header.runs[0].font.size = Pt(14)
+            header.runs[0].font.name = 'Calibri'
         
         subtitle = doc.add_paragraph('Régie Voirie Espaces Verts - 60 rue New-York')
         subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -487,9 +504,9 @@ def generate_fiche_docx():
                 para = cell_merged.paragraphs[0]
                 para.runs[0].font.bold = True
                 para.runs[0].font.size = Pt(10)
-                # Fond gris clair pour les en-têtes
+                # Fond coloré selon le quartier pour les en-têtes
                 shading_elm = OxmlElement('w:shd')
-                shading_elm.set(qn('w:fill'), 'D9D9D9')
+                shading_elm.set(qn('w:fill'), header_color)
                 cell_merged._element.get_or_add_tcPr().append(shading_elm)
             else:
                 cell_label.text = label
