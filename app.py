@@ -346,13 +346,13 @@ def generate_fiche_docx():
         # Créer un nouveau document
         doc = Document()
         
-        # Définir les marges
+        # Définir les marges (optimisées pour A4)
         sections = doc.sections
         for section in sections:
-            section.top_margin = Inches(0.6)
-            section.bottom_margin = Inches(0.6)
-            section.left_margin = Inches(0.8)
-            section.right_margin = Inches(0.8)
+            section.top_margin = Inches(0.4)
+            section.bottom_margin = Inches(0.4)
+            section.left_margin = Inches(0.5)
+            section.right_margin = Inches(0.5)
         
         # === LOGO ET EN-TÊTE ===
         # Essayer d'ajouter le logo
@@ -361,8 +361,7 @@ def generate_fiche_docx():
             header_para = doc.add_paragraph()
             header_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = header_para.add_run()
-            run.add_picture(str(logo_path), width=Inches(2.5))
-            doc.add_paragraph()
+            run.add_picture(str(logo_path), width=Inches(1.3))
         else:
             # Fallback si pas de logo
             header = doc.add_heading('BORDEAUX MÉTROPOLE', level=1)
@@ -373,39 +372,32 @@ def generate_fiche_docx():
         
         subtitle = doc.add_paragraph('Régie Voirie Espaces Verts | 60 rue New-York')
         subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        subtitle.runs[0].font.size = Pt(11)
+        subtitle.runs[0].font.size = Pt(8)
         subtitle.runs[0].font.color.rgb = RGBColor(102, 102, 102)
-        
-        # Ligne de séparation élégante
-        separator = doc.add_paragraph()
-        separator.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        sep_run = separator.add_run('━' * 60)
-        sep_run.font.color.rgb = RGBColor(0, 102, 204)
-        sep_run.font.size = Pt(8)
-        
-        doc.add_paragraph()
         
         # === TITRE FICHE ===
         titre = doc.add_heading('FICHE TRAVAUX', level=1)
         titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
         titre.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-        titre.runs[0].font.size = Pt(18)
+        titre.runs[0].font.size = Pt(13)
         titre.runs[0].font.bold = True
+        titre.space_after = Pt(3)
         
         # Nom du chantier
         nom_chantier = doc.add_paragraph()
         nom_chantier.alignment = WD_ALIGN_PARAGRAPH.CENTER
         nom_run = nom_chantier.add_run(data.get('nom', ''))
-        nom_run.font.size = Pt(14)
+        nom_run.font.size = Pt(11)
         nom_run.font.bold = True
         nom_run.font.color.rgb = RGBColor(51, 51, 51)
-        
-        doc.add_paragraph()
+        nom_chantier.space_after = Pt(6)
         
         # === LOCALISATION ===
         loc_heading = doc.add_heading('📍 LOCALISATION', level=2)
         loc_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-        loc_heading.runs[0].font.size = Pt(14)
+        loc_heading.runs[0].font.size = Pt(10)
+        loc_heading.space_before = Pt(3)
+        loc_heading.space_after = Pt(3)
         
         table_loc = doc.add_table(rows=4, cols=2)
         table_loc.style = 'Medium Grid 1 Accent 1'
@@ -423,15 +415,17 @@ def generate_fiche_docx():
             cell_label.text = label
             cell_label.paragraphs[0].runs[0].font.bold = True
             cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            cell_label.paragraphs[0].runs[0].font.size = Pt(9)
             table_loc.rows[i].cells[1].text = value
-        
-        doc.add_paragraph()
+            table_loc.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === TYPE DE DEMANDE ===
         if any([data.get('numeroGDU'), data.get('numeroMages'), data.get('dateDemande'), data.get('nomDemandeur')]):
             demande_heading = doc.add_heading('📋 TYPE DE DEMANDE', level=2)
             demande_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-            demande_heading.runs[0].font.size = Pt(14)
+            demande_heading.runs[0].font.size = Pt(10)
+            demande_heading.space_before = Pt(3)
+            demande_heading.space_after = Pt(3)
             
             table_demande = doc.add_table(rows=4, cols=2)
             table_demande.style = 'Medium Grid 1 Accent 1'
@@ -448,14 +442,16 @@ def generate_fiche_docx():
                 cell_label.text = label
                 cell_label.paragraphs[0].runs[0].font.bold = True
                 cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+                cell_label.paragraphs[0].runs[0].font.size = Pt(9)
                 table_demande.rows[i].cells[1].text = value
-            
-            doc.add_paragraph()
+                table_demande.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === DATES ET DURÉE ===
         dates_heading = doc.add_heading('📅 DATES ET DURÉE', level=2)
         dates_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-        dates_heading.runs[0].font.size = Pt(14)
+        dates_heading.runs[0].font.size = Pt(10)
+        dates_heading.space_before = Pt(3)
+        dates_heading.space_after = Pt(3)
         
         table_dates = doc.add_table(rows=3, cols=2)
         table_dates.style = 'Medium Grid 1 Accent 1'
@@ -471,14 +467,16 @@ def generate_fiche_docx():
             cell_label.text = label
             cell_label.paragraphs[0].runs[0].font.bold = True
             cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            cell_label.paragraphs[0].runs[0].font.size = Pt(9)
             table_dates.rows[i].cells[1].text = str(value) if value else ''
-        
-        doc.add_paragraph()
+            table_dates.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === PRÉPARATION ===
         prep_heading = doc.add_heading('🔍 PRÉPARATION', level=2)
         prep_heading.runs[0].font.color.rgb = RGBColor(0, 153, 76)
-        prep_heading.runs[0].font.size = Pt(14)
+        prep_heading.runs[0].font.size = Pt(10)
+        prep_heading.space_before = Pt(3)
+        prep_heading.space_after = Pt(3)
         
         table_prep = doc.add_table(rows=5, cols=2)
         table_prep.style = 'Medium List 1 Accent 3'
@@ -496,14 +494,16 @@ def generate_fiche_docx():
             cell_label.text = label
             cell_label.paragraphs[0].runs[0].font.bold = True
             cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 102, 51)
+            cell_label.paragraphs[0].runs[0].font.size = Pt(9)
             table_prep.rows[i].cells[1].text = value
-        
-        doc.add_paragraph()
+            table_prep.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === PRÉALABLES ===
         prealables_heading = doc.add_heading('⚠️ PRÉALABLES', level=2)
         prealables_heading.runs[0].font.color.rgb = RGBColor(255, 140, 0)
-        prealables_heading.runs[0].font.size = Pt(14)
+        prealables_heading.runs[0].font.size = Pt(10)
+        prealables_heading.space_before = Pt(3)
+        prealables_heading.space_after = Pt(3)
         
         table_prealables = doc.add_table(rows=8, cols=2)
         table_prealables.style = 'Medium List 1 Accent 6'
@@ -524,25 +524,27 @@ def generate_fiche_docx():
             cell_label.text = label
             cell_label.paragraphs[0].runs[0].font.bold = True
             cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(153, 76, 0)
+            cell_label.paragraphs[0].runs[0].font.size = Pt(9)
             table_prealables.rows[i].cells[1].text = value
-        
-        doc.add_paragraph()
+            table_prealables.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === DESCRIPTION DU CHANTIER ===
         if data.get('description'):
-            desc_heading = doc.add_heading('📝 DESCRIPTION DU CHANTIER', level=2)
+            desc_heading = doc.add_heading('📝 DESCRIPTION', level=2)
             desc_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-            desc_heading.runs[0].font.size = Pt(14)
+            desc_heading.runs[0].font.size = Pt(10)
+            desc_heading.space_before = Pt(3)
+            desc_heading.space_after = Pt(3)
             
             desc_para = doc.add_paragraph(data.get('description', ''))
-            desc_para.runs[0].font.size = Pt(11)
-            
-            doc.add_paragraph()
+            desc_para.runs[0].font.size = Pt(9)
         
         # === RESSOURCES ===
-        ressources_heading = doc.add_heading('👥 RESSOURCES HUMAINES ET MATÉRIELLES', level=2)
+        ressources_heading = doc.add_heading('👥 RESSOURCES', level=2)
         ressources_heading.runs[0].font.color.rgb = RGBColor(0, 102, 204)
-        ressources_heading.runs[0].font.size = Pt(14)
+        ressources_heading.runs[0].font.size = Pt(10)
+        ressources_heading.space_before = Pt(3)
+        ressources_heading.space_after = Pt(3)
         
         table_ressources = doc.add_table(rows=3, cols=2)
         table_ressources.style = 'Medium Grid 1 Accent 1'
@@ -558,52 +560,62 @@ def generate_fiche_docx():
             cell_label.text = label
             cell_label.paragraphs[0].runs[0].font.bold = True
             cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 51, 102)
+            cell_label.paragraphs[0].runs[0].font.size = Pt(9)
             table_ressources.rows[i].cells[1].text = value
-        
-        doc.add_paragraph()
+            table_ressources.rows[i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
         
         # === AGENTS, VÉHICULES, MATÉRIAUX ===
         if data.get('agents'):
-            agents_heading = doc.add_heading('👷 Agents affectés', level=3)
+            agents_heading = doc.add_heading('Agents affectés', level=3)
             agents_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            agents_heading.runs[0].font.size = Pt(9)
+            agents_heading.space_before = Pt(2)
+            agents_heading.space_after = Pt(2)
             for agent in data.get('agents', []):
                 p = doc.add_paragraph(style='List Bullet')
-                p.add_run(agent).font.size = Pt(10)
+                p.add_run(agent).font.size = Pt(8)
+                p.space_after = Pt(1)
         
         if data.get('vehicules'):
-            veh_heading = doc.add_heading('🚗 Véhicules', level=3)
+            veh_heading = doc.add_heading('Véhicules', level=3)
             veh_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            veh_heading.runs[0].font.size = Pt(9)
+            veh_heading.space_before = Pt(2)
+            veh_heading.space_after = Pt(2)
             for veh in data.get('vehicules', []):
                 p = doc.add_paragraph(style='List Bullet')
-                p.add_run(veh).font.size = Pt(10)
+                p.add_run(veh).font.size = Pt(8)
+                p.space_after = Pt(1)
         
         if data.get('articles'):
-            art_heading = doc.add_heading('📦 Matériaux magasin', level=3)
+            art_heading = doc.add_heading('Matériaux', level=3)
             art_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            art_heading.runs[0].font.size = Pt(9)
+            art_heading.space_before = Pt(2)
+            art_heading.space_after = Pt(2)
             for art in data.get('articles', []):
                 p = doc.add_paragraph(style='List Bullet')
-                p.add_run(art).font.size = Pt(10)
+                p.add_run(art).font.size = Pt(8)
+                p.space_after = Pt(1)
         
         if data.get('outils'):
-            outil_heading = doc.add_heading('🔧 Outillage', level=3)
+            outil_heading = doc.add_heading('Outillage', level=3)
             outil_heading.runs[0].font.color.rgb = RGBColor(51, 102, 153)
+            outil_heading.runs[0].font.size = Pt(9)
+            outil_heading.space_before = Pt(2)
+            outil_heading.space_after = Pt(2)
             for outil in data.get('outils', []):
                 p = doc.add_paragraph(style='List Bullet')
-                p.add_run(outil).font.size = Pt(10)
+                p.add_run(outil).font.size = Pt(8)
+                p.space_after = Pt(1)
         
         # === PIED DE PAGE ===
-        doc.add_paragraph()
-        separator2 = doc.add_paragraph()
-        separator2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        sep2_run = separator2.add_run('━' * 60)
-        sep2_run.font.color.rgb = RGBColor(0, 102, 204)
-        sep2_run.font.size = Pt(8)
-        
         footer = doc.add_paragraph(f"Document généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        footer.runs[0].font.size = Pt(9)
+        footer.runs[0].font.size = Pt(7)
         footer.runs[0].font.italic = True
         footer.runs[0].font.color.rgb = RGBColor(128, 128, 128)
+        footer.space_before = Pt(6)
         
         # Sauvegarder en mémoire
         file_stream = io.BytesIO()
