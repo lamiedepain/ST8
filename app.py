@@ -507,8 +507,6 @@ def generate_fiche_docx():
         if data.get('agents') or data.get('vehicules') or data.get('articles') or data.get('outils'):
             doc.add_paragraph()
             
-            details = doc.add_paragraph()
-            details.runs[0].font.size = Pt(9)
             details_text = []
             
             if data.get('agents'):
@@ -523,7 +521,7 @@ def generate_fiche_docx():
             if data.get('outils'):
                 details_text.append(f"Outillage: {', '.join(data.get('outils', []))}")
             
-            details.text = ' | '.join(details_text)
+            details = doc.add_paragraph(' | '.join(details_text))
             details.runs[0].font.size = Pt(8)
         
         # === PIED DE PAGE ===
