@@ -174,13 +174,18 @@
                     </table>
                     <div class="border-top pt-3">
                         <h6 class="mb-3"><i class="bi bi-upload"></i> Charger un nouveau fichier Excel</h6>
-                        <div class="input-group">
+                        <div class="input-group mb-2">
                             <input type="file" class="form-control" id="planningFileInput" accept=".xlsx,.xlsm">
                             <button class="btn btn-primary" type="button" id="uploadPlanningBtn">
                                 <i class="bi bi-upload"></i> Charger
                             </button>
                         </div>
-                        <div class="form-text">Remplacera le fichier actuel (une sauvegarde sera créée automatiquement)
+                        <button class="btn btn-success w-100" type="button" id="pushToGithubBtn">
+                            <i class="bi bi-github"></i> Pousser sur GitHub
+                        </button>
+                        <div class="form-text">
+                            Charger remplace le fichier local (une sauvegarde sera créée).<br>
+                            Pousser sur GitHub synchronise avec Render (accessible sur tous les postes).
                         </div>
                         <div id="uploadProgress" class="mt-2" style="display:none;">
                             <div class="progress">
@@ -286,6 +291,35 @@
             .catch(error => {
                 $('#uploadProgress').hide();
                 $('#uploadPlanningBtn').prop('disabled', false);
+                showAlert('danger', 'Erreur de connexion : ' + error);
+            });
+    });
+
+    // Gestion du push sur GitHub
+    $('#pushToGithubBtn').click(function () {
+        if (!confirm('Pousser le planning sur GitHub ?\n\nCela permettra aux autres postes d\'accéder à la dernière version.')) {
+            return;
+        }
+
+        const btn = $(this);
+        const originalHtml = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Push en cours...');
+
+        fetch('/api/push-to-github', {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.prop('disabled', false).html(originalHtml);
+
+                if (data.success) {
+                    showAlert('success', data.message);
+                } else {
+                    showAlert('danger', 'Erreur : ' + data.error);
+                }
+            })
+            .catch(error => {
+                btn.prop('disabled', false).html(originalHtml);
                 showAlert('danger', 'Erreur de connexion : ' + error);
             });
     });

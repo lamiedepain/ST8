@@ -692,6 +692,102 @@ def load_planning():
             'error': str(e)
         }), 500
 
+@app.route('/api/push-to-github', methods=['POST'])
+def push_to_github():
+    """
+    Pousse le fichier Excel sur GitHub
+    Gère les conflits en faisant un pull avant le push
+    """
+    import subprocess
+    
+    try:
+        repo_path = Path(__file__).parent
+        
+        # 1. Pull d'abord pour récupérer les derniers changements
+        pull_result = subprocess.run(
+            ['git', 'pull', 'origin', 'main'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        # Si conflit détecté
+        if pull_result.returncode != 0 and 'conflict' in pull_result.stderr.lower():
+            return jsonify({
+                'success': False,
+                'error': 'Conflit Git détecté. Résolution manuelle nécessaire.'
+            }), 409
+        
+        # 2. Ajouter le fichier Excel
+        add_result = subprocess.run(
+            ['git', 'add', '2026_PLANNING_CENTRE_ST8.xlsm'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if add_result.returncode != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Erreur git add: {add_result.stderr}'
+            }), 500
+        
+        # 3. Commit
+        commit_message = f"chore: mise a jour planning depuis {request.remote_addr} le {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        commit_result = subprocess.run(
+            ['git', 'commit', '-m', commit_message],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        # Si rien à commiter, c'est ok
+        if 'nothing to commit' in commit_result.stdout:
+            return jsonify({
+                'success': True,
+                'message': 'Aucun changement à pousser'
+            })
+        
+        if commit_result.returncode != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Erreur git commit: {commit_result.stderr}'
+            }), 500
+        
+        # 4. Push
+        push_result = subprocess.run(
+            ['git', 'push', 'origin', 'main'],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if push_result.returncode != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Erreur git push: {push_result.stderr}'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Planning poussé sur GitHub avec succès'
+        })
+    
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'success': False,
+            'error': 'Timeout: opération Git trop longue'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # ==============================================================================
 # ROUTES - BACKUPS
 # ==============================================================================
