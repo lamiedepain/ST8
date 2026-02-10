@@ -405,29 +405,7 @@ def generate_fiche_docx():
         nom_chantier.space_after = Pt(8)
         
         # === TABLEAU PRINCIPAL ===
-        # Compter le nombre de lignes nécessaires
-        rows_count = 4  # Localisation de base
-        if data.get('numeroGDU') or data.get('numeroMages'):
-            rows_count += 4  # Type de demande
-        rows_count += 3  # Dates
-        rows_count += 5  # Préparation
-        rows_count += 8  # Préalables
-        if data.get('description'):
-            rows_count += 1  # Description
-        rows_count += 3  # Ressources
-        
-        # Créer le tableau unique
-        table = doc.add_table(rows=rows_count, cols=2)
-        table.style = 'Light Grid Accent 1'
-        
-        # Définir les largeurs de colonnes
-        for row in table.rows:
-            row.cells[0].width = Inches(2.5)
-            row.cells[1].width = Inches(4.0)
-        
-        row_idx = 0
-        
-        # LOCALISATION
+        # Construire d'abord toutes les données
         sections_data = [
             ('LOCALISATION', '', True),
             ('Quartier', data.get('quartier', ''), False),
@@ -488,6 +466,15 @@ def generate_fiche_docx():
             ('Matériaux nécessaires', data.get('materiauxNecessaires', ''), False),
             ('Permis/CACES', data.get('permisCacesNecessaires', ''), False),
         ])
+        
+        # Créer le tableau avec le bon nombre de lignes
+        table = doc.add_table(rows=len(sections_data), cols=2)
+        table.style = 'Light Grid Accent 1'
+        
+        # Définir les largeurs de colonnes
+        for row in table.rows:
+            row.cells[0].width = Inches(2.5)
+            row.cells[1].width = Inches(4.0)
         
         # Remplir le tableau
         for i, (label, value, is_header) in enumerate(sections_data):
