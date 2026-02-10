@@ -21,6 +21,7 @@ instance/
 *.xlsm
 !2026_PLANNING_CENTRE_ST8.xlsm
 !easydict/T-DICT_Template.xlsm
+!magasin_st8/*.xlsx
 
 # Backups
 backups/
