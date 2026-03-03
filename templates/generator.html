@@ -447,6 +447,30 @@
                             </div>
                         </div>
 
+                        <div class="mb-4">
+                            <label for="attachmentFiles" class="form-label">
+                                <i class="bi bi-paperclip"></i> Pièces jointes
+                            </label>
+                            <input type="file" class="form-control mb-2" id="attachmentFiles" multiple>
+                            <label for="attachmentTargetFolder" class="form-label small text-muted mb-1">
+                                Dossier de destination des pièces jointes
+                            </label>
+                            <select class="form-select" id="attachmentTargetFolder">
+                                <option value="">Dossier principal du chantier</option>
+                                <option value="GDU">GDU</option>
+                                <option value="Mage">Mage</option>
+                                <option value="Photos" selected>Photos</option>
+                                <option value="Plans_et_schemas">Plans_et_schemas</option>
+                                <option value="Arrete">Arrete</option>
+                                <option value="DT_DICT">DT_DICT</option>
+                                <option value="Test_amiante">Test_amiante</option>
+                                <option value="Divers">Divers</option>
+                            </select>
+                            <div class="form-text">
+                                Les fichiers sélectionnés seront ajoutés automatiquement dans le ZIP généré.
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-download"></i> Générer et télécharger
@@ -910,6 +934,10 @@
         }
     }
 
+    function sanitizeAttachmentFileName(name) {
+        return name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim();
+    }
+
     $('#generatorForm').submit(async function (e) {
         e.preventDefault();
 
@@ -1191,6 +1219,30 @@
                 zip.file(`${folderName}/${folder.name}/.gitkeep`, '');
             }
         });
+
+        // Ajouter les pièces jointes
+        const attachmentFiles = Array.from($('#attachmentFiles')[0]?.files || []);
+        const attachmentTargetFolder = $('#attachmentTargetFolder').val();
+
+        if (attachmentFiles.length > 0) {
+            const targetPrefix = attachmentTargetFolder
+                ? `${folderName}/${attachmentTargetFolder}`
+                : `${folderName}`;
+
+            await Promise.all(attachmentFiles.map(async (file) => {
+                const sanitizedName = sanitizeAttachmentFileName(file.name) || 'piece_jointe';
+                const fileBuffer = await file.arrayBuffer();
+                zip.file(`${targetPrefix}/${sanitizedName}`, fileBuffer);
+            }));
+
+            readme += `\n--- PIÈCES JOINTES ---\n`;
+            readme += `Dossier cible: ${attachmentTargetFolder || 'Dossier principal'}\n`;
+            attachmentFiles.forEach(file => {
+                readme += `• ${file.name}\n`;
+            });
+
+            zip.file(`${folderName}/README.txt`, readme);
+        }
 
         // Générer et télécharger
         zip.generateAsync({ type: 'blob' }).then(function (content) {

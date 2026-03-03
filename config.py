@@ -124,11 +124,12 @@ ABSENT_STATUSES = {
     'TP'    # TP pareil IH
 }
 
-PRESENT_STATUSES = {'P', '', None}  # Codes indiquant la présence (P ou vide)
+PRESENT_STATUSES = {'P', 'JN', '', None}  # Codes indiquant la présence (P, JN ou vide)
 
 # Couleurs des statuts (correspondant exactement à l'Excel)
 STATUS_COLORS = {
     'P': '#00B050',      # Vert foncé - PRESENCE
+    'JN': '#92D050',     # Vert clair - JOURNÉE NORMALE
     'AH': '#92D050',     # Vert clair - AH
     'PC': '#C6E0B4',     # Vert très clair - PREV CONGES
     'F': '#FF00FF',      # Magenta - FORMATION
@@ -146,6 +147,7 @@ STATUS_COLORS = {
 # Libellés des statuts
 STATUS_LABELS = {
     'P': 'Présence',
+    'JN': 'Journée Normale',
     'AH': 'AH',
     'PC': 'Prev Congés',
     'F': 'Formation',
